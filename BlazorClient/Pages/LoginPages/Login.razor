@@ -1,0 +1,84 @@
+﻿@page  "/login"
+
+@using Newtonsoft.Json
+@using Services
+@using ShoppingListWebApi.Data
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+@inject Blazored.LocalStorage.ILocalStorageService localStorageService
+@inject UserService userService;
+
+<EditForm  OnValidSubmit="@ValidateUser" Model="@this">
+    <div>
+        <br /><br /><br /><br /><br />
+    </div>
+    <div>
+        <h3 style="font-weight:bold; color:purple">Book Stores Login</h3>
+    </div>
+    <div>
+        <br />
+    </div>
+    <div class="col-12 row">
+        <input class="form-control col-12" @bind="userName" placeholder="email address" />
+    </div>
+    <br />
+    <div class="col-12 row">
+        <input type="password" class="form-control col-12" @bind="password" placeholder="password" />
+    </div>
+    <br />
+    <div class="col-12 row">
+        <span class="col-12"></span>
+        <input type="submit" class="form-control col-6 btn btn-primary" value="Login" />
+        <a href="/signup" class="col-3">Sign up</a>
+    </div>
+    <br />
+    <div class="col-12 row" style="text-align:left; font-weight:bold">
+        <span class="col-12">@LoginMesssage</span>
+    </div>
+
+</EditForm>
+
+@code {
+
+
+    string userName, password;
+
+    //private User user;
+    public string LoginMesssage { get; set; }
+
+    protected override Task OnInitializedAsync()
+    {
+        //user = new User();
+        return base.OnInitializedAsync();
+    }
+
+    private async Task ValidateUser()
+    {
+        //assume that user is valid
+        //call an API
+
+        try
+        {
+            var message = await userService.LoginAsync(userName, password);
+
+
+
+            if (message != null && message.Status == "OK")
+            {
+                ((CustomAuthenticationStateProvider)AuthenticationStateProvider).MarkUserAsAuthenticated(message.Message);
+                NavigationManager.NavigateTo("/");
+            }
+            else
+            {
+                LoginMesssage = "Invalid username or password";
+            }
+
+        }
+        catch
+        {
+            LoginMesssage = "Some errors";
+        }
+    }
+
+
+}
