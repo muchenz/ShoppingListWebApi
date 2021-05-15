@@ -32,6 +32,7 @@ namespace EFDataBase
             {
                 optionsBuilder.UseSqlite("Name=ShopingListDB");
             }
+        
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -46,6 +47,11 @@ namespace EFDataBase
                 entity.ToTable("User");
 
                 entity.Property(e => e.UserId).HasColumnName("UserId");
+
+                entity.Property(e => e.LoginType)
+                   .HasColumnName("LoginType")
+                   .HasDefaultValue(1);
+                   
 
                 entity.Property(e => e.EmailAddress)
                     .HasColumnName("EmailAddress")
@@ -93,6 +99,7 @@ namespace EFDataBase
 
             modelBuilder.Entity<UserListAggregatorEntity>()
                 .Property(e => e.PermissionLevel).HasColumnName("PermissionLevel");
+            modelBuilder.Entity<UserListAggregatorEntity>().Property(e => e.State).HasColumnName("State");
 
             modelBuilder.Entity<UserListAggregatorEntity>()
                 .HasOne(bc => bc.ListAggregator)

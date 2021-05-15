@@ -14,6 +14,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using ServiceMediatR.ListItemCommandAndQueries;
+using ServiceMediatR.SignalREvents;
 using ServiceMediatR.UserCommandAndQuerry;
 using Shared;
 using ShoppingListWebApi.Data;
@@ -27,16 +28,14 @@ namespace ShoppingListWebApi.Controllers
     {
         private readonly ShopingListDBContext _context;
         private readonly IMapper _mapper;
-        private readonly SignarRService _signarRService;
         private readonly IMediator _mediator;
         private readonly IConfiguration _configuration;              
 
         public ListItemController(ShopingListDBContext context, IConfiguration configuration, IMapper mapper, 
-            SignarRService signarRHelper, IMediator mediator)//, IConfiguration configuration)
+             IMediator mediator)//, IConfiguration configuration)
         {
             _context = context;
             _mapper = mapper;
-            _signarRService = signarRHelper;
             _mediator = mediator;
             _configuration = configuration;
             
@@ -71,7 +70,9 @@ namespace ShoppingListWebApi.Controllers
             //task.GetAwaiter().GetResult();
 
             var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(listAggregationId, _context);
-            await _signarRService.SendRefreshMessageToUsersAsync(userList, "Add_ListItem", listItemEntity.ListItemId, listAggregationId, parentId);
+            //await _signarRService.SendRefreshMessageToUsersAsync(userList, "Add_ListItem", listItemEntity.ListItemId, listAggregationId, parentId);
+            await _mediator.Publish(
+                new AddEditSaveDeleteListItemEvent(userList, "Add_ListItem", listItemEntity.ListItemId, listAggregationId, parentId));
 
 
             return await Task.FromResult(item);
@@ -88,7 +89,7 @@ namespace ShoppingListWebApi.Controllers
             var amount = await _context.SaveChangesAsync();
 
             var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(listAggregationId, _context);
-            await _signarRService.SendRefreshMessageToUsersAsync(userList, "Delete_ListItem", ItemId, listAggregationId);
+            await _mediator.Publish(new AddEditSaveDeleteListItemEvent(userList, "Delete_ListItem", ItemId, listAggregationId));
 
 
             return await Task.FromResult(amount);
@@ -161,7 +162,7 @@ namespace ShoppingListWebApi.Controllers
 
 
             var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(listAggregationId, _context);
-            await _signarRService.SendRefreshMessageToUsersAsync(userList, "Edit/Save_ListItem", listItem.ListItemId, listAggregationId);
+            await _mediator.Publish(new AddEditSaveDeleteListItemEvent(userList, "Edit/Save_ListItem", listItem.ListItemId, listAggregationId));
 
             return await Task.FromResult(listItem);
         }
@@ -225,6 +226,7 @@ namespace ShoppingListWebApi.Controllers
             //ControllerContext.HttpContext.Response.Headers.Add("id2", listAggregationId.ToString());
             */
 
+            /////////////////////////////////////
 
             Stopwatch sw = new Stopwatch();
 
@@ -235,10 +237,11 @@ namespace ShoppingListWebApi.Controllers
             var users = await _mediator.Send(new GetUserIdFromListAggrIdCommand(listAggregationId));
             Debug.WriteLine(sw.ElapsedMilliseconds - t1);
 
-            await _signarRService.SendRefreshMessageToUsersAsync(users.Data, "Edit/Save_ListItem", item.ListItemId, listAggregationId);
+           // await _signarRService.SendRefreshMessageToUsersAsync(users.Data, "Edit/Save_ListItem", item.ListItemId, listAggregationId);
+
+            await _mediator.Publish(new AddEditSaveDeleteListItemEvent(users.Data, "Edit/Save_ListItem", item.ListItemId, listAggregationId));
 
 
-           
             return await Task.FromResult(res.Data);
         }
     }

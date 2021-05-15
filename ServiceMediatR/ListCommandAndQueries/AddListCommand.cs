@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using EFDataBase;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using ServiceMediatR.Models;
@@ -33,22 +34,15 @@ namespace ServiceMediatR.ListCommandAndQueries
 
         public int ParentId=>_parentId;
         public List Item=>_item;
-        public int ListAggregationId=>_listAggregationId;
-      
-       // public  SignarRService SignarRService=>_signarRService;
-
-
+        public int ListAggregationId=>_listAggregationId;    
+       
     }
 
-    public class CreateAddListCommandHandler : IHandlerWrapper<AddListCommand, List>
+    public class CreateAddListCommandHandler : BaseForHandler,  IHandlerWrapper<AddListCommand, List>
     {
-        private readonly ShopingListDBContext _context;
-        private readonly IMapper _mapper;
 
-        public CreateAddListCommandHandler(ShopingListDBContext context, IMapper mapper )
+        public CreateAddListCommandHandler(ShopingListDBContext context, IMapper mapper):base(context, mapper)
         {
-            _context = context;
-            _mapper = mapper;
         }
 
         public async Task<MessageAndStatusAndData<List>> Handle(AddListCommand request, CancellationToken cancellationToken)
@@ -64,30 +58,13 @@ namespace ServiceMediatR.ListCommandAndQueries
             _context.Lists.Add(listItemEntity);
             await _context.SaveChangesAsync();
 
-            //var item = _mapper.Map<ListItem>(listItemEntity);
             request.Item.ListId = listItemEntity.ListId;
 
-            //var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(request.ListAggregationId, request.Context);
-            //await request.SignarRService.SendRefreshMessageToUsersAsync(userList);
 
             return await Task.FromResult(MessageAndStatusAndData.Ok<List>(request.Item,"OK"));
 
+        }       
 
-            //return Task.FromResult(MessageAndStatusAndData.Fail<List>(""));
-        }
-
-        bool CheckIntegrityListAggr(int listAggr, int listAggregationId)
-        {
-
-            return listAggr == listAggregationId;
-        }
-
-        public static async Task<IEnumerable<int>> GetuUserIdFromListAggrIdAsync(int listAggrId, ShopingListDBContext _context)
-        {
-            var userList = await _context.UserListAggregators.Where(a => a.ListAggregatorId == listAggrId).Select(a => a.UserId).ToListAsync();
-
-            return userList;
-        }
     }
 
 

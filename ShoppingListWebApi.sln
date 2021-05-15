@@ -11,9 +11,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShoppingListWebApiSignalR",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceMediatR", "ServiceMediatR\ServiceMediatR.csproj", "{94D100DC-B160-4C2D-9455-34FE4456AE29}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EFDataBase", "EFDataBase\EFDataBase.csproj", "{17461E9B-F77A-4B76-A8BD-1CFD6C436BF9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EFDataBase", "EFDataBase\EFDataBase.csproj", "{17461E9B-F77A-4B76-A8BD-1CFD6C436BF9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared", "Shared\Shared.csproj", "{2C54C523-A0FF-47AC-AD83-3B6906204C5E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shared", "Shared\Shared.csproj", "{2C54C523-A0FF-47AC-AD83-3B6906204C5E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SignalRService", "SignalRService\SignalRService.csproj", "{8D3C7342-B54C-4755-ACD5-A44A44337C0A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +47,10 @@ Global
 		{2C54C523-A0FF-47AC-AD83-3B6906204C5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2C54C523-A0FF-47AC-AD83-3B6906204C5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2C54C523-A0FF-47AC-AD83-3B6906204C5E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8D3C7342-B54C-4755-ACD5-A44A44337C0A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8D3C7342-B54C-4755-ACD5-A44A44337C0A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8D3C7342-B54C-4755-ACD5-A44A44337C0A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8D3C7342-B54C-4755-ACD5-A44A44337C0A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

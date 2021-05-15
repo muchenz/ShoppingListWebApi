@@ -2,14 +2,16 @@
 using EFDataBase;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace ShoppingListWebApi.Migrations
 {
     [DbContext(typeof(ShopingListDBContext))]
-    partial class ShopingListDBContextModelSnapshot : ModelSnapshot
+    [Migration("20210430112809_Add_State_To_UserListAggregatorEntity")]
+    partial class Add_State_To_UserListAggregatorEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

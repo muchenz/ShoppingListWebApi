@@ -3,25 +3,30 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Net.Http;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
 using EFDataBase;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
+using ServiceMediatR.SignalREvents;
 using Shared;
 using ShoppingListWebApi.Data;
 
 
 namespace ShoppingListWebApi.Controllers
 {
+
     [Route("api/[controller]")]
     [ApiController]
     public class UserController : ControllerBase
@@ -29,14 +34,14 @@ namespace ShoppingListWebApi.Controllers
         private readonly ShopingListDBContext _context;
         private readonly IMapper _mapper;
         private readonly IConfiguration _configuration;
-        private readonly SignarRService _signarRService;
+        private readonly IMediator _mediator;
 
-        public UserController(ShopingListDBContext context, IMapper mapper, IConfiguration configuration, SignarRService signarRService)
+        public UserController(ShopingListDBContext context, IMapper mapper, IConfiguration configuration, IMediator mediator)
         {
             _context = context;
             _mapper = mapper;
             _configuration = configuration;
-            _signarRService = signarRService;
+            _mediator = mediator;
         }
 
 
@@ -51,30 +56,120 @@ namespace ShoppingListWebApi.Controllers
                 return new MessageAndStatus { Status = "ERROR", Message = "User not found." };
             }
 
-            return new MessageAndStatus { Status = "OK", Message = JsonConvert.SerializeObject(user) }; 
+            return new MessageAndStatus { Status = "OK", Message = JsonConvert.SerializeObject(user) };
+        }
+
+
+        //string access_token,
+        //    string data_access_expiration_time,
+        //    string expires_in,
+        //    string long_lived_token,
+        //    string state
+
+
+        [HttpGet("FacebookToken")]
+        public async Task<MessageAndStatusAndData<TokenAndEmailData>> FacebookToken(string access_token, string state)
+        {
+            MeResponse meResponse = null;
+
+            if (!string.IsNullOrEmpty(access_token))
+                meResponse = await WebApiHelper.GetFacebookUserFromTokenAsync(access_token, state, _configuration);
+            else
+                return new MessageAndStatusAndData<TokenAndEmailData>(null, "Some Errors", true);
+
+            var user = await _context.Users.Where(a => a.EmailAddress == meResponse.email).FirstOrDefaultAsync();
+
+            if (user == null)
+            {
+
+                var res = await Register(meResponse.email, "", LoginType.Facebook);
+
+                return new MessageAndStatusAndData<TokenAndEmailData>(
+
+                       new TokenAndEmailData { Token = res.Message, Email = user.EmailAddress }
+                       , "", false);
+
+            }
+            else
+            {
+                if (user.LoginType == 2)
+                {
+                    var token = await GenerateToken2(user.UserId);
+                    
+                    return new MessageAndStatusAndData<TokenAndEmailData>(
+                        
+                        new TokenAndEmailData {Token=token, Email=user.EmailAddress }
+                        , null, false);
+
+                }
+
+            }
+
+            return new MessageAndStatusAndData<TokenAndEmailData>(null, "User Exist", true);
+
+        }
+
+
+        [HttpGet]
+        public async Task<IActionResult> FacebookCode(string code, string state)
+        {
+            MeResponse meResponse = null;
+
+            if (!string.IsNullOrEmpty(code))
+                meResponse = await WebApiHelper.GetFacebookUserFromCodeAsync(code, state, _configuration);
+            else
+                return BadRequest();
+
+            var user = await _context.Users.Where(a => a.EmailAddress == meResponse.email).FirstOrDefaultAsync();
+
+            if (user == null)
+            {
+
+                var res = await Register(meResponse.email, "", LoginType.Facebook);
+
+                return Redirect($"https://localhost:5081/login?token={res.Message}");
+
+            }
+            else
+            {
+                if (user.LoginType == 2) // 2 ==>> LoginType.Facebook
+                {
+                    var token = await GenerateToken2(user.UserId);
+                    return Redirect($"https://localhost:5081/login?token={token}&sss=(rrr)");
+
+                }
+
+            }
+
+            return Redirect("https://localhost:5081/login?error=Email already exist");
+
         }
 
         [HttpPost("Login")]
         public async Task<MessageAndStatus> Login(string userName, string password)
         {
-            
-            var user = await _context.Users.Where(a => a.EmailAddress == userName && a.Password == password).FirstOrDefaultAsync();
-            
+            var a = (byte)LoginType.Facebook;
+
+            var user = await _context.Users.Where(a => a.EmailAddress == userName && a.Password == password
+                                                && (byte)a.LoginType == 1)
+                .FirstOrDefaultAsync();
+
 
             if (user == null)
                 return new MessageAndStatus { Status = "ERROR", Message = "User" };
             else
                 return
-                    new MessageAndStatus { Status = "OK", Message = await GenerateToken2(user.UserId) }; 
-                   // Ok(await GenerateAccessTokenAsync(user.UserId));
+                    new MessageAndStatus { Status = "OK", Message = await GenerateToken2(user.UserId) };
+            // Ok(await GenerateAccessTokenAsync(user.UserId));
         }
 
+        public enum LoginType { Local = 1, Facebook = 2 }
 
         [HttpPost("Register")]
-        public async Task<MessageAndStatus> Register(string userName, string password)
+        public async Task<MessageAndStatus> Register(string userName, string password, LoginType loginType = LoginType.Local)
         {
-            
-            var user = new UserEntity { EmailAddress = userName, Password = password   };
+
+            var user = new UserEntity { EmailAddress = userName, Password = password, LoginType = (byte)loginType };
 
             UserRolesEntity userRoles = new UserRolesEntity { User = user, RoleId = 1 };
 
@@ -84,12 +179,12 @@ namespace ShoppingListWebApi.Controllers
                 await _context.SaveChangesAsync();
             }
             catch (Exception ex)
-             {
+            {
 
-                return new MessageAndStatus { Status = "ERROR", Message ="" };
+                return new MessageAndStatus { Status = "ERROR", Message = "" };
             }
 
-            return new MessageAndStatus { Status = "OK", Message = await GenerateToken2(user.UserId) }; 
+            return new MessageAndStatus { Status = "OK", Message = await GenerateToken2(user.UserId) };
             // Ok(await GenerateAccessTokenAsync(user.UserId));
         }
 
@@ -97,7 +192,7 @@ namespace ShoppingListWebApi.Controllers
         //[Authorize]
         [HttpPost("GetUserDataTree")]
         [Authorize]
-        public async Task<ActionResult<MessageAndStatus>> GetUserDataTree(string  userName)
+        public async Task<ActionResult<MessageAndStatus>> GetUserDataTree(string userName)
         {
             UserEntity userDTO = null;
             try
@@ -116,7 +211,7 @@ namespace ShoppingListWebApi.Controllers
                        UserRoles = a.UserRoles
 
                    }).FirstOrDefaultAsync(a => a.EmailAddress == userName);
-                          
+
 
 
             }
@@ -128,10 +223,10 @@ namespace ShoppingListWebApi.Controllers
 
             var userTemp = _mapper.Map(userDTO, typeof(UserEntity), typeof(User)) as User;
 
-           
+
             // var token = await GenerateAccessTokenAsync(id);
 
-           // var userrr = GetUserFromAccessToken(token);
+            // var userrr = GetUserFromAccessToken(token);
 
             return new MessageAndStatus { Status = "OK", Message = JsonConvert.SerializeObject(userTemp) };
 
@@ -141,36 +236,40 @@ namespace ShoppingListWebApi.Controllers
 
         [HttpPost("AddUserPermission")]
         [SecurityLevel(1)]
-        public async Task<ActionResult<MessageAndStatus>> AddUserPermission(int listAggregationId, [FromBody]UserPermissionToListAggregation item)
-        {            
+        public async Task<ActionResult<MessageAndStatus>> AddUserPermission(int listAggregationId, [FromBody] UserPermissionToListAggregation item)
+        {
 
             var user = await _context.Users.Where(a => a.EmailAddress == item.User.EmailAddress).FirstOrDefaultAsync();
 
-            if (user==null)
-                return new MessageAndStatus { Status = "ERROR", Message = "User not exist." }; 
+            if (user == null)
+                return new MessageAndStatus { Status = "ERROR", Message = "User not exist." };
 
             var bbbb = _context.UserListAggregators.Where(a => a.User.UserId == item.User.UserId && a.ListAggregatorId == listAggregationId).Any();
 
             if (bbbb)
-                return  new MessageAndStatus { Status = "ERROR", Message = "User is on list" };
+                return new MessageAndStatus { Status = "ERROR", Message = "User is on list" };
 
 
-            var userListAggregatorEntity = new UserListAggregatorEntity { UserId = user.UserId, ListAggregatorId = listAggregationId,
-                PermissionLevel = item.Permission };
+            var userListAggregatorEntity = new UserListAggregatorEntity
+            {
+                UserId = user.UserId,
+                ListAggregatorId = listAggregationId,
+                PermissionLevel = item.Permission
+            };
 
 
             _context.UserListAggregators.Add(userListAggregatorEntity);
 
             await _context.SaveChangesAsync();
-                                  
 
-            return new MessageAndStatus { Status = "OK", Message = "User was added." }; 
+
+            return new MessageAndStatus { Status = "OK", Message = "User was added." };
         }
 
 
         [HttpPost("InviteUserPermission")]
         [SecurityLevel(2)]
-        public async Task<ActionResult<MessageAndStatus>> InviteUserPermission(int listAggregationId, [FromBody]UserPermissionToListAggregation item)
+        public async Task<ActionResult<MessageAndStatus>> InviteUserPermission(int listAggregationId, [FromBody] UserPermissionToListAggregation item)
         {
 
             var user = await _context.Users.Where(a => a.EmailAddress == item.User.EmailAddress).FirstOrDefaultAsync();
@@ -187,12 +286,12 @@ namespace ShoppingListWebApi.Controllers
 
             if (bbbb)
                 return await Task.FromResult(new MessageAndStatus { Status = "ERROR", Message = "User already has permission." });
-            
+
             var senderName = HttpContext.User.Identity.Name;
 
             var invitationEntity = new InvitationEntity
             {
-                 EmailAddress = item.User.EmailAddress,
+                EmailAddress = item.User.EmailAddress,
                 ListAggregatorId = listAggregationId,
                 PermissionLevel = item.Permission,
                 SenderName = senderName
@@ -207,28 +306,28 @@ namespace ShoppingListWebApi.Controllers
             return await Task.FromResult(new MessageAndStatus { Status = "OK", Message = "Ivitation was added." });
         }
 
-   
 
 
 
-    [HttpPost("ChangeUserPermission")]
+
+        [HttpPost("ChangeUserPermission")]
         [SecurityLevel(1)]
-        public async Task<ActionResult<MessageAndStatus>> ChangeUserPermission(int listAggregationId, [FromBody]UserPermissionToListAggregation item)
+        public async Task<ActionResult<MessageAndStatus>> ChangeUserPermission(int listAggregationId, [FromBody] UserPermissionToListAggregation item)
         {
 
             var user = await _context.Users.Where(a => a.EmailAddress == item.User.EmailAddress).FirstOrDefaultAsync();
 
             if (user == null)
-                return new MessageAndStatus { Status = "ERROR", Message = "User not exist." }; 
+                return new MessageAndStatus { Status = "ERROR", Message = "User not exist." };
 
 
             var count = await _context.UserListAggregators.Where(a => a.ListAggregatorId == listAggregationId && a.PermissionLevel == 1).CountAsync();
 
-            UserListAggregatorEntity lastAdmin=null;
+            UserListAggregatorEntity lastAdmin = null;
             if (count == 1)
                 lastAdmin = await _context.UserListAggregators.Where(a => a.ListAggregatorId == listAggregationId && a.PermissionLevel == 1).SingleAsync();
 
-            if (count == 1 && user.UserId== lastAdmin.UserId)
+            if (count == 1 && user.UserId == lastAdmin.UserId)
                 return new MessageAndStatus { Status = "ERROR", Message = "Only one Admin left - not changed." };
 
 
@@ -236,29 +335,29 @@ namespace ShoppingListWebApi.Controllers
                 .FirstOrDefaultAsync();
 
             if (userListAggr == null)
-                return new MessageAndStatus { Status = "ERROR", Message = "User permission not found." }; 
+                return new MessageAndStatus { Status = "ERROR", Message = "User permission not found." };
             else
                 userListAggr.PermissionLevel = item.Permission;
 
 
-          //  _context.Update(userListAggr);
+            //  _context.Update(userListAggr);
             await _context.SaveChangesAsync();
 
-           
-            await _signarRService.SendRefreshMessageToUsersAsync(new int[] { user.UserId });
 
-            return new MessageAndStatus { Status = "OK", Message = "Permission has changed." }; 
+            await _mediator.Publish(new DataChangedEvent(new int[] { user.UserId }));
+
+            return new MessageAndStatus { Status = "OK", Message = "Permission has changed." };
         }
 
         [HttpPost("DeleteUserPermission")]
         [SecurityLevel(1)]
-        public async Task<ActionResult<MessageAndStatus>> DeleteUserPermission(int listAggregationId, [FromBody]UserPermissionToListAggregation item)
+        public async Task<ActionResult<MessageAndStatus>> DeleteUserPermission(int listAggregationId, [FromBody] UserPermissionToListAggregation item)
         {
 
             var user = await _context.Users.Where(a => a.EmailAddress == item.User.EmailAddress).FirstOrDefaultAsync();
 
             if (user == null)
-                return new MessageAndStatus { Status = "ERROR", Message = "User not exist." }; 
+                return new MessageAndStatus { Status = "ERROR", Message = "User not exist." };
 
 
             var count = await _context.UserListAggregators.Where(a => a.ListAggregatorId == listAggregationId && a.PermissionLevel == 1).CountAsync();
@@ -273,18 +372,18 @@ namespace ShoppingListWebApi.Controllers
 
             var userListAggr = await _context.UserListAggregators.Where(a => a.User.UserId == item.User.UserId && a.ListAggregatorId == listAggregationId)
                 .FirstOrDefaultAsync();
-            
-            if (userListAggr==null)
-                return new MessageAndStatus { Status = "ERROR", Message = "User permission not found." }; 
-            else            
+
+            if (userListAggr == null)
+                return new MessageAndStatus { Status = "ERROR", Message = "User permission not found." };
+            else
                 _context.Remove(userListAggr);
-                       
+
 
             await _context.SaveChangesAsync();
 
-            await _signarRService.SendRefreshMessageToUsersAsync(new int[] { user.UserId });
+            await _mediator.Publish(new DataChangedEvent(new int[] { user.UserId }));
 
-            return new MessageAndStatus { Status = "OK", Message = "User permission was deleted." }; 
+            return new MessageAndStatus { Status = "OK", Message = "User permission was deleted." };
         }
         public class ListAggregationForPermission
         {
@@ -329,7 +428,7 @@ namespace ShoppingListWebApi.Controllers
             List<ListAggregationForPermission> dataTransfer = ConvertFromEntitiesToDTOtListObject(listAggregatinPermissionAndUser);
 
 
-            return new MessageAndStatus { Status = "OK", Message = JsonConvert.SerializeObject(dataTransfer) }; 
+            return new MessageAndStatus { Status = "OK", Message = JsonConvert.SerializeObject(dataTransfer) };
 
 
         }
@@ -362,7 +461,7 @@ namespace ShoppingListWebApi.Controllers
             var tokenHandler = new JwtSecurityTokenHandler();
 
             var key = Encoding.ASCII.GetBytes(_configuration.GetSection("Secrets")["JWTSecurityKey"]);
-                       
+
 
             var roles = await GetUserRoles(userId);
             var claims = new List<Claim>();
@@ -382,7 +481,7 @@ namespace ShoppingListWebApi.Controllers
                 Expires = DateTime.UtcNow.AddDays(10),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key),
                 SecurityAlgorithms.HmacSha256Signature)
-               
+
             };
 
 
@@ -405,12 +504,12 @@ namespace ShoppingListWebApi.Controllers
 
             //var roles = await GetUserRoles(userId);
 
-           
+
 
             user.Roles.ToList().ForEach(role => claims.Add(new Claim(ClaimTypes.Role, role)));
 
             var userListAggregators = await _context.UserListAggregators.Where(a => a.UserId == userId).ToListAsync();
-            userListAggregators.ForEach(item => claims.Add(new Claim("ListAggregator",$"{item.ListAggregatorId}.{item.PermissionLevel}")));
+            userListAggregators.ForEach(item => claims.Add(new Claim("ListAggregator", $"{item.ListAggregatorId}.{item.PermissionLevel}")));
 
             var token = new JwtSecurityToken(
                 new JwtHeader(
@@ -429,7 +528,7 @@ namespace ShoppingListWebApi.Controllers
 
 
             }
-                        
+
 
             return stringToken;
         }
@@ -438,8 +537,8 @@ namespace ShoppingListWebApi.Controllers
         async Task<List<RoleEntity>> GetUserRoles(int userId)
         {
 
-            var roles = await _context.Users.Where(a => a.UserId == userId).Include(a=>a.UserRoles)
-                .ThenInclude(a=>a.Role).Select(a=>a.UserRoles.Select(b=>b.Role).ToList()).FirstAsync();
+            var roles = await _context.Users.Where(a => a.UserId == userId).Include(a => a.UserRoles)
+                .ThenInclude(a => a.Role).Select(a => a.UserRoles.Select(b => b.Role).ToList()).FirstAsync();
 
             return roles;
         }

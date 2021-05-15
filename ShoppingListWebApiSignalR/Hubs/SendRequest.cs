@@ -27,7 +27,7 @@ namespace ShoppingListWebApiSignalR.Hubs
         }
 
 
-        public async Task SendToAsync(IEnumerable<int> list, string command, int? id1, int? listAggregationId, int? parentId)
+        public async Task SendAsyncAllTree(IEnumerable<int> list)
         {
             //await Clients.All.SendAsync("DataAreChanged");
 
@@ -37,14 +37,29 @@ namespace ShoppingListWebApiSignalR.Hubs
             foreach (var item in list)
             {
 
-                    tasks[i++] =  Clients.Others.SendAsync("DataAreChanged_"+item, command, id1, listAggregationId, parentId);
+                    tasks[i++] =  Clients.Others.SendAsync("DataAreChanged_"+item);
 
             }
 
             await Task.WhenAll(tasks);
         }
 
+        public async Task SendAsyncListItem(IEnumerable<int> list, string command, int? id1, int? listAggregationId, int? parentId)
+        {
+            //await Clients.All.SendAsync("DataAreChanged");
 
+            Task[] tasks = new Task[list.Count()];
+            int i = 0;
+
+            foreach (var item in list)
+            {
+
+                tasks[i++] = Clients.Others.SendAsync("ListItemAreChanged_" + item, command, id1, listAggregationId, parentId);
+
+            }
+
+            await Task.WhenAll(tasks);
+        }
 
 
     }

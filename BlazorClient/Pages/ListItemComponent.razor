@@ -18,23 +18,23 @@
                 </div>
             </td>
             <td>
-                <div class="mx-2">
+                <div class="mx-2 d-flex flex-column">
                     @if (EditItemEvent.HasDelegate && Permission != null && Permission <= 2)
                     {
-                        <a style="text-underline-position:below; cursor:pointer; color:blue; text-align:left" @onclick="(() => EditItem(item))">Edit</a>
+                       <div><a style="text-underline-position:below; cursor:pointer; color:blue; text-align:left" @onclick="(() => EditItem(item))">Edit</a></div>
                     }
                     else if (EditItemEvent.HasDelegate && Permission != null)
                     {
-                        <a style="text-underline-position:below; cursor:not-allowed; color:lightgray; text-align:left">Edit</a>
+                        <div><a style="text-underline-position:below; cursor:not-allowed; color:lightgray; text-align:left">Edit</a></div>
 
                     }
                     @if (DeleteItemEvent.HasDelegate && Permission != null && Permission == 1)
                     {
-                        <a style="text-underline-position:below; cursor:pointer; color:blue; text-align:left" @onclick="(() => DeleteItem(item))">Delete</a>
+                        <div><a style="text-underline-position:below; cursor:pointer; color:blue; text-align:left" @onclick="(() => DeleteItem(item))">Delete</a></div>
                     }
                     else  if (DeleteItemEvent.HasDelegate && Permission != null)
                     {
-                        <a style="text-underline-position:below; cursor:not-allowed; color:lightgray; text-align:left">Delete</a>
+                        <div><a style="text-underline-position:below; cursor:not-allowed; color:lightgray; text-align:left">Delete</a></div>
 
                     }
                 </div>

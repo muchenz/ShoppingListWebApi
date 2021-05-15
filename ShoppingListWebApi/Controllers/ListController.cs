@@ -10,6 +10,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using ServiceMediatR.ListCommandAndQueries;
+using ServiceMediatR.SignalREvents;
+using ServiceMediatR.UserCommandAndQuerry;
 using Shared;
 using ShoppingListWebApi.Data;
 
@@ -23,15 +25,13 @@ namespace ShoppingListWebApi.Controllers
     {
         private readonly ShopingListDBContext _context;
         private readonly IMapper _mapper;
-        private readonly SignarRService _signarRService;
         private readonly IMediator _mediator;
        
         public ListController(ShopingListDBContext context, IMapper mapper,
-            SignarRService signarRService, IMediator mediator)//, IConfiguration configuration)
+            IMediator mediator)//, IConfiguration configuration)
         {
             _context = context;
             _mapper = mapper;
-            _signarRService = signarRService;
             _mediator = mediator;
            
         }
@@ -41,31 +41,15 @@ namespace ShoppingListWebApi.Controllers
         [SecurityLevel(2)]
 
         public async Task<ActionResult<List>> AddListtoListt(int parentId, [FromBody]List item, int listAggregationId)
-        {
-            //if (!CheckIntegrityListAggr(parentId, listAggregationId)) return Forbid();
-
-
-            //var listItemEntity = _mapper.Map<ListEntity>(item);
-            //listItemEntity.ListAggregatorId = parentId;
-
-            //_context.Lists.Add(listItemEntity);
-            //await _context.SaveChangesAsync();
-
-            ////var item = _mapper.Map<ListItem>(listItemEntity);
-            //item.ListId = listItemEntity.ListId;
-
-            //var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(listAggregationId, _context);
-            //await _signarRService.SendRefreshMessageToUsersAsync(userList);
-
-            //return await Task.FromResult(item);
+        {           
 
             var res = await _mediator.Send(new AddListCommand(parentId, item, listAggregationId));
 
-            var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(listAggregationId, _context);
+            if (res.IsError) Forbid();
 
+            var userList = await _mediator.Send(new GetUserIdFromListAggrIdCommand(listAggregationId));
 
-
-            await _signarRService.SendRefreshMessageToUsersAsync(userList);
+            await _mediator.Publish(new DataChangedEvent(userList.Data));
 
             return await Task.FromResult(res.Data);
 
@@ -75,61 +59,34 @@ namespace ShoppingListWebApi.Controllers
         [SecurityLevel(1)]
         public async Task<ActionResult<int>> DeleteList(int ItemId, int listAggregationId)
         {
-            if (!CheckIntegrity(ItemId, listAggregationId)) return Forbid();
+            var res = await _mediator.Send(new DeleteListCommand(ItemId, listAggregationId));
 
+            if (res.IsError) Forbid();
 
-            _context.Lists.Remove(_context.Lists.Single(a => a.ListId == ItemId));
-            var amount = await _context.SaveChangesAsync();
+            var userList = await _mediator.Send(new GetUserIdFromListAggrIdCommand(listAggregationId));
 
-            var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(listAggregationId, _context);
-            await _signarRService.SendRefreshMessageToUsersAsync(userList);
+            await _mediator.Publish(new DataChangedEvent(userList.Data));
 
-            return await Task.FromResult(amount);
+            return await Task.FromResult(res.Data);
+                       
         }
-
-        bool CheckIntegrity(int listId, int listAggregationId)
-        {
-            var  list = _context.Lists.Where(a => a.ListId == listId).FirstOrDefault();
-
-            bool aaa=false;
-
-            if (list != null)
-            {
-                aaa = list.ListAggregatorId == listAggregationId;
-                _context.Entry(list).State = Microsoft.EntityFrameworkCore.EntityState.Detached;
-            }
-            
-            return aaa;
-        }
-
-        bool CheckIntegrityListAggr(int listAggr, int listAggregationId)
-        {
-
-            return listAggr== listAggregationId;
-        }
+              
 
         [HttpPost("EditList")]
         [SecurityLevel(2)]
 
         public async Task<ActionResult<List>> EditListItem([FromBody]List item, int listAggregationId)
         {
-            var listItemEntity = _mapper.Map<ListEntity>(item);
+
+            var res = await _mediator.Send(new EditListCommand(item, listAggregationId));
+
+            if (res.IsError) return Forbid();
 
 
-            if (!CheckIntegrity(item.ListId, listAggregationId)) return Forbid();
+            var userList = await _mediator.Send(new GetUserIdFromListAggrIdCommand(listAggregationId));
+            await _mediator.Publish(new DataChangedEvent(userList.Data));
 
-            //_context.ListItems.Remove(_context.ListItems.Single(a => a.ListItemId == ItemId));
-
-
-            _context.Entry<ListEntity>(listItemEntity).Property(nameof(ListEntity.ListName)).IsModified = true;
-            var amount = await _context.SaveChangesAsync();
-
-            var listItem = _mapper.Map<List>(listItemEntity);
-
-            var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(listAggregationId, _context);
-            await _signarRService.SendRefreshMessageToUsersAsync(userList);
-
-            return await Task.FromResult(listItem);
+            return await Task.FromResult(res.Data);
         }
 
         [HttpPost("ChangeOrderList")]

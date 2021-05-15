@@ -31,6 +31,7 @@ namespace EFDataBase
         public string EmailAddress { get; set; }
         public string Password { get; set; }
 
+        public byte LoginType { get; set; } // 1 - local 2 - facebook ()
         public virtual ICollection<UserListAggregatorEntity> UserListAggregators { get; set; }
 
         public virtual ICollection<UserRolesEntity> UserRoles { get; set; }
@@ -69,6 +70,8 @@ namespace EFDataBase
         public virtual UserEntity User { get; set; }
         public virtual ListAggregatorEntity ListAggregator { get; set; }
         public int PermissionLevel { get; set; }
+        public int State { get; set; }
+
 
     }
 

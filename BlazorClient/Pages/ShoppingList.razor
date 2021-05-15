@@ -6,6 +6,7 @@
 @using Blazored.LocalStorage;
 @using Data;
 @using Microsoft.AspNetCore.SignalR.Client;
+@using Microsoft.Extensions.Configuration;
 
 @inject UserService userService
 @inject ShoppingListService shoppingListService
@@ -14,6 +15,7 @@
 @inject BrowserService broserService
 @inject IJSRuntime JSRuntime
 @inject NavigationManager navigationManager
+@inject IConfiguration configuration
 
 <div class="row d-lg-none" style="margin-bottom:15px">
     <div class="col">
@@ -260,459 +262,351 @@
 
 @code {
 
-        EditContext AddListItemEditContext;
-        EditForm AddListItemEditForm;
+    EditContext AddListItemEditContext;
+    EditForm AddListItemEditForm;
 
-        ListItem AddListItem = new ListItem();
-        ListAggregator AddListAggregator = new ListAggregator { PermissionLevel = 1 };
-        List AddList = new List();
+    ListItem AddListItem = new ListItem();
+    ListAggregator AddListAggregator = new ListAggregator { PermissionLevel = 1 };
+    List AddList = new List();
 
-        User data = null;
-        int EditListItemId = -1;
-        int EditListId = -1;
-        int EditListAggregatorId = -1;
+    User data = null;
+    int EditListItemId = -1;
+    int EditListId = -1;
+    int EditListAggregatorId = -1;
 
-        ListAggregator listAggregatorChoosed;
-        List listChoosed;
+    public ListAggregator listAggregatorChoosed;
+    public List listChoosed;
 
-        // bool EditListItem = false;
+    // bool EditListItem = false;
 
-        string ReadOnlyInputField()
+    string ReadOnlyInputField()
+    {
+
+        if (listAggregatorChoosed?.PermissionLevel >= 3)
+            return "readonly";
+        return "";
+
+    }
+
+    async Task ListItemDragOver(ListItem e)
+    {
+
+    }
+
+
+
+
+    async Task ListItemDrop(ListItem e)
+    {
+
+
+        var list = await LoadSaveOrderHelper.ChangeOrderItemsInList(e, listItemDragStart, listChoosed.ListItems
+            , shoppingListService.ChangeOrder<ListItem>);
+
+        listChoosed.ListItems = list;
+
+        await SaveAllOrder(data.ListAggregators);
+
+    }
+
+    async Task ListDrop(List e)
+    {
+
+        var list = await LoadSaveOrderHelper.ChangeOrderItemsInList(e, listDragStart, listAggregatorChoosed.Lists
+            , shoppingListService.ChangeOrder);
+
+        listAggregatorChoosed.Lists = list;
+
+
+
+        await SaveAllOrder(data.ListAggregators);
+
+    }
+
+
+
+    async Task ListAggregatorDrop(ListAggregator e)
+    {
+
+        var list = await LoadSaveOrderHelper.ChangeOrderItemsInList(e, listAggregatorDragStart, data.ListAggregators
+         , SaveListAggregatorsOrder);
+
+        data.ListAggregators = list;
+
+
+
+        await SaveAllOrder(data.ListAggregators);
+    }
+
+
+
+    async Task SaveListAggregatorsOrder(ICollection<ListAggregator> list)
+    {
+        var tempList = new List<OrderListAggrItem>();
+
+        list.ToList().ForEach(a => tempList.Add(new OrderListAggrItem { Id = a.ListAggregatorId, Order = a.Order }));
+
+        var user = await authenticationStateProvider.GetAuthenticationStateAsync();
+
+        await localStorage.SetItemAsync(user.User.Identity.Name, tempList);
+    }
+
+
+    async Task SaveAllOrder(ICollection<ListAggregator> list)
+    {
+        var tempAggrList = new List<OrderListAggrItem>();
+
+        list.ToList().ForEach(aggr =>
         {
 
-            if (listAggregatorChoosed?.PermissionLevel >= 3)
-                return "readonly";
-            return "";
-
-        }
-
-        async Task ListItemDragOver(ListItem e)
-        {
-
-        }
+            var itemAggr = new OrderListAggrItem { Id = aggr.ListAggregatorId, Order = aggr.Order };
 
 
-
-
-        async Task ListItemDrop(ListItem e)
-        {
-
-
-            var list = await PageHelper.ChangeOrderItemsInList(e, listItemDragStart, listChoosed.ListItems
-                , shoppingListService.ChangeOrder<ListItem>);
-
-            listChoosed.ListItems = list;
-
-            await SaveAllOrder(data.ListAggregators);
-
-        }
-
-        async Task ListDrop(List e)
-        {
-
-            var list = await PageHelper.ChangeOrderItemsInList(e, listDragStart, listAggregatorChoosed.Lists
-                , shoppingListService.ChangeOrder);
-
-            listAggregatorChoosed.Lists = list;
-
-
-
-            await SaveAllOrder(data.ListAggregators);
-
-        }
-
-
-
-        async Task ListAggregatorDrop(ListAggregator e)
-        {
-
-            var list = await PageHelper.ChangeOrderItemsInList(e, listAggregatorDragStart, data.ListAggregators
-             , SaveListAggregatorsOrder);
-
-            data.ListAggregators = list;
-
-
-
-            await SaveAllOrder(data.ListAggregators);
-        }
-
-
-
-        async Task SaveListAggregatorsOrder(ICollection<ListAggregator> list)
-        {
-            var tempList = new List<OrderListAggrItem>();
-
-            list.ToList().ForEach(a => tempList.Add(new OrderListAggrItem { Id = a.ListAggregatorId, Order = a.Order }));
-
-            var user = await authenticationStateProvider.GetAuthenticationStateAsync();
-
-            await localStorage.SetItemAsync(user.User.Identity.Name, tempList);
-        }
-
-
-        async Task SaveAllOrder(ICollection<ListAggregator> list)
-        {
-            var tempAggrList = new List<OrderListAggrItem>();
-
-            list.ToList().ForEach(aggr =>
+            aggr.Lists.ToList().ForEach(list =>
             {
+                var itemList = new OrderListItem { Id = list.ListId, Order = list.Order };
 
-                var itemAggr = new OrderListAggrItem { Id = aggr.ListAggregatorId, Order = aggr.Order };
-
-
-                aggr.Lists.ToList().ForEach(list =>
+                list.ListItems.ToList().ForEach(item =>
                 {
-                    var itemList = new OrderListItem { Id = list.ListId, Order = list.Order };
 
-                    list.ListItems.ToList().ForEach(item =>
-                    {
+                    var itemItem = new OrderItem { Id = item.ListItemId, Order = item.Order };
 
-                        var itemItem = new OrderItem { Id = item.ListItemId, Order = item.Order };
+                    itemList.List.Add(itemItem);
 
-                        itemList.List.Add(itemItem);
-
-                    });
-
-
-                    itemAggr.List.Add(itemList);
                 });
 
 
-                tempAggrList.Add(itemAggr);
-
+                itemAggr.List.Add(itemList);
             });
 
-            var user = await authenticationStateProvider.GetAuthenticationStateAsync();
 
-            await localStorage.SetItemAsync(user.User.Identity.Name, tempAggrList);
+            tempAggrList.Add(itemAggr);
+
+        });
+
+        var user = await authenticationStateProvider.GetAuthenticationStateAsync();
+
+        await localStorage.SetItemAsync(user.User.Identity.Name, tempAggrList);
+    }
+
+
+
+
+
+
+    ListItem listItemDragStart;
+    async Task ListItemDragStart(ListItem e)
+    {
+        listItemDragStart = e;
+    }
+
+    List listDragStart;
+    async Task ListDragStart(List e)
+    {
+        listDragStart = e;
+    }
+
+    ListAggregator listAggregatorDragStart;
+    async Task ListAggregatorDragStart(ListAggregator e)
+    {
+        listAggregatorDragStart = e;
+    }
+
+    async Task ListAggregationClicked(ListAggregator e)
+    {
+
+        listChoosed = null;
+        listAggregatorChoosed = e;
+
+        var listId = await localStorage.GetItemAsync<int?>("ListId");
+
+        if (listId != null && listAggregatorChoosed.Lists.Any(a => a.ListId == listId))
+            listChoosed = listAggregatorChoosed.Lists.Single(a => a.ListId == listId);
+
+        listAggregatorChoosed.Lists = listAggregatorChoosed?.Lists.OrderByDescending(a => a.Order).ToList();
+
+
+        await localStorage.SetItemAsync("ListAggregatorId", e.ListAggregatorId);
+    }
+
+
+    async Task ListClicked(List e)
+    {
+        listChoosed = e;
+        listChoosed.ListItems = listChoosed?.ListItems.OrderByDescending(a => a.Order).ToList();
+
+        await localStorage.SetItemAsync("ListId", e.ListId);
+    }
+
+    void ListItemClicked(ListItem e)
+    {
+
+    }
+
+    async Task ListItemDoubleClicked(ListItem e)
+    {
+        if (e.State == ItemState.Normal)
+            e.State = ItemState.Buyed;
+        else
+            e.State = ItemState.Normal;
+
+        await shoppingListService.SaveItemProperty<ListItem>(e, nameof(ListItem.State), listAggregatorChoosed.ListAggregatorId);
+
+    }
+    void EditItem(ListItem e)
+    {
+        EditListItemId = e.ListItemId;
+
+    }
+
+    void EditList(List e)
+    {
+        EditListId = e.ListId;
+
+    }
+
+
+    void EditListAggregator(ListAggregator e)
+    {
+        EditListAggregatorId = e.ListAggregatorId;
+
+    }
+
+    async Task SaveItem(ListItem e)
+    {
+        EditListItemId = -1;
+
+        var listItem = await shoppingListService.EditItem<ListItem>(e, listAggregatorChoosed.ListAggregatorId);
+
+        e.ListItemName = listItem.ListItemName;
+    }
+
+    async Task SaveList(List e)
+    {
+        EditListId = -1;
+
+        var list = await shoppingListService.EditItem<List>(e, listAggregatorChoosed.ListAggregatorId);
+
+        e.ListName = list.ListName;
+    }
+
+    async Task SaveListAggregator(ListAggregator e)
+    {
+        EditListAggregatorId = -1;
+
+        var list = await shoppingListService.EditItem<ListAggregator>(e, listAggregatorChoosed.ListAggregatorId);
+
+        e.ListAggregatorName = list.ListAggregatorName;
+    }
+
+    async Task DeleteItem(ListItem e)
+    {
+        var amount = await shoppingListService.Delete<ListItem>(e.ListItemId, listAggregatorChoosed.ListAggregatorId);
+
+        if (amount > 0)
+        {
+            listChoosed.ListItems.Remove(e);
+        }
+    }
+
+    async Task DeleteList(List e)
+    {
+        var amount = await shoppingListService.Delete<List>(e.ListId, listAggregatorChoosed.ListAggregatorId);
+
+        if (amount > 0)
+        {
+            listAggregatorChoosed.Lists.Remove(e);
         }
 
-
-        void SetEntryOrder(IEnumerable<IModelItemOrder> list)
-        {
-            int i = 1;
-            foreach (var item in list)
-            {
-                //if (item.Order == 0)
-                //{
-                //    item.Order = list.Max(a => a.Order) + 1;
-
-                //}
-
-                item.Order = i++;
-            }
-        }
-
-        void ResolveDoubleOrderValue(IEnumerable<IModelItemOrder> list)
-        {
-            foreach (var item in list)
-            {
-                foreach (var item2 in list)
-                {
-                    if (item.Id != item2.Id)
-                        if (item.Order == item2.Order)
-                            item2.Order = list.Max(a => a.Order) + 1;
-                }
-            }
-
-        }
-
-        async Task LoadListAggregatorsOrder()
-        {
-            var user = await authenticationStateProvider.GetAuthenticationStateAsync();
-
-            if (data == null || data.ListAggregators == null || !data.ListAggregators.Any()) return;
-
-
-            SetEntryOrder(data.ListAggregators);
-
-
-            var tempListFromFile = await localStorage.GetItemAsync<List<OrderListAggrItem>>(user.User.Identity.Name);
-
-
-            // if (tempListFromFile == null) return;  //????????????????? nie
-
-
-            foreach (var listAggr in data.ListAggregators)
-            {
-
-                var itemAggrFromFile = tempListFromFile?.Where(a => a.Id == listAggr.ListAggregatorId).FirstOrDefault();
-
-                if (itemAggrFromFile != null)
-                {
-
-                    listAggr.Order = itemAggrFromFile.Order;
-
-                }
-
-
-                ////////////////////
-                SetEntryOrder(listAggr.Lists);
-
-
-                foreach (var listList in listAggr.Lists)
-                {
-
-                    var itemListFromFile = itemAggrFromFile?.List.Where(a => a.Id == listList.ListId).FirstOrDefault();
-
-                    if (itemListFromFile != null)
-                    {
-
-                        listList.Order = itemListFromFile.Order;
-
-                    }
-
-
-                    SetEntryOrder(listList.ListItems);
-
-
-                    foreach (var listItem in listList.ListItems)
-                    {
-
-                        var itemItemFromFile = itemListFromFile?.List.Where(a => a.Id == listItem.ListItemId).FirstOrDefault();
-
-                        if (itemItemFromFile != null)
-                        {
-
-                            listItem.Order = itemItemFromFile.Order;
-
-                        }
-
-                    }
-
-                    ResolveDoubleOrderValue(listList.ListItems);
-
-                    listList.ListItems = listList.ListItems.OrderByDescending(a => a.Order).ToList();
-                }
-
-                ResolveDoubleOrderValue(listAggr.Lists);
-
-                listAggr.Lists = listAggr.Lists.OrderByDescending(a => a.Order).ToList();
-                ////////////////////////////
-
-
-            }
-
-
-            ResolveDoubleOrderValue(data.ListAggregators);
-
-
-            data.ListAggregators = data.ListAggregators.OrderByDescending(a => a.Order).ToList();
-
-        }
-
-
-        ListItem listItemDragStart;
-        async Task ListItemDragStart(ListItem e)
-        {
-            listItemDragStart = e;
-        }
-
-        List listDragStart;
-        async Task ListDragStart(List e)
-        {
-            listDragStart = e;
-        }
-
-        ListAggregator listAggregatorDragStart;
-        async Task ListAggregatorDragStart(ListAggregator e)
-        {
-            listAggregatorDragStart = e;
-        }
-
-        async Task ListAggregationClicked(ListAggregator e)
-        {
-
+        if (listChoosed == null || listChoosed.ListId == e.ListId)
             listChoosed = null;
-            listAggregatorChoosed = e;
+    }
 
-            var listId = await localStorage.GetItemAsync<int?>("ListId");
+    async Task DeleteListAggregator(ListAggregator e)
+    {
+        var amount = await shoppingListService.Delete<ListAggregator>(e.ListAggregatorId, e.ListAggregatorId);
 
-            if (listId != null && listAggregatorChoosed.Lists.Any(a => a.ListId == listId))
-                listChoosed = listAggregatorChoosed.Lists.Single(a => a.ListId == listId);
-
-            listAggregatorChoosed.Lists = listAggregatorChoosed?.Lists.OrderByDescending(a => a.Order).ToList();
-
-
-            await localStorage.SetItemAsync("ListAggregatorId", e.ListAggregatorId);
-        }
-
-
-        async Task ListClicked(List e)
+        if (amount > 0)
         {
-            listChoosed = e;
-            listChoosed.ListItems = listChoosed?.ListItems.OrderByDescending(a => a.Order).ToList();
-
-            await localStorage.SetItemAsync("ListId", e.ListId);
+            data.ListAggregators.Remove(e);
         }
 
-        void ListItemClicked(ListItem e)
+        if (listAggregatorChoosed == null || listAggregatorChoosed.Id == e.ListAggregatorId)
         {
-
+            listChoosed = null;
+            listAggregatorChoosed = null;
         }
+    }
 
-        async Task ListItemDoubleClicked(ListItem e)
+    async Task AddItem()
+    {
+        //AddListItem.ListItemId = listChoosed.ListItems.Max(a => a.ListItemId) + 1;
+        //listChoosed.ListItems.Add(AddListItem);
+        //AddListItem = new ListItem();
+        if (listChoosed == null) return;
+
+        if (listChoosed.ListItems.Any())
         {
-            if (e.State == ItemState.Normal)
-                e.State = ItemState.Buyed;
-            else
-                e.State = ItemState.Normal;
-
-            await shoppingListService.SaveItemProperty<ListItem>(e, nameof(ListItem.State), listAggregatorChoosed.ListAggregatorId);
-
+            AddListItem.Order = listChoosed.ListItems.Max(a => a.Order) + 1;
         }
-        void EditItem(ListItem e)
-        {
-            EditListItemId = e.ListItemId;
+        var newItem = await shoppingListService.AddItem<ListItem>(listChoosed.ListId, AddListItem, listAggregatorChoosed.ListAggregatorId);
 
-        }
+        listChoosed.ListItems.Add(newItem);
+        listChoosed.ListItems = listChoosed.ListItems.OrderByDescending(a => a.Order).ToList();
 
-        void EditList(List e)
-        {
-            EditListId = e.ListId;
+        AddListItem.ListItemName = "";
+        AddListItemEditContext.MarkAsUnmodified();
+    }
 
-        }
+    async Task AddToList()
+    {
+        //AddListItem.ListItemId = listChoosed.ListItems.Max(a => a.ListItemId) + 1;
+        //listChoosed.ListItems.Add(AddListItem);
+        //AddListItem = new ListItem();
 
+        if (listAggregatorChoosed == null) return;
 
-        void EditListAggregator(ListAggregator e)
-        {
-            EditListAggregatorId = e.ListAggregatorId;
-
-        }
-
-        async Task SaveItem(ListItem e)
-        {
-            EditListItemId = -1;
-
-            var listItem = await shoppingListService.EditItem<ListItem>(e, listAggregatorChoosed.ListAggregatorId);
-
-            e.ListItemName = listItem.ListItemName;
-        }
-
-        async Task SaveList(List e)
-        {
-            EditListId = -1;
-
-            var list = await shoppingListService.EditItem<List>(e, listAggregatorChoosed.ListAggregatorId);
-
-            e.ListName = list.ListName;
-        }
-
-        async Task SaveListAggregator(ListAggregator e)
-        {
-            EditListAggregatorId = -1;
-
-            var list = await shoppingListService.EditItem<ListAggregator>(e, listAggregatorChoosed.ListAggregatorId);
-
-            e.ListAggregatorName = list.ListAggregatorName;
-        }
-
-        async Task DeleteItem(ListItem e)
-        {
-            var amount = await shoppingListService.Delete<ListItem>(e.ListItemId, listAggregatorChoosed.ListAggregatorId);
-
-            if (amount > 0)
-            {
-                listChoosed.ListItems.Remove(e);
-            }
-        }
-
-        async Task DeleteList(List e)
-        {
-            var amount = await shoppingListService.Delete<List>(e.ListId, listAggregatorChoosed.ListAggregatorId);
-
-            if (amount > 0)
-            {
-                listAggregatorChoosed.Lists.Remove(e);
-            }
-
-            if (listChoosed == null || listChoosed.ListId == e.ListId)
-                listChoosed = null;
-        }
-
-        async Task DeleteListAggregator(ListAggregator e)
-        {
-            var amount = await shoppingListService.Delete<ListAggregator>(e.ListAggregatorId, e.ListAggregatorId);
-
-            if (amount > 0)
-            {
-                data.ListAggregators.Remove(e);
-            }
-
-            if (listAggregatorChoosed == null || listAggregatorChoosed.Id == e.ListAggregatorId)
-            {
-                listChoosed = null;
-                listAggregatorChoosed = null;
-            }
-        }
-
-        async Task AddItem()
-        {
-            //AddListItem.ListItemId = listChoosed.ListItems.Max(a => a.ListItemId) + 1;
-            //listChoosed.ListItems.Add(AddListItem);
-            //AddListItem = new ListItem();
-            if (listChoosed == null) return;
-
-            if (listChoosed.ListItems.Any())
-            {
-                AddListItem.Order = listChoosed.ListItems.Max(a => a.Order) + 1;
-            }
-            var newItem = await shoppingListService.AddItem<ListItem>(listChoosed.ListId, AddListItem, listAggregatorChoosed.ListAggregatorId);
-
-            listChoosed.ListItems.Add(newItem);
-            listChoosed.ListItems = listChoosed.ListItems.OrderByDescending(a => a.Order).ToList();
-
-            AddListItem.ListItemName = "";
-            AddListItemEditContext.MarkAsUnmodified();
-        }
-
-        async Task AddToList()
-        {
-            //AddListItem.ListItemId = listChoosed.ListItems.Max(a => a.ListItemId) + 1;
-            //listChoosed.ListItems.Add(AddListItem);
-            //AddListItem = new ListItem();
-
-            if (listAggregatorChoosed == null) return;
-
-            if (listAggregatorChoosed.Lists.Any())
-                AddList.Order = listAggregatorChoosed.Lists.Max(a => a.Order) + 1;
+        if (listAggregatorChoosed.Lists.Any())
+            AddList.Order = listAggregatorChoosed.Lists.Max(a => a.Order) + 1;
 
 
-            var newItem = await shoppingListService.AddItem<List>(listAggregatorChoosed.ListAggregatorId, AddList, listAggregatorChoosed.ListAggregatorId);
+        var newItem = await shoppingListService.AddItem<List>(listAggregatorChoosed.ListAggregatorId, AddList, listAggregatorChoosed.ListAggregatorId);
 
-            listAggregatorChoosed.Lists.Add(newItem);
+        listAggregatorChoosed.Lists.Add(newItem);
 
-            listAggregatorChoosed.Lists = listAggregatorChoosed.Lists.OrderByDescending(a => a.Order).ToList();
+        listAggregatorChoosed.Lists = listAggregatorChoosed.Lists.OrderByDescending(a => a.Order).ToList();
 
-            //listChoosed = newItem;
+        //listChoosed = newItem;
 
-        }
+    }
 
 
 
 
-        async Task AddToListAggregator()
-        {
+    async Task AddToListAggregator()
+    {
 
 
-            //if (data.ListAggregators.Any())
-            //    AddListAggregator.Order = data.ListAggregators.Max(a => a.Order) + 1;
+        //if (data.ListAggregators.Any())
+        //    AddListAggregator.Order = data.ListAggregators.Max(a => a.Order) + 1;
 
-            var newItem = await shoppingListService.AddItem<ListAggregator>(data.UserId, AddListAggregator, -1);
+        var newItem = await shoppingListService.AddItem<ListAggregator>(data.UserId, AddListAggregator, -1);
 
-            if (data.ListAggregators.Any())
-                newItem.Order = data.ListAggregators.Max(a => a.Order) + 1;
+        if (data.ListAggregators.Any())
+            newItem.Order = data.ListAggregators.Max(a => a.Order) + 1;
 
-            data.ListAggregators.Add(newItem);
+        data.ListAggregators.Add(newItem);
 
-            data.ListAggregators = data.ListAggregators.OrderByDescending(a => a.Order).ToList();
+        data.ListAggregators = data.ListAggregators.OrderByDescending(a => a.Order).ToList();
 
-            //listAggregatorChoosed = newItem;
-            //listChoosed = null;
-        }
+        //listAggregatorChoosed = newItem;
+        //listChoosed = null;
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        await base.OnAfterRenderAsync(firstRender);
+
         if (firstRender)
         {
 
@@ -739,21 +633,23 @@
             }
 
 
-            await SignalRInitAsync();
 
-            await LoadChoosedList();
+            (listAggregatorChoosed, listChoosed) = await LoadSaveOrderHelper.LoadChoosedList(data, localStorage);
 
-            await LoadListAggregatorsOrder();
+            await LoadSaveOrderHelper.LoadListAggregatorsOrder(localStorage, data, authenticationStateProvider);
 
             var dimension = await broserService.GetDimensions();
             await BrowserHasResized(dimension.Width);
             await JSRuntime.InvokeAsync<object>("SayHelloJS");
             StateHasChanged();
 
-
+            try
+            {
+                await SignalRInitAsync();
+            }
+            catch { }
         }
 
-        await base.OnAfterRenderAsync(firstRender);
     }
 
     protected override void OnInitialized()
@@ -818,119 +714,145 @@
     }
 
     HubConnection _hubConnection;
+
+    void Accessor<T>(T value, Action<T> setter)
+    {
+        setter(value);
+    }
+
+
     async Task SignalRInitAsync()
     {
-        _hubConnection = new HubConnectionBuilder().WithUrl("https://94.251.148.92:5013/chatHub", (opts) =>
-        {
-            //   _hubConnection = new HubConnectionBuilder().WithUrl("https://192.168.8.222:91/chatHub", (opts) =>
-            //  {
-            opts.HttpMessageHandlerFactory = (message) =>
-            {
-                if (message is HttpClientHandler clientHandler)
-                    // bypass SSL certificate
-                    clientHandler.ServerCertificateCustomValidationCallback +=
-                           (sender, certificate, chain, sslPolicyErrors) => { return true; };
-                return message;
-            };
-        }).WithAutomaticReconnect().Build();
 
 
-        _hubConnection.On("DataAreChanged_" + data.UserId, async (string command, int? id1, int? listAggregationId, int? parentId) =>
-        {
-            if (string.IsNullOrEmpty(command))
-            {
+        await SignalRHelper.SignalRInitAsync(configuration,
+            data,
+            (a) => data = a,
+            (a) => listAggregatorChoosed = a,
+            (a) => listChoosed = a,
+           authenticationStateProvider, userService,
+           navigationManager, StateHasChanged,
+           shoppingListService,
+           localStorage);
 
 
-                try
-                {
-
-                    var identity = await authenticationStateProvider.GetAuthenticationStateAsync();
-
-                    var nameUser = identity.User.Identity.Name;
-
-                    data = await userService.GetUserDataTreeObjectsgAsync(nameUser);
+        //_hubConnection = new HubConnectionBuilder().WithUrl("https://94.251.148.92:5013/chatHub", (opts) =>
+        //{
+        //_hubConnection = new HubConnectionBuilder().WithUrl("https://192.168.8.222:91/chatHub", (opts) =>
+        //{
 
 
-                }
-
-                catch
-                {
-
-                    ((ShoppingListWebApi.Data.CustomAuthenticationStateProvider)authenticationStateProvider).MarkUserAsLoggedOut();
-
-                    navigationManager.NavigateTo("/login");
-
-                    return;
-                }
-
-                await LoadChoosedList();
+        //_hubConnection = new HubConnectionBuilder().WithUrl(configuration.GetSection("AppSettings")["SignlRAddress"], (opts) =>
+        //{
+        //    opts.HttpMessageHandlerFactory = (message) =>
+        //    {
+        //        if (message is HttpClientHandler clientHandler)
+        //            // bypass SSL certificate
+        //            clientHandler.ServerCertificateCustomValidationCallback +=
+        //                       (sender, certificate, chain, sslPolicyErrors) => { return true; };
+        //        return message;
+        //    };
+        //}).WithAutomaticReconnect().Build();
 
 
-                await LoadListAggregatorsOrder();
+        //_hubConnection.On("DataAreChanged_" + data.UserId, async () =>
+        //{
 
-                StateHasChanged();
+        //    try
+        //    {
 
-                return;
-            }
+        //        var identity = await authenticationStateProvider.GetAuthenticationStateAsync();
 
+        //        var nameUser = identity.User.Identity.Name;
 
-
-
-            if (command.EndsWith("ListItem"))
-            {
-                var item = await shoppingListService.GetItem<ListItem>((int)id1, (int)listAggregationId);
-
-                if (command == "Edit/Save_ListItem")
-                {
-                    var lists = data.ListAggregators.Where(a => a.ListAggregatorId == listAggregationId).FirstOrDefault();
-
-                    ListItem foundListItem = null;
-                    foreach (var listItem in lists.Lists)
-                    {
-                        foundListItem = listItem.ListItems.FirstOrDefault(a => a.Id == id1);
-                        if (foundListItem != null) break;
-                    }
-                    foundListItem.ListItemName = item.ListItemName;
-                    foundListItem.State = item.State;
-                    StateHasChanged();
+        //        data = await userService.GetUserDataTreeObjectsgAsync(nameUser);
 
 
-                }
-                else
-                     if (command == "Add_ListItem")
-                {
+        //    }
+
+        //    catch
+        //    {
+
+        //        ((ShoppingListWebApi.Data.CustomAuthenticationStateProvider)authenticationStateProvider).MarkUserAsLoggedOut();
+
+        //        navigationManager.NavigateTo("/login");
+
+        //        return;
+        //    }
+
+        //    (listAggregatorChoosed, listChoosed) = await LoadSaveOrderHelper.LoadChoosedList(data, localStorage);
 
 
-                    data.ListAggregators.Where(a => a.ListAggregatorId == listAggregationId).FirstOrDefault().
-                   Lists.Where(a => a.ListId == parentId).FirstOrDefault().ListItems.Add(item);
+        //    await LoadSaveOrderHelper.LoadListAggregatorsOrder(localStorage, data, authenticationStateProvider);
 
-                    StateHasChanged();
-                }
-                else
-                         if (command == "Delete_ListItem")
-                {
+        //    StateHasChanged();
 
-                    var lists = data.ListAggregators.Where(a => a.ListAggregatorId == listAggregationId).FirstOrDefault();
+        //    return;
 
-                    ListItem foundListItem = null;
-                    List founfList = null;
 
-                    foreach (var listItem in lists.Lists)
-                    {
-                        founfList = listItem;
-                        foundListItem = listItem.ListItems.FirstOrDefault(a => a.Id == id1);
-                        if (foundListItem != null) break;
-                    }
+        //});
 
-                    founfList.ListItems.Remove(foundListItem);
+        //_hubConnection.On("ListItemAreChanged_" + data.UserId, async (string command, int? id1, int? listAggregationId, int? parentId) =>
+        //{
 
-                    StateHasChanged();
 
-                }
-            }
-        });
+        //    if (command.EndsWith("ListItem"))
+        //    {
+        //        var item = await shoppingListService.GetItem<ListItem>((int)id1, (int)listAggregationId);
 
-        await _hubConnection.StartAsync();
+        //        if (command == "Edit/Save_ListItem")
+        //        {
+        //            var lists = data.ListAggregators.Where(a => a.ListAggregatorId == listAggregationId).FirstOrDefault();
+
+        //            ListItem foundListItem = null;
+        //            foreach (var listItem in lists.Lists)
+        //            {
+        //                foundListItem = listItem.ListItems.FirstOrDefault(a => a.Id == id1);
+        //                if (foundListItem != null) break;
+        //            }
+        //            foundListItem.ListItemName = item.ListItemName;
+        //            foundListItem.State = item.State;
+        //            StateHasChanged();
+
+
+        //        }
+        //        else
+        //             if (command == "Add_ListItem")
+        //        {
+
+
+        //            data.ListAggregators.Where(a => a.ListAggregatorId == listAggregationId).FirstOrDefault().
+        //           Lists.Where(a => a.ListId == parentId).FirstOrDefault().ListItems.Add(item);
+
+        //            StateHasChanged();
+        //        }
+        //        else
+        //                 if (command == "Delete_ListItem")
+        //        {
+
+        //            var lists = data.ListAggregators.Where(a => a.ListAggregatorId == listAggregationId).FirstOrDefault();
+
+        //            ListItem foundListItem = null;
+        //            List founfList = null;
+
+        //            foreach (var listItem in lists.Lists)
+        //            {
+        //                founfList = listItem;
+        //                foundListItem = listItem.ListItems.FirstOrDefault(a => a.Id == id1);
+        //                if (foundListItem != null) break;
+        //            }
+
+        //            founfList.ListItems.Remove(foundListItem);
+
+        //            StateHasChanged();
+
+        //        }
+        //    }
+        //});
+
+        //await _hubConnection.StartAsync();
+
+
 
     }
 
@@ -942,37 +864,6 @@
     }
 
 
-    async Task LoadChoosedList()
-    {
-        var listAggregatorId = await localStorage.GetItemAsync<int>("ListAggregatorId");
-        var listId = await localStorage.GetItemAsync<int>("ListId");
 
-
-        listAggregatorChoosed = data.ListAggregators.Where(a => a.ListAggregatorId == listAggregatorId).FirstOrDefault();
-
-
-        if (listAggregatorId <= 0 || listAggregatorChoosed == null)
-        {
-            listAggregatorChoosed = data.ListAggregators.FirstOrDefault();
-        }
-
-        if (listAggregatorChoosed != null)
-            listAggregatorChoosed.Lists = listAggregatorChoosed.Lists.OrderByDescending(a => a.Order).ToList();
-
-
-        listChoosed = listAggregatorChoosed?.Lists.Where(a => a.ListId == listId).FirstOrDefault();
-
-
-
-        if (listId < 0 || listChoosed == null)
-        {
-            listChoosed = listAggregatorChoosed?.Lists.FirstOrDefault();
-        }
-
-        if (listChoosed != null)
-            listChoosed.ListItems = listChoosed.ListItems.OrderByDescending(a => a.Order).ToList();
-
-
-    }
 }
 

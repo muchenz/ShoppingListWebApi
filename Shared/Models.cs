@@ -13,18 +13,23 @@ namespace Shared
 
     }
 
-    public class MessageAndStatusAndData<T>
+    public class TokenAndEmailData
+    {
+        public string Token { get; set; }
+        public string Email { get; set; }
+    }
+
+    public class MessageAndStatusAndData<T> : MessageAndStatus
     {
         public MessageAndStatusAndData(T data, string msg, bool error)
         {
             Data = data;
             Message = msg;
-            Error = error;
+            IsError = error;
         }
 
         public T Data { get; set; }
-        public string Message { get; set; }
-        public bool Error { get; set; }
+        public bool IsError { get; set; }
 
     }
 
@@ -53,7 +58,7 @@ namespace Shared
         public string EmailAddress { get; set; }
         // public string Password { get; set; }
 
-
+        public byte LoginType { get; set; } // 1 - local 2 - facebook ()
         public ICollection<ListAggregator> ListAggregators { get; set; }
         public ICollection<string> Roles { get; set; }
 

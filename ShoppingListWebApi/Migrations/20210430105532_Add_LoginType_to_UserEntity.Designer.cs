@@ -2,14 +2,16 @@
 using EFDataBase;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace ShoppingListWebApi.Migrations
 {
     [DbContext(typeof(ShopingListDBContext))]
-    partial class ShopingListDBContextModelSnapshot : ModelSnapshot
+    [Migration("20210430105532_Add_LoginType_to_UserEntity")]
+    partial class Add_LoginType_to_UserEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -192,10 +194,6 @@ namespace ShoppingListWebApi.Migrations
 
                     b.Property<int>("PermissionLevel")
                         .HasColumnName("PermissionLevel")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("State")
-                        .HasColumnName("State")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("UserId", "ListAggregatorId");

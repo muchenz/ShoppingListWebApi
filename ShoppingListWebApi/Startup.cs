@@ -25,7 +25,7 @@ using Microsoft.OpenApi.Models;
 using ServiceMediatR.ListCommandAndQueries;
 using ShoppingListWebApi.Data;
 using ShoppingListWebApi.Handlers;
-
+using SignalRService;
 
 namespace ShoppingListWebApi
 {
@@ -52,7 +52,7 @@ namespace ShoppingListWebApi
             //        options.UseSqlServer(Configuration.GetConnectionString("ShopingListDB2")));
 
             services.AddDbContext<ShopingListDBContext>(options =>
-                    options.UseSqlite(Configuration.GetConnectionString("ShopingListDB3")));
+                    options.UseSqlite(Configuration.GetConnectionString("ShopingListDB3"), b => b.MigrationsAssembly("ShoppingListWebApi")));
 
 
             services.AddAutoMapper(typeof(MappingProfile));

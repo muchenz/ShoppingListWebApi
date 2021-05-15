@@ -15,6 +15,21 @@ namespace BlazorClient.Models
         public string Message { get; set; }
 
     }
+
+    public class MessageAndStatusAndData<T> : MessageAndStatus where T :class
+    {
+        public MessageAndStatusAndData(T data, bool error = false, string msg = "")
+        {
+            Data = data;
+            Message = msg;
+            IsError = error;
+        }
+
+
+        public T Data { get; set; }
+        public bool IsError { get; set; }
+
+    }
     public  static class ItemState
     {
         public static int Normal => 0;
@@ -102,7 +117,7 @@ namespace BlazorClient.Models
         public string EmailAddress { get; set; }
         // public string Password { get; set; }
 
-
+        public byte LoginType { get; set; } // 1 - local 2 - facebook ()
         public ICollection<ListAggregator> ListAggregators { get; set; }
 
 

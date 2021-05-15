@@ -4,10 +4,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using EFDataBase;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using ServiceMediatR.SignalREvents;
 using Shared;
 using ShoppingListWebApi.Data;
 
@@ -21,13 +23,13 @@ namespace ShoppingListWebApi.Controllers
     {
         private readonly ShopingListDBContext _context;
         private readonly IMapper _mapper;
-        private readonly SignarRService _signarRService;
+        private readonly IMediator _mediator;
         private readonly IConfiguration _configuration;
-        public ListAggregatorController(ShopingListDBContext context, IConfiguration configuration, IMapper mapper, SignarRService signarRService)//, IConfiguration configuration)
+        public ListAggregatorController(ShopingListDBContext context, IConfiguration configuration, IMapper mapper, IMediator mediator)//, IConfiguration configuration)
         {
             _context = context;
             _mapper = mapper;
-            _signarRService = signarRService;
+            _mediator = mediator;
             _configuration = configuration;
         }
 
@@ -66,7 +68,7 @@ namespace ShoppingListWebApi.Controllers
             var amount = await _context.SaveChangesAsync();
 
             var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(listAggregationId, _context);
-            await _signarRService.SendRefreshMessageToUsersAsync(userList);
+            await _mediator.Publish(new DataChangedEvent(userList));
 
             return await Task.FromResult(amount);
         }
@@ -96,7 +98,7 @@ namespace ShoppingListWebApi.Controllers
             var listItem = _mapper.Map<ListAggregator>(listItemEntity);
 
             var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(listAggregationId, _context);
-            await _signarRService.SendRefreshMessageToUsersAsync(userList);
+            await _mediator.Publish(new DataChangedEvent(userList));
 
 
             return await Task.FromResult(listItem);

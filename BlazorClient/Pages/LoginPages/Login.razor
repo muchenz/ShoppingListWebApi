@@ -3,12 +3,13 @@
 @using Newtonsoft.Json
 @using Services
 @using ShoppingListWebApi.Data
+@using BlazorClient.Data 
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
 @inject Blazored.LocalStorage.ILocalStorageService localStorageService
 @inject UserService userService;
 
-<EditForm  OnValidSubmit="@ValidateUser" Model="@this">
+<EditForm OnValidSubmit="@ValidateUser" Model="@this">
     <div>
         <br /><br /><br /><br /><br />
     </div>
@@ -38,6 +39,9 @@
 
 </EditForm>
 
+<div>
+    <button @onclick="FacebookSignIn">Facebook</button>
+</div>
 @code {
 
 
@@ -48,9 +52,26 @@
 
     protected override Task OnInitializedAsync()
     {
-        //user = new User();
+
+        if (NavigationManager.GetParameter("error")!=null)
+        {
+            LoginMesssage = NavigationManager.GetParameter("error");
+        }
+        else if (NavigationManager.GetParameter("token") != null)
+        {
+            var token = NavigationManager.GetParameter("token");
+
+            ((CustomAuthenticationStateProvider)AuthenticationStateProvider)
+                .MarkUserAsAuthenticated(token);
+            NavigationManager.NavigateTo("/");
+        }
+
+
+
+
         return base.OnInitializedAsync();
     }
+
 
     private async Task ValidateUser()
     {
@@ -78,6 +99,17 @@
         {
             LoginMesssage = "Some errors";
         }
+    }
+
+    void FacebookSignIn()
+    {
+
+        NavigationManager.NavigateTo(string.Format("https://www.facebook.com/v10.0/dialog/oauth?client_id={0}&response_type=code&redirect_uri={1}&state={2}&scope={3}",
+        259675572518658,
+         //"https://localhost:44394/signinfacebook",
+         "https://localhost:5001/api/User",
+       // "https://www.facebook.com/connect/login_success.html",
+        "{st=state123abc,ds=123456789}", "public_profile,email"));
     }
 
 

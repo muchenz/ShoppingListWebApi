@@ -1,5 +1,7 @@
 ﻿using EFDataBase;
+using MediatR;
 using Microsoft.AspNetCore.Http;
+using ServiceMediatR.SignalREvents;
 using ShoppingListWebApi.Data;
 using System;
 using System.Collections.Generic;
@@ -13,14 +15,13 @@ namespace ShoppingListWebApi.Handlers
     public class MiddlewareSignalR
     {
         private readonly RequestDelegate _next;
+        private readonly IMediator _mediator;
         private readonly ShopingListDBContext _context;
-        private readonly SignarRService _signarRService;
 
-        public MiddlewareSignalR(RequestDelegate next, SignarRService signarRService)
+        public MiddlewareSignalR(RequestDelegate next, IMediator mediator)
         {
             _next = next;
-          
-            _signarRService = signarRService;
+            _mediator = mediator;
         }
 
 
@@ -41,7 +42,7 @@ namespace ShoppingListWebApi.Handlers
                 int id2 = int.Parse(respons.Headers["id2"]);
 
                 var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(id2, _context);
-                await _signarRService.SendRefreshMessageToUsersAsync(userList, "Edit/Save_ListItem", id1, id2);
+                await _mediator.Publish(new AddEditSaveDeleteListItemEvent(userList, "Edit/Save_ListItem", id1, id2));
 
             }
         }

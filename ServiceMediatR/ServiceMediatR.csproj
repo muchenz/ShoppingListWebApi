@@ -12,6 +12,7 @@
   <ItemGroup>
     <ProjectReference Include="..\EFDataBase\EFDataBase.csproj" />
     <ProjectReference Include="..\Shared\Shared.csproj" />
+    <ProjectReference Include="..\SignalRService\SignalRService.csproj" />
   </ItemGroup>
 
 </Project>
