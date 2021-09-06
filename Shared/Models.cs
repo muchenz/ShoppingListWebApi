@@ -5,7 +5,19 @@ using System.Threading.Tasks;
 
 namespace Shared
 {
+    public  class Log
+    {
+        public long LogId { get; set; }
+        public string LogLevel { get; set; }
+        public string Source { get; set; }
+        public string Message { get; set; }
+        public string ExceptionMessage { get; set; }
+        public string StackTrace { get; set; }
+        public string CreatedDate { get; set; }
+        public long? UserId { get; set; }
+        public Log Inner { get; set; }
 
+    }
     public class MessageAndStatus
     {
         public string Status { get; set; }
@@ -65,6 +77,16 @@ namespace Shared
         // public virtual TokenItem Token { get; set; }
 
     }
+    public class UserListAggregator
+    { 
+        public int UserId { get; set; }
+        public int ListAggregatorId { get; set; }
+        public virtual User User { get; set; }
+        public virtual ListAggregator ListAggregator { get; set; }
+        public int PermissionLevel { get; set; }
+        public int State { get; set; }
+
+    }
 
     public class Role
     {
@@ -106,6 +128,8 @@ namespace Shared
         public int Order { get; set; }
 
         public ICollection<ListItem> ListItems { get; set; }
+        public int ListAggrId { get; set; }
+
 
     }
 
@@ -117,11 +141,26 @@ namespace Shared
         public int State { get; set; }
 
         public string ListItemName { get; set; }
+        public int ListAggrId { get; set; }
 
     }
 
 
+    public class ListAggregationForPermission
+    {
 
+        public ListAggregator ListAggregatorEntity { get; set; }
+
+        public List<UserPermissionToListAggregation> Users { get; set; }
+    }
+
+    public class UserPermissionToListAggregation
+    {
+
+        public User User { get; set; }
+        public int Permission { get; set; }
+
+    }
 
     //public class TokenItem
     //{

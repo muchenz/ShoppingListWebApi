@@ -1,0 +1,55 @@
+﻿@using Microsoft.Extensions.Configuration;
+@using Microsoft.AspNetCore.SignalR.Client;
+
+
+
+@inject IConfiguration configuration
+
+@implements IAsyncDisposable
+
+
+<CascadingValue Value=_hubConnection>
+    @ChildContent
+</CascadingValue>
+
+
+@code {
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    HubConnection _hubConnection;
+    int amount = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+
+        Console.WriteLine("singnalR amount" + amount++);
+        Console.WriteLine("singnalR ststus" + _hubConnection?.State);
+        //_hubConnection = new HubConnectionBuilder().WithUrl("https://94.251.148.92:5013/chatHub", (opts) =>
+        //{
+        //_hubConnection = new HubConnectionBuilder().WithUrl("https://192.168.8.222:91/chatHub", (opts) =>
+        //{
+        _hubConnection = new HubConnectionBuilder().WithUrl(configuration.GetSection("AppSettings")["SignlRAddress"], (opts) =>
+        {
+            opts.HttpMessageHandlerFactory = (message) =>
+            {
+                if (message is HttpClientHandler clientHandler)
+                    // bypass SSL certificate
+                    clientHandler.ServerCertificateCustomValidationCallback +=
+                                          (sender, certificate, chain, sslPolicyErrors) => { return true; };
+                return message;
+            };
+        }).WithAutomaticReconnect().Build();
+
+        await _hubConnection.StartAsync();
+
+    }
+    public async ValueTask DisposeAsync()
+    {
+        await _hubConnection?.DisposeAsync();
+    }
+
+}

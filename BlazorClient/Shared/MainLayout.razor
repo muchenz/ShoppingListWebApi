@@ -1,6 +1,18 @@
-﻿@inherits LayoutComponentBase
+﻿@using Microsoft.Extensions.Configuration;
 
-    <BlazoredModal />
+
+@inherits LayoutComponentBase
+@inject IConfiguration configuration
+@using Blazored.Toast.Configuration
+
+<BlazoredModal />
+<BlazoredToasts Position="ToastPosition.BottomRight"
+                Timeout="3"
+                IconType="IconType.FontAwesome"
+                SuccessClass="success-toast-override"
+                SuccessIcon="fa fa-thumbs-up"
+                ErrorIcon="fa fa-bug" />
+<BlazorClient.Pages.SignalR>
 <div class="sidebar">
     <NavMenu />
 </div>
@@ -16,3 +28,13 @@
         @Body
     </div>
 </div>
+</BlazorClient.Pages.SignalR>
+@code{
+    //protected override async Task OnInitializedAsync()
+    //{
+
+
+    //    await Data.SignalRHelper.SignalRInitAsync(configuration);
+
+    //}
+}

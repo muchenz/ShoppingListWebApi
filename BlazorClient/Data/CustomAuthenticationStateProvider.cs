@@ -9,12 +9,13 @@ using System.Security.Claims;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace ShoppingListWebApi.Data
+namespace BlazorClient.Data
 {
     public class CustomAuthenticationStateProvider : AuthenticationStateProvider
     {
+        private readonly UserService _userService;
+
         public ILocalStorageService _localStorageService { get; }
-        public UserService _userService { get; set; }
 
         public CustomAuthenticationStateProvider(ILocalStorageService localStorageService,
             UserService userService)
@@ -31,11 +32,12 @@ namespace ShoppingListWebApi.Data
             ClaimsIdentity identity;
 
 
-            if (isAccessToken==false)
+            if (isAccessToken == false)
             {
 
                 identity = new ClaimsIdentity();
-            }else
+            }
+            else
             {
                 var accessToken = await _localStorageService.GetItemAsync<string>("accessToken");
                 try
@@ -47,7 +49,7 @@ namespace ShoppingListWebApi.Data
                     identity = new ClaimsIdentity();
                 }
             }
-                
+
 
 
             var claimsPrincipal = new ClaimsPrincipal(identity);
@@ -69,7 +71,7 @@ namespace ShoppingListWebApi.Data
 
         public void MarkUserAsLoggedOut()
         {
-           // _localStorageService.RemoveItemAsync("refreshToken");
+            // _localStorageService.RemoveItemAsync("refreshToken");
             _localStorageService.RemoveItemAsync("accessToken");
 
             var identity = new ClaimsIdentity();
@@ -82,9 +84,9 @@ namespace ShoppingListWebApi.Data
         private ClaimsIdentity GetClaimsIdentity(string token)
         {
 
-            var claim =  ParseClaimsFromJwt(token);
-            
-           
+            var claim = ParseClaimsFromJwt(token);
+
+
             var claimsIdentity = new ClaimsIdentity(claim, "apiauth_type");
             return claimsIdentity;
         }

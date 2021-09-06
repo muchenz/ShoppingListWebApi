@@ -364,3 +364,6 @@ FodyWeavers.xsd
 
 #test facebook
 AspFacebookLogin
+
+#Test integrationtest
+T.WebApi.integration.test

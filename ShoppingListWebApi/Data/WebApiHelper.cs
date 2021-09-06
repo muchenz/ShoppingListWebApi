@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace ShoppingListWebApi.Data
@@ -15,9 +16,17 @@ namespace ShoppingListWebApi.Data
     {
 
 
-        public static async Task<IEnumerable<int>> GetuUserIdFromListAggrIdAsync(int listAggrId, ShopingListDBContext _context)
+        public static async Task<List<int>> GetuUserIdFromListAggrIdAsync(int listAggrId, ShopingListDBContext _context
+            , ClaimsPrincipal user)
         {
-            var userList = await _context.UserListAggregators.Where(a => a.ListAggregatorId == listAggrId).Select(a => a.UserId).ToListAsync();
+            var userList = await _context.UserListAggregators.AsQueryable().Where(a => a.ListAggregatorId == listAggrId).Select(a => a.UserId).ToListAsync();
+
+
+            var userId = user?.Claims?.Where(a => a.Type == ClaimTypes.NameIdentifier).SingleOrDefault().Value;
+
+            if(userId!=null)
+                userList.Remove(int.Parse(userId));
+
 
             return userList;
         }

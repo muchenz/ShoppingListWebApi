@@ -25,6 +25,7 @@ namespace EFDataBase
         public virtual DbSet<ListEntity> Lists { get; set; }
         public virtual DbSet<ListItemEntity> ListItems { get; set; }
         public virtual DbSet<InvitationEntity> Invitations { get; set; }
+        public virtual DbSet<LogEntity> Logs { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -37,6 +38,33 @@ namespace EFDataBase
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+
+            modelBuilder.Entity<LogEntity>(entity =>
+            {
+                entity.HasKey(e => e.LogId);
+
+                entity.Property(e => e.LogId).HasColumnName("log_id");
+
+                entity.Property(e => e.CreatedDate).HasColumnName("created_date");
+
+                entity.Property(e => e.ExceptionMessage).HasColumnName("exception_message");
+                
+                entity.Property(e => e.Message).HasColumnName("message");
+
+                entity.Property(e => e.LogLevel).HasColumnName("log_level");
+
+                entity.Property(e => e.Source).HasColumnName("source");
+
+                entity.Property(e => e.StackTrace).HasColumnName("stack_trace");
+
+                entity.Property(e => e.UserId).HasColumnName("user_id");
+
+                entity.Property(e => e.InnerId).HasColumnName("inner_id");
+            
+            });
+
+                  
+
             modelBuilder.Entity<UserEntity>(entity =>
             {
 

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using AutoMapper;
 using EFDataBase;
@@ -29,14 +30,16 @@ namespace ShoppingListWebApi.Controllers
         private readonly ShopingListDBContext _context;
         private readonly IMapper _mapper;
         private readonly IMediator _mediator;
+        private readonly IListItemEndpoint _listItemEndpoint;
         private readonly IConfiguration _configuration;              
 
         public ListItemController(ShopingListDBContext context, IConfiguration configuration, IMapper mapper, 
-             IMediator mediator)//, IConfiguration configuration)
+             IMediator mediator, IListItemEndpoint listItemEndpoint)//, IConfiguration configuration)
         {
             _context = context;
             _mapper = mapper;
             _mediator = mediator;
+            _listItemEndpoint = listItemEndpoint;
             _configuration = configuration;
             
         }
@@ -49,30 +52,21 @@ namespace ShoppingListWebApi.Controllers
         {
             //Task task = WebApiHelper.SendMessageToUserAsync(listAggregationId, _context, _hubConnection);
                         
-            if (!CheckIntegrityList(parentId,  listAggregationId)) return Forbid();
+            if (!await CheckIntegrityListAsync(parentId,  listAggregationId)) return Forbid();
 
 
-            var listItemEntity = _mapper.Map<ListItemEntity>(item);
-            listItemEntity.ListId = parentId;
+            var listItem = await _listItemEndpoint.AddListItemAsync(parentId, item, listAggregationId);
 
-            _context.ListItems.Add(listItemEntity);
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch(Exception ex)
-            {
+            item.ListItemId = listItem.ListItemId;
 
-            }
-            //var item = _mapper.Map<ListItem>(listItemEntity);
-            item.ListItemId = listItemEntity.ListItemId;
 
-            //task.GetAwaiter().GetResult();
+            var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(listAggregationId, _context, User);
+            
+            
 
-            var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(listAggregationId, _context);
             //await _signarRService.SendRefreshMessageToUsersAsync(userList, "Add_ListItem", listItemEntity.ListItemId, listAggregationId, parentId);
             await _mediator.Publish(
-                new AddEditSaveDeleteListItemEvent(userList, "Add_ListItem", listItemEntity.ListItemId, listAggregationId, parentId));
+                new AddEditSaveDeleteListItemEvent(userList, "Add_ListItem", listItem.ListItemId, listAggregationId, parentId));
 
 
             return await Task.FromResult(item);
@@ -83,12 +77,11 @@ namespace ShoppingListWebApi.Controllers
         [SecurityLevel(1)]
         public async Task<ActionResult<int>> DeleteListItem(int ItemId, int listAggregationId)
         {
-            if (!CheckIntegrityListItem(ItemId, listAggregationId)) return Forbid();
+            if (!await CheckIntegrityListItemAsync(ItemId, listAggregationId)) return Forbid();
 
-            _context.ListItems.Remove(_context.ListItems.Single(a => a.ListItemId == ItemId));
-            var amount = await _context.SaveChangesAsync();
+            var amount = await _listItemEndpoint.DeleteListItemAsync(ItemId);
 
-            var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(listAggregationId, _context);
+            var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(listAggregationId, _context, User);
             await _mediator.Publish(new AddEditSaveDeleteListItemEvent(userList, "Delete_ListItem", ItemId, listAggregationId));
 
 
@@ -99,46 +92,25 @@ namespace ShoppingListWebApi.Controllers
         [SecurityLevel(3)]
         public async Task<ActionResult<ListItem>> GetItemListItem(int ItemId, int listAggregationId)
         {
-            if (!CheckIntegrityListItem(ItemId, listAggregationId)) return Forbid();
+            if (!await CheckIntegrityListItemAsync(ItemId, listAggregationId)) return Forbid();
 
-            var listItemEntity = _context.ListItems.Single(a => a.ListItemId == ItemId);
-
-            var listItem = _mapper.Map<ListItem>(listItemEntity);
-
-           // var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(listAggregationId, _context);
-           // await _signarRService.SendRefreshMessageToUsersAsync(userList);
+            var listItem = await _listItemEndpoint.GetItemListItemAsync(ItemId);
 
             return await Task.FromResult(listItem);
         }
 
-        bool CheckIntegrityListItem(int listItemId, int listAggregationId)
+        async Task<bool> CheckIntegrityListItemAsync(int listItemId, int listAggregationId)
         {
-            
-            var  listItem = _context.ListItems.Where(a => a.ListItemId == listItemId).Include(a=>a.List).FirstOrDefault();
 
-            bool exist = false;
-
-            if (listItem != null)
-            {
-                _context.Entry(listItem).State = EntityState.Detached;
-                exist = listItem.List.ListAggregatorId == listAggregationId;
-            }
-            return exist;
+            return await _listItemEndpoint.CheckIntegrityListItemAsync(listItemId,listAggregationId);
         }
 
-        bool CheckIntegrityList(int listId, int listAggregationId)
+        async Task<bool> CheckIntegrityListAsync(int listId, int listAggregationId)
         {
 
-            var list = _context.Lists.Where(a => a.ListId == listId).FirstOrDefault();
+            return await _listItemEndpoint.CheckIntegrityListAsync(listId, listAggregationId);
 
-            bool exist = false;
 
-            if (list != null)
-            {
-                _context.Entry(list).State = EntityState.Detached;
-                exist = list.ListAggregatorId == listAggregationId;
-            }
-            return exist;
         }
 
 
@@ -148,20 +120,13 @@ namespace ShoppingListWebApi.Controllers
         public async Task<ActionResult<ListItem>> EditListItem([FromBody]ListItem item, int listAggregationId)
         {           
 
-            if (!CheckIntegrityListItem(item.ListItemId, listAggregationId)) return Forbid();
-
-            var listItemEntity = _mapper.Map<ListItemEntity>(item);
-
-            // _context.ListItems.Remove(_context.ListItems.Single(a => a.ListItemId == ItemId));
+            if (!await CheckIntegrityListItemAsync(item.ListItemId, listAggregationId)) return Forbid();
 
 
-            _context.Entry<ListItemEntity>(listItemEntity).Property(nameof(ListItemEntity.ListItemName)).IsModified =true;
-            var amount = await _context.SaveChangesAsync();
-
-            var listItem = _mapper.Map<ListItem>(listItemEntity);
+            var listItem = await _listItemEndpoint.EditListItemAsync(item);
 
 
-            var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(listAggregationId, _context);
+            var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(listAggregationId, _context, User);
             await _mediator.Publish(new AddEditSaveDeleteListItemEvent(userList, "Edit/Save_ListItem", listItem.ListItemId, listAggregationId));
 
             return await Task.FromResult(listItem);
@@ -171,21 +136,8 @@ namespace ShoppingListWebApi.Controllers
         [Authorize]
         public async Task<ActionResult<bool>> ChangeOrderListItem([FromBody]IEnumerable<ListItem> items)
         {
-            var listItemEntity = _mapper.Map<IEnumerable<ListItemEntity>>(items);
 
-
-            // _context.ListItems.Remove(_context.ListItems.Single(a => a.ListItemId == ItemId));
-
-            foreach (var item in listItemEntity)
-            {
-                _context.Entry<ListItemEntity>(item).Property(nameof(ListItemEntity.Order)).IsModified = true;
-            }
-           
-
-            var amount = await _context.SaveChangesAsync();
-
-           // var listItem = _mapper.Map<ListItem>(listItemEntity);
-
+            await _listItemEndpoint.ChangeOrderListItemAsync(items);
 
             return await Task.FromResult(true);
         }

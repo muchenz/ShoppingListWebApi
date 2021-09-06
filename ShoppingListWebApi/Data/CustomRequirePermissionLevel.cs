@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
+using Shared;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -37,12 +38,12 @@ namespace ShoppingListWebApi.Data
     public class CustomRequirePermissionLevelHandler : AuthorizationHandler<CustomRequirePermissionLevel>
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly ShopingListDBContext _dBContext;
+        private readonly IUserEndpoint _userEndpoint;
 
-        public CustomRequirePermissionLevelHandler(IHttpContextAccessor httpContextAccessor,  ShopingListDBContext dBContext)
+        public CustomRequirePermissionLevelHandler(IHttpContextAccessor httpContextAccessor, IUserEndpoint userEndpoint)
         {
             _httpContextAccessor = httpContextAccessor;
-            _dBContext = dBContext;
+            _userEndpoint = userEndpoint;
         }
 
         protected override async Task HandleRequirementAsync(
@@ -81,14 +82,14 @@ namespace ShoppingListWebApi.Data
 
             var intLvlReq = int.Parse(lvlRequiredFromCode);
 
-            var user = await _dBContext.Users.FirstOrDefaultAsync(a => a.EmailAddress == context.User.Identity.Name);
+            var user = await _userEndpoint.GetUserByNameAsync(context.User.Identity.Name);
 
             if (user == null) return;
             
-            var userListAgg = _dBContext.UserListAggregators.Where(a => a.ListAggregatorId == intAgrId && a.UserId == user.UserId).FirstOrDefault();
+            var userListAgg = await _userEndpoint.GetUserListAggrByUserId(user.UserId);
                         
 
-            if (userListAgg?.PermissionLevel <= intLvlReq)
+            if (userListAgg?.Where(a=>a.ListAggregatorId==intAgrId).FirstOrDefault()?.PermissionLevel <= intLvlReq)
             {
                 context.Succeed(requirement);
             }

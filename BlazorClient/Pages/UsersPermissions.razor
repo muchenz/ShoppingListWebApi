@@ -344,7 +344,7 @@
             catch
             {
 
-                ((ShoppingListWebApi.Data.CustomAuthenticationStateProvider)authenticationStateProvider).MarkUserAsLoggedOut();
+                ((BlazorClient.Data.CustomAuthenticationStateProvider)authenticationStateProvider).MarkUserAsLoggedOut();
 
                 navigationManager.NavigateTo("/login");
 

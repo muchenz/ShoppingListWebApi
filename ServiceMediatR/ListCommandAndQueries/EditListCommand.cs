@@ -23,25 +23,26 @@ namespace ServiceMediatR.ListCommandAndQueries
     }
 
 
-    public class EditListHandler : BaseForHandler, IHandlerWrapper<EditListCommand, List>
+    //public class EditListHandler : BaseForHandler, IHandlerWrapper<EditListCommand, List>
+    public class EditListHandler : IHandlerWrapper<EditListCommand, List>
     {
-        public EditListHandler(ShopingListDBContext context, IMapper mapper) : base(context, mapper)
-        {
+        private readonly IListEndpoint _listEndpoint;
 
+        public EditListHandler(IListEndpoint listEndpoint) 
+        {
+            _listEndpoint = listEndpoint;
         }
         public async Task<MessageAndStatusAndData<List>> Handle(EditListCommand request, CancellationToken cancellationToken)
         {
-            var listItemEntity = _mapper.Map<ListEntity>(request.List);
 
 
-            if (!CheckIntegrityList(request.List.ListId, request.ListAggregationId)) return MessageAndStatusAndData.Fail<List>("Forbbidden");
+
+             if (!await _listEndpoint.CheckIntegrityListAsync(request.List.ListId, request.ListAggregationId)) 
+                return MessageAndStatusAndData.Fail<List>("Forbbidden");
 
             //_context.ListItems.Remove(_context.ListItems.Single(a => a.ListItemId == ItemId));
 
-            _context.Entry<ListEntity>(listItemEntity).Property(nameof(ListEntity.ListName)).IsModified = true;
-            var amount = await _context.SaveChangesAsync();
-
-            var listItem = _mapper.Map<List>(listItemEntity);
+            var listItem = await _listEndpoint.EditListAsync(request.List);
 
             return await Task.FromResult(MessageAndStatusAndData.Ok(listItem, "OK"));
 

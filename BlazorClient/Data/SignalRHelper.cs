@@ -3,7 +3,7 @@ using BlazorClient.Services;
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.AspNetCore.SignalR.Client;  
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
@@ -15,7 +15,84 @@ namespace BlazorClient.Data
 {
     public class SignalRHelper
     {
-        public static async Task SignalRInitAsync(IConfiguration  configuration,
+        /*
+
+        static HubConnection _hubConnection;
+
+        static int amount = 0;
+        public static async Task SignalRInitAsync(IConfiguration configuration)
+        {
+            Console.WriteLine("singnalR amount" + amount++);
+            Console.WriteLine("singnalR ststus" + _hubConnection?.State);
+            //_hubConnection = new HubConnectionBuilder().WithUrl("https://94.251.148.92:5013/chatHub", (opts) =>
+            //{
+            //_hubConnection = new HubConnectionBuilder().WithUrl("https://192.168.8.222:91/chatHub", (opts) =>
+            //{
+            _hubConnection = new HubConnectionBuilder().WithUrl(configuration.GetSection("AppSettings")["SignlRAddress"], (opts) =>
+            {
+                opts.HttpMessageHandlerFactory = (message) =>
+                {
+                    if (message is HttpClientHandler clientHandler)
+                        // bypass SSL certificate
+                        clientHandler.ServerCertificateCustomValidationCallback +=
+                                  (sender, certificate, chain, sslPolicyErrors) => { return true; };
+                    return message;
+                };
+            }).WithAutomaticReconnect().Build();
+
+            await _hubConnection.StartAsync();
+
+        }
+
+
+
+        */
+        public static async  Task<List<IDisposable>> SignalRInvitationInitAsync(
+            HubConnection _hubConnection,
+            int userId,
+            AuthenticationStateProvider authenticationStateProvider,
+            UserService userService,
+             Action<List<Invitation>> SetInvitation,
+             Action<int> SetInvitationCount,
+             Action StateHasChanged
+
+
+            )
+        {
+
+            IDisposable dataAreChanged=null;
+
+            try
+            {
+                var authProvider = await authenticationStateProvider.GetAuthenticationStateAsync();
+
+                dataAreChanged = _hubConnection.On("NewInvitation_" + userId, async () =>
+                {
+
+
+                    var userName = authProvider.User.Identity.Name;
+
+                    var invitationsList = await userService.GetInvitationsListAsync(userName);
+
+                    int count = invitationsList?.Count ?? 0; // == null ? 0 : invitationsList.Count;
+
+                    SetInvitation(invitationsList);
+                    SetInvitationCount(count);
+                    StateHasChanged();
+
+                });
+
+            }
+            catch
+            {
+
+            }
+
+            return new List<IDisposable> { dataAreChanged };
+        }
+
+        public static List<IDisposable> SignalRShoppingListInitAsync(
+             HubConnection _hubConnection,
             User data,
             Action<User> SetData,
             Action<ListAggregator> SetListAggregatorChoosed,
@@ -29,64 +106,66 @@ namespace BlazorClient.Data
             )
         {
 
-            //_hubConnection = new HubConnectionBuilder().WithUrl("https://94.251.148.92:5013/chatHub", (opts) =>
+            List<IDisposable> disposables = new List<IDisposable>();
+
+            ////_hubConnection = new HubConnectionBuilder().WithUrl("https://94.251.148.92:5013/chatHub", (opts) =>
+            ////{
+            ////_hubConnection = new HubConnectionBuilder().WithUrl("https://192.168.8.222:91/chatHub", (opts) =>
+            ////{
+            //HubConnection _hubConnection = new HubConnectionBuilder().WithUrl(configuration.GetSection("AppSettings")["SignlRAddress"], (opts) =>
             //{
-            //_hubConnection = new HubConnectionBuilder().WithUrl("https://192.168.8.222:91/chatHub", (opts) =>
-            //{
-            HubConnection _hubConnection = new HubConnectionBuilder().WithUrl(configuration.GetSection("AppSettings")["SignlRAddress"], (opts) =>
-            {
-                opts.HttpMessageHandlerFactory = (message) =>
-                {
-                    if (message is HttpClientHandler clientHandler)
-                        // bypass SSL certificate
-                        clientHandler.ServerCertificateCustomValidationCallback +=
-                                   (sender, certificate, chain, sslPolicyErrors) => { return true; };
-                    return message;
-                };
-            }).WithAutomaticReconnect().Build();
+            //    opts.HttpMessageHandlerFactory = (message) =>
+            //    {
+            //        if (message is HttpClientHandler clientHandler)
+            //            // bypass SSL certificate
+            //            clientHandler.ServerCertificateCustomValidationCallback +=
+            //                       (sender, certificate, chain, sslPolicyErrors) => { return true; };
+            //        return message;
+            //    };
+            //}).WithAutomaticReconnect().Build();
 
 
-            _hubConnection.On("DataAreChanged_" + data.UserId, async () =>
-            {
+            var dataAreChanged = _hubConnection.On("DataAreChanged_" + data.UserId, async () =>
+           {
 
-                try
-                {
+               try
+               {
 
-                    var identity = await authenticationStateProvider.GetAuthenticationStateAsync();
+                   var identity = await authenticationStateProvider.GetAuthenticationStateAsync();
 
-                    var nameUser = identity.User.Identity.Name;
+                   var nameUser = identity.User.Identity.Name;
 
-                    data = await userService.GetUserDataTreeObjectsgAsync(nameUser);
+                   data = await userService.GetUserDataTreeObjectsgAsync(nameUser);
 
-                    SetData(data);
+                   SetData(data);
 
-                }
+               }
 
-                catch(Exception ex)
-                {
+               catch (Exception ex)
+               {
 
-                    ((ShoppingListWebApi.Data.CustomAuthenticationStateProvider)authenticationStateProvider).MarkUserAsLoggedOut();
+                   ((CustomAuthenticationStateProvider)authenticationStateProvider).MarkUserAsLoggedOut();
 
-                    navigationManager.NavigateTo("/login");
+                   navigationManager.NavigateTo("/login");
 
-                    return;
-                }
+                   return;
+               }
 
-                (var listAggregatorChoosed, var listChoosed) = await LoadSaveOrderHelper.LoadChoosedList(data, localStorage);
+               (var listAggregatorChoosed, var listChoosed) = await LoadSaveOrderHelper.LoadChoosedList(data, localStorage);
 
-                SetListAggregatorChoosed(listAggregatorChoosed);
-                SetListChoosed(listChoosed);
+               SetListAggregatorChoosed(listAggregatorChoosed);
+               SetListChoosed(listChoosed);
 
-                await LoadSaveOrderHelper.LoadListAggregatorsOrder(localStorage, data, authenticationStateProvider);
+               await LoadSaveOrderHelper.LoadListAggregatorsOrder(localStorage, data, authenticationStateProvider);
 
-                StateHasChanged();
+               StateHasChanged();
 
-                return;
+               return;
 
 
-            });
+           });
 
-            _hubConnection.On("ListItemAreChanged_" + data.UserId, async (string command, int? id1, int? listAggregationId, int? parentId) =>
+            var listAreChaned = _hubConnection.On("ListItemAreChanged_" + data.UserId, async (string command, int? id1, int? listAggregationId, int? parentId) =>
             {
 
 
@@ -146,9 +225,12 @@ namespace BlazorClient.Data
                 }
             });
 
-            await _hubConnection.StartAsync();
 
 
+            disposables.Add(dataAreChanged);
+            disposables.Add(listAreChaned);
+
+            return disposables;
         }
     }
 }

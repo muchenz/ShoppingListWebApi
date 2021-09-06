@@ -14,7 +14,11 @@
     <base href="~/" />
     <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
     <link href="css/site.css" rel="stylesheet" />
+    <link href="css/app.css" rel="stylesheet" />
+
     <link href="_content/Blazored.Modal/blazored-modal.css" rel="stylesheet" />
+    <link href="_content/Blazored.Toast/blazored-toast.min.css" rel="stylesheet" />
+
 </head>
 <body>
 
@@ -46,7 +50,7 @@
                 DotNet.invokeMethodAsync("BlazorClient", 'OnBrowserResize', window.innerWidth).then(data => data);
             }
         }
-      
+
 
     </script>
 
@@ -64,7 +68,7 @@
         <a href="" class="reload">Reload</a>
         <a class="dismiss">🗙</a>
     </div>
-   
+
     <script src="_framework/blazor.server.js"></script>
     <script>
 
@@ -129,14 +133,14 @@
                         firstBigRender = false;
                         firstSmallRender = true;
 
-                      
+
                     }
                 }
-               
+
             });
 
         }
-        
+
         function Collapse() {
 
             $('#collapseExample1').attr("class", "collapse");

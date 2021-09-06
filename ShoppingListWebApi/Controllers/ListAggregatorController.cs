@@ -24,12 +24,15 @@ namespace ShoppingListWebApi.Controllers
         private readonly ShopingListDBContext _context;
         private readonly IMapper _mapper;
         private readonly IMediator _mediator;
+        private readonly IListAggregatorEndpoint _listAggregatorEndpoint;
         private readonly IConfiguration _configuration;
-        public ListAggregatorController(ShopingListDBContext context, IConfiguration configuration, IMapper mapper, IMediator mediator)//, IConfiguration configuration)
+        public ListAggregatorController(ShopingListDBContext context, IConfiguration configuration, IMapper mapper
+            , IMediator mediator, IListAggregatorEndpoint listAggregatorEndpoint)//, IConfiguration configuration)
         {
             _context = context;
             _mapper = mapper;
             _mediator = mediator;
+            _listAggregatorEndpoint = listAggregatorEndpoint;
             _configuration = configuration;
         }
 
@@ -39,22 +42,9 @@ namespace ShoppingListWebApi.Controllers
        [Authorize]
         public async Task<ActionResult<ListAggregator>> AddListAggregatortoListt(int parentId, [FromBody]ListAggregator item)
         {
+            var listAggr = await _listAggregatorEndpoint.AddListAggregatorAsync(item, parentId);
 
-            var listItemEntity = _mapper.Map<ListAggregatorEntity>(item);
-            //listItemEntity.ListAggregatorId = parentId;
-
-            var userListAggregatorEntity = new UserListAggregatorEntity { UserId = parentId, ListAggregator = listItemEntity, PermissionLevel=1 };
-
-            
-            _context.UserListAggregators.Add(userListAggregatorEntity);
-            
-            await _context.SaveChangesAsync();
-            
-
-            //var item = _mapper.Map<ListItem>(listItemEntity);
-            item.ListAggregatorId = listItemEntity.ListAggregatorId;
-
-            
+            item.ListAggregatorId = listAggr.ListAggregatorId;
 
             return await Task.FromResult(item);
         }
@@ -64,10 +54,9 @@ namespace ShoppingListWebApi.Controllers
         public async Task<ActionResult<int>> DeleteList(int ItemId, int listAggregationId)
         {
 
-            _context.ListAggregators.Remove(_context.ListAggregators.Single(a => a.ListAggregatorId == ItemId));
-            var amount = await _context.SaveChangesAsync();
+            var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(listAggregationId, _context, User);
 
-            var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(listAggregationId, _context);
+            var amount = await _listAggregatorEndpoint.DeleteListAggrAsync(ItemId);
             await _mediator.Publish(new DataChangedEvent(userList));
 
             return await Task.FromResult(amount);
@@ -85,19 +74,13 @@ namespace ShoppingListWebApi.Controllers
         [SecurityLevel(2)]
         public async Task<ActionResult<ListAggregator>> EditListAggregator([FromBody]ListAggregator item, int listAggregationId)
         {
-            var listItemEntity = _mapper.Map<ListAggregatorEntity>(item);
 
             if (!CheckIntegrity(item.ListAggregatorId, listAggregationId)) return Forbid();
 
-            // _context.ListItems.Remove(_context.ListItems.Single(a => a.ListItemId == ItemId));
+            var listItem = await _listAggregatorEndpoint.EditListAggregatorAsync(item);
 
+             var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(listAggregationId, _context, User);
 
-            _context.Entry<ListAggregatorEntity>(listItemEntity).Property(nameof(ListAggregatorEntity.ListAggregatorName)).IsModified = true;
-            var amount = await _context.SaveChangesAsync();
-
-            var listItem = _mapper.Map<ListAggregator>(listItemEntity);
-
-            var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(listAggregationId, _context);
             await _mediator.Publish(new DataChangedEvent(userList));
 
 
@@ -108,19 +91,8 @@ namespace ShoppingListWebApi.Controllers
         [Authorize]
         public async Task<ActionResult<bool>> ChangeOrderListItem([FromBody]IEnumerable<ListAggregator> items)
         {
-            var listItemEntity = _mapper.Map<IEnumerable<ListAggregatorEntity>>(items);
 
-
-            // _context.ListItems.Remove(_context.ListItems.Single(a => a.ListItemId == ItemId));
-
-            foreach (var item in listItemEntity)
-            {
-                _context.Entry<ListAggregatorEntity>(item).Property(nameof(ListAggregatorEntity.Order)).IsModified = true;
-            }
-
-
-            var amount = await _context.SaveChangesAsync();
-
+            await _listAggregatorEndpoint.ChangeOrderListItemAsync(items);
             // var listItem = _mapper.Map<ListItem>(listItemEntity);
 
             return await Task.FromResult(true);

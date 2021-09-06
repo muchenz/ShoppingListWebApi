@@ -5,7 +5,20 @@ using System.Threading.Tasks;
 
 namespace EFDataBase
 {
+    public class LogEntity
+    {
+        public long LogId { get; set; }
+        public string LogLevel { get; set; }
+        public string Source { get; set; }
+        public string Message { get; set; }
+        public string ExceptionMessage { get; set; }
+        public string StackTrace { get; set; }
+        public string CreatedDate { get; set; }
+        public long? UserId { get; set; }
+        public long? InnerId { get; set; }
+        public virtual LogEntity Inner { get; set; }
 
+    }
     public class InvitationEntity
     {
         public int InvitationId { get; set; }

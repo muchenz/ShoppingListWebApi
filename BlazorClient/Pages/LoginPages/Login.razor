@@ -2,12 +2,14 @@
 
 @using Newtonsoft.Json
 @using Services
-@using ShoppingListWebApi.Data
 @using BlazorClient.Data 
+@using Microsoft.Extensions.Logging
+
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
 @inject Blazored.LocalStorage.ILocalStorageService localStorageService
 @inject UserService userService;
+@inject ILogger<Login> _logger
 
 <EditForm OnValidSubmit="@ValidateUser" Model="@this">
     <div>
@@ -72,32 +74,46 @@
         return base.OnInitializedAsync();
     }
 
+    [CascadingParameter]
+    public Error Error { get; set; }
 
     private async Task ValidateUser()
     {
         //assume that user is valid
         //call an API
-
         try
         {
-            var message = await userService.LoginAsync(userName, password);
-
-
-
-            if (message != null && message.Status == "OK")
+            try
             {
-                ((CustomAuthenticationStateProvider)AuthenticationStateProvider).MarkUserAsAuthenticated(message.Message);
-                NavigationManager.NavigateTo("/");
-            }
-            else
-            {
-                LoginMesssage = "Invalid username or password";
-            }
+                //throw new Exception("Ala ");
 
+                var message = await userService.LoginAsync(userName, password);
+
+
+
+                if (message != null && message.Status == "OK")
+                {
+                    ((CustomAuthenticationStateProvider)AuthenticationStateProvider).MarkUserAsAuthenticated(message.Message);
+                    NavigationManager.NavigateTo("/");
+                }
+                else
+                {
+                    LoginMesssage = "Invalid username or password";
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+                LoginMesssage = "Some errors";
+                Error.ProcessError(ex);
+                //throw new NullReferenceException("Inner ", ex);
+
+            }
         }
-        catch
+        catch(NullReferenceException ex)
         {
-            LoginMesssage = "Some errors";
+            _logger.LogError(ex, "alla");
         }
     }
 
@@ -108,7 +124,7 @@
         259675572518658,
          //"https://localhost:44394/signinfacebook",
          "https://localhost:5001/api/User",
-       // "https://www.facebook.com/connect/login_success.html",
+        // "https://www.facebook.com/connect/login_success.html",
         "{st=state123abc,ds=123456789}", "public_profile,email"));
     }
 

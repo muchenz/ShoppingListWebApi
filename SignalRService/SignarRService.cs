@@ -53,6 +53,10 @@ namespace SignalRService
                     {
                         await _hubConnection.SendAsync("SendAsyncListItem", usersIds, command, id1, listAggregationId, parentId);
                     }
+                    if (command == "New_Invitation")
+                    {
+                        await _hubConnection.SendAsync("SendAsyncNewIvitation", usersIds);
+                    }
                     else
                     {
                         await _hubConnection.SendAsync("SendAsyncAllTree", usersIds);

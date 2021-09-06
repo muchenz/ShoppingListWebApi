@@ -23,7 +23,8 @@ namespace ShoppingListWebApiSignalR
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
-        {           
+        {
+            services.AddCors();
             services.AddSignalR();
             services.AddRazorPages();
         }
@@ -45,6 +46,12 @@ namespace ShoppingListWebApiSignalR
             app.UseHttpsRedirection();
             app.UseStaticFiles();
 
+            app.UseCors(builder =>
+            {
+                builder.AllowAnyOrigin()
+                    .AllowAnyHeader()
+                    .WithMethods("GET", "POST");
+            });
             app.UseRouting();
 
             app.UseAuthorization();

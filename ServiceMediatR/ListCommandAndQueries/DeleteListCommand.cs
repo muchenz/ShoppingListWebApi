@@ -26,22 +26,24 @@ namespace ServiceMediatR.ListCommandAndQueries
     }
 
 
-    public class DeleteListHandler :BaseForHandler, IHandlerWrapper<DeleteListCommand, int>
+    //public class DeleteListHandler :BaseForHandler, IHandlerWrapper<DeleteListCommand, int>
+    public class DeleteListHandler :IHandlerWrapper<DeleteListCommand, int>
     {
+        private readonly IListEndpoint _listEndpoint;
 
-        public DeleteListHandler(ShopingListDBContext context, IMapper mapper):base(context, mapper)
+        //public DeleteListHandler(ShopingListDBContext context, IMapper mapper, IListEndpoint listEndpoint):base(context, mapper)
+        public DeleteListHandler(IListEndpoint listEndpoint)
         {
+            _listEndpoint = listEndpoint;
         }
 
         public async Task<MessageAndStatusAndData<int>> Handle(DeleteListCommand request, CancellationToken cancellationToken)
         {
 
-            if (!CheckIntegrityList(request.ItemId,  request.ListAggregationId)) return MessageAndStatusAndData.Fail<int>("Forbbidden");
+            if (!await _listEndpoint.CheckIntegrityListAsync(request.ItemId,  request.ListAggregationId)) return MessageAndStatusAndData.Fail<int>("Forbbidden");
 
 
-            _context.Lists.Remove(_context.Lists.Single(a => a.ListId == request.ItemId));
-            var amount = await _context.SaveChangesAsync();
-
+           var amount = await _listEndpoint.DeleteListAsync(request.ItemId, request.ListAggregationId);
 
             return await Task.FromResult(MessageAndStatusAndData.Ok(amount, "OK"));
         }

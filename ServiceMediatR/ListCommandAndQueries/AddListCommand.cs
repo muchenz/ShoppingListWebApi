@@ -38,30 +38,28 @@ namespace ServiceMediatR.ListCommandAndQueries
        
     }
 
-    public class CreateAddListCommandHandler : BaseForHandler,  IHandlerWrapper<AddListCommand, List>
+   // public class CreateAddListCommandHandler : BaseForHandler,  IHandlerWrapper<AddListCommand, List>
+    public class CreateAddListCommandHandler :   IHandlerWrapper<AddListCommand, List>
     {
+        private readonly IListEndpoint _listEndpoint;
 
-        public CreateAddListCommandHandler(ShopingListDBContext context, IMapper mapper):base(context, mapper)
+        //public CreateAddListCommandHandler(ShopingListDBContext context, IMapper mapper, IListEndpoint listEndpoint):base(context, mapper)
+        public CreateAddListCommandHandler(IListEndpoint listEndpoint)
         {
+            _listEndpoint = listEndpoint;
         }
 
         public async Task<MessageAndStatusAndData<List>> Handle(AddListCommand request, CancellationToken cancellationToken)
         {
 
-            if (!CheckIntegrityListAggr(request.ParentId, request.ListAggregationId)) 
+            if (!await _listEndpoint.CheckIntegrityListAggrAsync(request.ParentId, request.ListAggregationId)) 
                 return await Task.FromResult(MessageAndStatusAndData.Fail<List>("Forbbidden."));
 
 
-            var listItemEntity = _mapper.Map<EFDataBase.ListEntity>(request.Item);
-            listItemEntity.ListAggregatorId = request.ParentId;
-
-            _context.Lists.Add(listItemEntity);
-            await _context.SaveChangesAsync();
-
-            request.Item.ListId = listItemEntity.ListId;
+            var res =  await _listEndpoint.AddListAsync(request.ParentId, request.Item, request.ListAggregationId);
 
 
-            return await Task.FromResult(MessageAndStatusAndData.Ok<List>(request.Item,"OK"));
+            return await Task.FromResult(MessageAndStatusAndData.Ok<List>(res, "OK"));
 
         }       
 

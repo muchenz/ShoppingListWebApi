@@ -1,10 +1,13 @@
 ﻿@page "/shoppinglist"
+
+@implements IDisposable
+
 @attribute [Authorize]
 
 @using Services
 @using Models
 @using Blazored.LocalStorage;
-@using Data;
+@using BlazorClient.Data;
 @using Microsoft.AspNetCore.SignalR.Client;
 @using Microsoft.Extensions.Configuration;
 
@@ -170,7 +173,7 @@
                     <td style="width:81%">
                         <EditForm @ref="AddListItemEditForm" EditContext="@AddListItemEditContext">
 
-                            @if (listAggregatorChoosed?.PermissionLevel < 3)
+                            @if (listAggregatorChoosed?.PermissionLevel < 3 && listChoosed != null)
                             {
                                 <InputText class="form-control" @bind-Value="AddListItem.ListItemName" placeholder="New item to buy" />
                             }
@@ -182,7 +185,7 @@
                         </EditForm>
                     </td>
                     <td align="center">
-                        @if (listAggregatorChoosed?.PermissionLevel < 3)
+                        @if (listAggregatorChoosed?.PermissionLevel < 3 && listChoosed != null)
                         {
                             <a style="text-underline-position:below; cursor:pointer; color:blue; display:inline;
                                 " @onclick="(() => AddItem())">Add</a>
@@ -556,6 +559,8 @@
 
         AddListItem.ListItemName = "";
         AddListItemEditContext.MarkAsUnmodified();
+
+       //await SaveAllOrder(data.ListAggregators);
     }
 
     async Task AddToList()
@@ -577,7 +582,7 @@
         listAggregatorChoosed.Lists = listAggregatorChoosed.Lists.OrderByDescending(a => a.Order).ToList();
 
         //listChoosed = newItem;
-
+        await SaveAllOrder(data.ListAggregators);
     }
 
 
@@ -599,6 +604,7 @@
 
         data.ListAggregators = data.ListAggregators.OrderByDescending(a => a.Order).ToList();
 
+      //  await SaveAllOrder(data.ListAggregators);
         //listAggregatorChoosed = newItem;
         //listChoosed = null;
     }
@@ -625,7 +631,7 @@
             catch
             {
 
-                ((ShoppingListWebApi.Data.CustomAuthenticationStateProvider)authenticationStateProvider).MarkUserAsLoggedOut();
+                ((BlazorClient.Data.CustomAuthenticationStateProvider)authenticationStateProvider).MarkUserAsLoggedOut();
 
                 navigationManager.NavigateTo("/login");
 
@@ -647,7 +653,7 @@
             {
                 await SignalRInitAsync();
             }
-            catch { }
+            catch (Exception ex) { System.Console.WriteLine(ex); }
         }
 
     }
@@ -713,145 +719,31 @@
         StateHasChanged();
     }
 
-    HubConnection _hubConnection;
 
     void Accessor<T>(T value, Action<T> setter)
     {
         setter(value);
     }
 
+    List<IDisposable> SignalRToDispose;
+
+    [CascadingParameter]
+    public HubConnection _hubConnection { get; set; }
 
     async Task SignalRInitAsync()
     {
 
 
-        await SignalRHelper.SignalRInitAsync(configuration,
-            data,
-            (a) => data = a,
-            (a) => listAggregatorChoosed = a,
-            (a) => listChoosed = a,
-           authenticationStateProvider, userService,
-           navigationManager, StateHasChanged,
-           shoppingListService,
-           localStorage);
-
-
-        //_hubConnection = new HubConnectionBuilder().WithUrl("https://94.251.148.92:5013/chatHub", (opts) =>
-        //{
-        //_hubConnection = new HubConnectionBuilder().WithUrl("https://192.168.8.222:91/chatHub", (opts) =>
-        //{
-
-
-        //_hubConnection = new HubConnectionBuilder().WithUrl(configuration.GetSection("AppSettings")["SignlRAddress"], (opts) =>
-        //{
-        //    opts.HttpMessageHandlerFactory = (message) =>
-        //    {
-        //        if (message is HttpClientHandler clientHandler)
-        //            // bypass SSL certificate
-        //            clientHandler.ServerCertificateCustomValidationCallback +=
-        //                       (sender, certificate, chain, sslPolicyErrors) => { return true; };
-        //        return message;
-        //    };
-        //}).WithAutomaticReconnect().Build();
-
-
-        //_hubConnection.On("DataAreChanged_" + data.UserId, async () =>
-        //{
-
-        //    try
-        //    {
-
-        //        var identity = await authenticationStateProvider.GetAuthenticationStateAsync();
-
-        //        var nameUser = identity.User.Identity.Name;
-
-        //        data = await userService.GetUserDataTreeObjectsgAsync(nameUser);
-
-
-        //    }
-
-        //    catch
-        //    {
-
-        //        ((ShoppingListWebApi.Data.CustomAuthenticationStateProvider)authenticationStateProvider).MarkUserAsLoggedOut();
-
-        //        navigationManager.NavigateTo("/login");
-
-        //        return;
-        //    }
-
-        //    (listAggregatorChoosed, listChoosed) = await LoadSaveOrderHelper.LoadChoosedList(data, localStorage);
-
-
-        //    await LoadSaveOrderHelper.LoadListAggregatorsOrder(localStorage, data, authenticationStateProvider);
-
-        //    StateHasChanged();
-
-        //    return;
-
-
-        //});
-
-        //_hubConnection.On("ListItemAreChanged_" + data.UserId, async (string command, int? id1, int? listAggregationId, int? parentId) =>
-        //{
-
-
-        //    if (command.EndsWith("ListItem"))
-        //    {
-        //        var item = await shoppingListService.GetItem<ListItem>((int)id1, (int)listAggregationId);
-
-        //        if (command == "Edit/Save_ListItem")
-        //        {
-        //            var lists = data.ListAggregators.Where(a => a.ListAggregatorId == listAggregationId).FirstOrDefault();
-
-        //            ListItem foundListItem = null;
-        //            foreach (var listItem in lists.Lists)
-        //            {
-        //                foundListItem = listItem.ListItems.FirstOrDefault(a => a.Id == id1);
-        //                if (foundListItem != null) break;
-        //            }
-        //            foundListItem.ListItemName = item.ListItemName;
-        //            foundListItem.State = item.State;
-        //            StateHasChanged();
-
-
-        //        }
-        //        else
-        //             if (command == "Add_ListItem")
-        //        {
-
-
-        //            data.ListAggregators.Where(a => a.ListAggregatorId == listAggregationId).FirstOrDefault().
-        //           Lists.Where(a => a.ListId == parentId).FirstOrDefault().ListItems.Add(item);
-
-        //            StateHasChanged();
-        //        }
-        //        else
-        //                 if (command == "Delete_ListItem")
-        //        {
-
-        //            var lists = data.ListAggregators.Where(a => a.ListAggregatorId == listAggregationId).FirstOrDefault();
-
-        //            ListItem foundListItem = null;
-        //            List founfList = null;
-
-        //            foreach (var listItem in lists.Lists)
-        //            {
-        //                founfList = listItem;
-        //                foundListItem = listItem.ListItems.FirstOrDefault(a => a.Id == id1);
-        //                if (foundListItem != null) break;
-        //            }
-
-        //            founfList.ListItems.Remove(foundListItem);
-
-        //            StateHasChanged();
-
-        //        }
-        //    }
-        //});
-
-        //await _hubConnection.StartAsync();
-
+        SignalRToDispose = SignalRHelper.SignalRShoppingListInitAsync(
+            _hubConnection,
+           data,
+           (a) => data = a,
+           (a) => listAggregatorChoosed = a,
+           (a) => listChoosed = a,
+          authenticationStateProvider, userService,
+          navigationManager, StateHasChanged,
+          shoppingListService,
+          localStorage);
 
 
     }
@@ -861,8 +753,8 @@
     public void Dispose()
     {
         BrowserService.OnResize -= BrowserHasResized;
+        SignalRToDispose?.ForEach(a => a?.Dispose());
     }
-
 
 
 }

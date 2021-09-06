@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using EFDataBase;
+using FirebaseDatabase;
 using Shared;
 using System;
 using System.Collections.Generic;
@@ -17,23 +18,49 @@ namespace ShoppingListWebApi.Data
                 CreateMap<UserEntity, User>()
                     .ForMember(a => a.ListAggregators, b => b.MapFrom(x => x.UserListAggregators.Select(y => y.ListAggregator)))
                     .ForMember(a => a.Roles, b => b.MapFrom(x => x.UserRoles.Select(y => y.Role.RoleName)));
-                             
-                                
 
-                CreateMap<ListItem, ListItemEntity>();
-                CreateMap<ListItemEntity, ListItem>();
+
+            CreateMap<User, UserFD>();
+            CreateMap<UserFD, User>();
+
+            CreateMap<ListItem, ListItemEntity>();
+            CreateMap<ListItemEntity, ListItem>();
+
+            CreateMap<ListItem, ListItemFD>();
+            CreateMap<ListItemFD, ListItem>();
+
+            CreateMap<Log, LogEntity>();
+            CreateMap<LogEntity, Log>();
 
             CreateMap<Invitation, InvitationEntity>();
             CreateMap<InvitationEntity, Invitation>();
 
+            CreateMap<Invitation, InvitationFD>();
+            CreateMap<InvitationFD, Invitation>();
+
+            CreateMap<UserListAggregator, UserListAggregatorEntity>();
+            CreateMap<UserListAggregatorEntity, UserListAggregator>();
+
+            CreateMap<UserListAggregator, UserListAggregatorFD>();
+            CreateMap<UserListAggregatorFD, UserListAggregator>();
+
             CreateMap<List, ListEntity>();
                 CreateMap<ListEntity, List>();
 
-                CreateMap<ListAggregator, ListAggregatorEntity>();
-                CreateMap<ListAggregatorEntity, ListAggregator>()
-                .ForMember(a=>a.PermissionLevel, b=>b.MapFrom(x=>x.UserListAggregators.Select(y=>y.PermissionLevel).FirstOrDefault()));
+            CreateMap<List, ListFD>();
+            CreateMap<ListFD, List>();
 
-           
+            CreateMap<ListAggregator, ListAggregatorEntity>();
+            CreateMap<ListAggregatorEntity, ListAggregator>()
+               .ForMember(a=>a.PermissionLevel, b=>b.MapFrom(x=>x.UserListAggregators.Select(y=>y.PermissionLevel).FirstOrDefault()));
+
+
+
+            CreateMap<ListAggregator, ListAggregatorFD>()
+                .ForMember(a => a.Lists, a => a.Ignore());
+            CreateMap<ListAggregatorFD, ListAggregator>()
+            .ForMember(a => a.Lists, a => a.Ignore()); 
+
                 CreateMap<RoleEntity, Role>();
 
             CreateMap<KeyValuePair<UserEntity, int>, KeyValuePair<User, int>>()

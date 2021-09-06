@@ -22,6 +22,7 @@ using Newtonsoft.Json;
 using ServiceMediatR.SignalREvents;
 using Shared;
 using ShoppingListWebApi.Data;
+using SignalRService;
 
 
 namespace ShoppingListWebApi.Controllers
@@ -35,13 +36,18 @@ namespace ShoppingListWebApi.Controllers
         private readonly IMapper _mapper;
         private readonly IConfiguration _configuration;
         private readonly IMediator _mediator;
+        private readonly SignarRService _signarRService;
+        private readonly IUserEndpoint _userEndpoint;
 
-        public UserController(ShopingListDBContext context, IMapper mapper, IConfiguration configuration, IMediator mediator)
+        public UserController(ShopingListDBContext context, IMapper mapper, IConfiguration configuration, IMediator mediator
+            , SignarRService signarRService, IUserEndpoint userEndpoint)
         {
             _context = context;
             _mapper = mapper;
             _configuration = configuration;
             _mediator = mediator;
+            _signarRService = signarRService;
+            _userEndpoint = userEndpoint;
         }
 
 
@@ -49,7 +55,7 @@ namespace ShoppingListWebApi.Controllers
         [Authorize]
         public async Task<ActionResult<MessageAndStatus>> GetUser(int id)
         {
-            var user = await _context.Users.FindAsync(id);
+            var user = await _userEndpoint.FindUserByIdAsync(id);
 
             if (user == null)
             {
@@ -77,7 +83,7 @@ namespace ShoppingListWebApi.Controllers
             else
                 return new MessageAndStatusAndData<TokenAndEmailData>(null, "Some Errors", true);
 
-            var user = await _context.Users.Where(a => a.EmailAddress == meResponse.email).FirstOrDefaultAsync();
+            var user = await _userEndpoint.GetUserByNameAsync(meResponse.email);
 
             if (user == null)
             {
@@ -120,7 +126,7 @@ namespace ShoppingListWebApi.Controllers
             else
                 return BadRequest();
 
-            var user = await _context.Users.Where(a => a.EmailAddress == meResponse.email).FirstOrDefaultAsync();
+            var user = await _userEndpoint.GetUserByNameAsync(meResponse.email);
 
             if (user == null)
             {
@@ -150,9 +156,7 @@ namespace ShoppingListWebApi.Controllers
         {
             var a = (byte)LoginType.Facebook;
 
-            var user = await _context.Users.Where(a => a.EmailAddress == userName && a.Password == password
-                                                && (byte)a.LoginType == 1)
-                .FirstOrDefaultAsync();
+            var user = await _userEndpoint.LoginAsync(userName, password);
 
 
             if (user == null)
@@ -163,20 +167,16 @@ namespace ShoppingListWebApi.Controllers
             // Ok(await GenerateAccessTokenAsync(user.UserId));
         }
 
-        public enum LoginType { Local = 1, Facebook = 2 }
 
         [HttpPost("Register")]
         public async Task<MessageAndStatus> Register(string userName, string password, LoginType loginType = LoginType.Local)
         {
 
-            var user = new UserEntity { EmailAddress = userName, Password = password, LoginType = (byte)loginType };
+            User user=null;
 
-            UserRolesEntity userRoles = new UserRolesEntity { User = user, RoleId = 1 };
-
-            _context.Add(userRoles);
             try
             {
-                await _context.SaveChangesAsync();
+                user = await _userEndpoint.Register(userName, password, loginType);
             }
             catch (Exception ex)
             {
@@ -188,41 +188,13 @@ namespace ShoppingListWebApi.Controllers
             // Ok(await GenerateAccessTokenAsync(user.UserId));
         }
 
-        //[Authorize(Roles ="User")]
-        //[Authorize]
         [HttpPost("GetUserDataTree")]
         [Authorize]
+        //[Authorize(Roles ="User")]
         public async Task<ActionResult<MessageAndStatus>> GetUserDataTree(string userName)
         {
-            UserEntity userDTO = null;
-            try
-            {
-                userDTO = await _context.Users
-                   // .Where(a => a.UserId == id)
-                   .Include(a => a.UserRoles).ThenInclude(a => a.Role)
-                   .Include(a => a.UserListAggregators)
-                   .ThenInclude(a => a.ListAggregator)
-                   .ThenInclude(a => a.Lists)
-                   .ThenInclude(a => a.ListItems).Select(a => new UserEntity
-                   {
-                       UserId = a.UserId,
-                       UserListAggregators = a.UserListAggregators,
-                       EmailAddress = a.EmailAddress,
-                       UserRoles = a.UserRoles
 
-                   }).FirstOrDefaultAsync(a => a.EmailAddress == userName);
-
-
-
-            }
-            catch (Exception ex)
-            {
-
-
-            }
-
-            var userTemp = _mapper.Map(userDTO, typeof(UserEntity), typeof(User)) as User;
-
+            var userTemp = await _userEndpoint.GetTreeAsync(userName);
 
             // var token = await GenerateAccessTokenAsync(id);
 
@@ -239,29 +211,18 @@ namespace ShoppingListWebApi.Controllers
         public async Task<ActionResult<MessageAndStatus>> AddUserPermission(int listAggregationId, [FromBody] UserPermissionToListAggregation item)
         {
 
-            var user = await _context.Users.Where(a => a.EmailAddress == item.User.EmailAddress).FirstOrDefaultAsync();
+            var user = await _userEndpoint.GetUserByNameAsync(item.User.EmailAddress);
 
             if (user == null)
                 return new MessageAndStatus { Status = "ERROR", Message = "User not exist." };
 
-            var bbbb = _context.UserListAggregators.Where(a => a.User.UserId == item.User.UserId && a.ListAggregatorId == listAggregationId).Any();
-
-            if (bbbb)
+            var isUserHasListAgregation = await _userEndpoint.IsUserHasListAggregatorAsync(user.UserId, listAggregationId);
+            
+            if (isUserHasListAgregation)
                 return new MessageAndStatus { Status = "ERROR", Message = "User is on list" };
 
 
-            var userListAggregatorEntity = new UserListAggregatorEntity
-            {
-                UserId = user.UserId,
-                ListAggregatorId = listAggregationId,
-                PermissionLevel = item.Permission
-            };
-
-
-            _context.UserListAggregators.Add(userListAggregatorEntity);
-
-            await _context.SaveChangesAsync();
-
+            await _userEndpoint.AddUserListAggregationAsync(user.UserId, listAggregationId, item.Permission);
 
             return new MessageAndStatus { Status = "OK", Message = "User was added." };
         }
@@ -272,36 +233,29 @@ namespace ShoppingListWebApi.Controllers
         public async Task<ActionResult<MessageAndStatus>> InviteUserPermission(int listAggregationId, [FromBody] UserPermissionToListAggregation item)
         {
 
-            var user = await _context.Users.Where(a => a.EmailAddress == item.User.EmailAddress).FirstOrDefaultAsync();
+            var user = await _userEndpoint.GetUserByNameAsync(item.User.EmailAddress);
 
             if (user == null)
                 return await Task.FromResult(new MessageAndStatus { Status = "ERROR", Message = "User not exist." });
 
-            var bbbb = _context.Invitations.Where(a => a.EmailAddress == item.User.EmailAddress && a.ListAggregatorId == listAggregationId).Any();
+            var IsUserInvitatedToListAggregation = await _userEndpoint.IsUserInvitatedToListAggregationAsync(item.User.EmailAddress, listAggregationId);
 
-            if (bbbb)
+            if (IsUserInvitatedToListAggregation)
                 return await Task.FromResult(new MessageAndStatus { Status = "ERROR", Message = "Ivitation is on list" });
 
-            bbbb = _context.UserListAggregators.Where(a => a.UserId == user.UserId && a.ListAggregatorId == listAggregationId).Any();
-
-            if (bbbb)
+            //bbbb = _context.UserListAggregators.AsQueryable().Where(a => a.UserId == user.UserId && a.ListAggregatorId == listAggregationId).Any();
+           
+            var isUserHasListAgregation = await _userEndpoint.IsUserHasListAggregatorAsync(user.UserId, listAggregationId);
+           
+            if (isUserHasListAgregation)
                 return await Task.FromResult(new MessageAndStatus { Status = "ERROR", Message = "User already has permission." });
 
             var senderName = HttpContext.User.Identity.Name;
 
-            var invitationEntity = new InvitationEntity
-            {
-                EmailAddress = item.User.EmailAddress,
-                ListAggregatorId = listAggregationId,
-                PermissionLevel = item.Permission,
-                SenderName = senderName
-            };
+            await _userEndpoint.AddInvitationAsync(item.User.EmailAddress, listAggregationId, item.Permission, senderName);
 
 
-            _context.Add(invitationEntity);
-
-            await _context.SaveChangesAsync();
-
+            await _signarRService.SendRefreshMessageToUsersAsync(new List<int> { user.UserId}, "New_Invitation");
 
             return await Task.FromResult(new MessageAndStatus { Status = "OK", Message = "Ivitation was added." });
         }
@@ -315,34 +269,41 @@ namespace ShoppingListWebApi.Controllers
         public async Task<ActionResult<MessageAndStatus>> ChangeUserPermission(int listAggregationId, [FromBody] UserPermissionToListAggregation item)
         {
 
-            var user = await _context.Users.Where(a => a.EmailAddress == item.User.EmailAddress).FirstOrDefaultAsync();
+            var user = await _userEndpoint.GetUserByNameAsync(item.User.EmailAddress);
 
             if (user == null)
                 return new MessageAndStatus { Status = "ERROR", Message = "User not exist." };
 
 
-            var count = await _context.UserListAggregators.Where(a => a.ListAggregatorId == listAggregationId && a.PermissionLevel == 1).CountAsync();
+            var count = await _userEndpoint.GetNumberOfAdministratorsOfListAggregationsAsync(listAggregationId);
 
-            UserListAggregatorEntity lastAdmin = null;
+            int lastAdminId = -1;
             if (count == 1)
-                lastAdmin = await _context.UserListAggregators.Where(a => a.ListAggregatorId == listAggregationId && a.PermissionLevel == 1).SingleAsync();
+                lastAdminId = await _userEndpoint.GetLastAdminIdAsync(listAggregationId);
 
-            if (count == 1 && user.UserId == lastAdmin.UserId)
+            if (count == 1 && user.UserId == lastAdminId)
                 return new MessageAndStatus { Status = "ERROR", Message = "Only one Admin left - not changed." };
 
 
-            var userListAggr = await _context.UserListAggregators.Where(a => a.User.UserId == item.User.UserId && a.ListAggregatorId == listAggregationId)
-                .FirstOrDefaultAsync();
+            //var userListAggr = await _context.UserListAggregators.AsQueryable().Where(a => a.User.UserId == item.User.UserId && a.ListAggregatorId == listAggregationId)
+            //    .FirstOrDefaultAsync();
 
-            if (userListAggr == null)
+            //if (userListAggr == null)
+            //    return new MessageAndStatus { Status = "ERROR", Message = "User permission not found." };
+            //else
+            //    userListAggr.PermissionLevel = item.Permission;
+
+
+            ////  _context.Update(userListAggr);
+            //await _context.SaveChangesAsync();
+
+            bool isUserHasListAggregator = await _userEndpoint.IsUserHasListAggregatorAsync(user.UserId, listAggregationId);
+
+
+            if (!isUserHasListAggregator)
                 return new MessageAndStatus { Status = "ERROR", Message = "User permission not found." };
             else
-                userListAggr.PermissionLevel = item.Permission;
-
-
-            //  _context.Update(userListAggr);
-            await _context.SaveChangesAsync();
-
+                await _userEndpoint.SetUserPermissionToListAggrAsync(user.UserId, listAggregationId, item.Permission);
 
             await _mediator.Publish(new DataChangedEvent(new int[] { user.UserId }));
 
@@ -354,107 +315,49 @@ namespace ShoppingListWebApi.Controllers
         public async Task<ActionResult<MessageAndStatus>> DeleteUserPermission(int listAggregationId, [FromBody] UserPermissionToListAggregation item)
         {
 
-            var user = await _context.Users.Where(a => a.EmailAddress == item.User.EmailAddress).FirstOrDefaultAsync();
+            var user = await _userEndpoint.GetUserByNameAsync(item.User.EmailAddress);
 
             if (user == null)
                 return new MessageAndStatus { Status = "ERROR", Message = "User not exist." };
 
 
-            var count = await _context.UserListAggregators.Where(a => a.ListAggregatorId == listAggregationId && a.PermissionLevel == 1).CountAsync();
+            var count = await _userEndpoint.GetNumberOfAdministratorsOfListAggregationsAsync(listAggregationId);
 
-            UserListAggregatorEntity lastAdmin = null;
+            int lastAdminId = -1;
             if (count == 1)
-                lastAdmin = await _context.UserListAggregators.Where(a => a.ListAggregatorId == listAggregationId && a.PermissionLevel == 1).SingleAsync();
+                lastAdminId = await _userEndpoint.GetLastAdminIdAsync(listAggregationId);
 
-            if (count == 1 && user.UserId == lastAdmin.UserId)
+            if (count == 1 && user.UserId == lastAdminId)
                 return new MessageAndStatus { Status = "ERROR", Message = "Only one Admin left - not delete." };
 
 
-            var userListAggr = await _context.UserListAggregators.Where(a => a.User.UserId == item.User.UserId && a.ListAggregatorId == listAggregationId)
-                .FirstOrDefaultAsync();
+            var isUserHasListAggregator = await _userEndpoint.IsUserHasListAggregatorAsync(item.User.UserId, listAggregationId);
 
-            if (userListAggr == null)
+            if (!isUserHasListAggregator)
                 return new MessageAndStatus { Status = "ERROR", Message = "User permission not found." };
             else
-                _context.Remove(userListAggr);
+                await _userEndpoint.DeleteUserListAggrAscync(item.User.UserId, listAggregationId);
 
-
-            await _context.SaveChangesAsync();
 
             await _mediator.Publish(new DataChangedEvent(new int[] { user.UserId }));
 
             return new MessageAndStatus { Status = "OK", Message = "User permission was deleted." };
         }
-        public class ListAggregationForPermission
-        {
-
-            public ListAggregator ListAggregatorEntity { get; set; }
-
-            public List<UserPermissionToListAggregation> Users { get; set; }
-        }
-
-        public class UserPermissionToListAggregation
-        {
-
-            public User User { get; set; }
-            public int Permission { get; set; }
-
-        }
+     
 
         [Authorize]
         [HttpPost("GetListAggregationForPermission")]
         public async Task<ActionResult<MessageAndStatus>> GetListAggregationForPermission(string userName)
         {
-            var userListAggregatorsEntities = await _context.UserListAggregators
-
-                .Include(a => a.ListAggregator).Where(a => a.User.EmailAddress == userName && a.PermissionLevel == 1)
-                .Select(a => a.ListAggregator).ToListAsync();
-
-
-            var listAggregatinPermissionAndUser = new Dictionary<ListAggregatorEntity, List<KeyValuePair<UserEntity, int>>>();
-
-
-            foreach (var item in userListAggregatorsEntities)
-            {
-
-                var user = _context.UserListAggregators.Where(a => a.ListAggregatorId == item.ListAggregatorId)
-                    .Select(a => new KeyValuePair<UserEntity, int>(a.User, a.PermissionLevel));
-
-                var userList = await user.ToListAsync();
-
-                listAggregatinPermissionAndUser.Add(item, userList);
-            }
-
-            List<ListAggregationForPermission> dataTransfer = ConvertFromEntitiesToDTOtListObject(listAggregatinPermissionAndUser);
+          
+            var dataTransfer = await _userEndpoint.GetListAggregationForPermission2(userName);
 
 
             return new MessageAndStatus { Status = "OK", Message = JsonConvert.SerializeObject(dataTransfer) };
 
-
         }
 
-        private List<ListAggregationForPermission> ConvertFromEntitiesToDTOtListObject(Dictionary<ListAggregatorEntity, List<KeyValuePair<UserEntity, int>>> listAggregatinPermissionAndUser)
-        {
-            var listTemp = _mapper.Map(listAggregatinPermissionAndUser, typeof(Dictionary<ListAggregatorEntity, List<KeyValuePair<UserEntity, int>>>),
-                typeof(Dictionary<ListAggregator, List<KeyValuePair<User, int>>>)) as Dictionary<ListAggregator, List<KeyValuePair<User, int>>>;
-
-
-            var dataTransfer = new List<ListAggregationForPermission>();
-            // var sss = listTemp.ToList();
-
-            foreach (var item in listTemp)
-            {
-
-                var tempListUsers = new List<UserPermissionToListAggregation>();
-
-                item.Value.ForEach(a => tempListUsers.Add(new UserPermissionToListAggregation { User = a.Key, Permission = a.Value }));
-
-                dataTransfer.Add(new ListAggregationForPermission { ListAggregatorEntity = item.Key, Users = tempListUsers });
-
-            }
-
-            return dataTransfer;
-        }
+      
 
         private async Task<string> GenerateAccessTokenAsync(int userId)
         {
@@ -463,14 +366,14 @@ namespace ShoppingListWebApi.Controllers
             var key = Encoding.ASCII.GetBytes(_configuration.GetSection("Secrets")["JWTSecurityKey"]);
 
 
-            var roles = await GetUserRoles(userId);
+            var roles = await GetUserRolesByUserIdAsync(userId);
             var claims = new List<Claim>();
 
             claims.Add(new Claim(ClaimTypes.Name, Convert.ToString(userId)));
 
-            foreach (var item in roles)
+            foreach (var role in roles)
             {
-                claims.Add(new Claim(ClaimTypes.Role, item.RoleName));
+                claims.Add(new Claim(ClaimTypes.Role, role));
 
             }
 
@@ -508,7 +411,8 @@ namespace ShoppingListWebApi.Controllers
 
             user.Roles.ToList().ForEach(role => claims.Add(new Claim(ClaimTypes.Role, role)));
 
-            var userListAggregators = await _context.UserListAggregators.Where(a => a.UserId == userId).ToListAsync();
+            var userListAggregators = await _userEndpoint.GetUserListAggrByUserId(userId);
+
             userListAggregators.ForEach(item => claims.Add(new Claim("ListAggregator", $"{item.ListAggregatorId}.{item.PermissionLevel}")));
 
             var token = new JwtSecurityToken(
@@ -534,28 +438,19 @@ namespace ShoppingListWebApi.Controllers
         }
 
 
-        async Task<List<RoleEntity>> GetUserRoles(int userId)
+        Task<List<string>> GetUserRolesByUserIdAsync(int userId)
         {
 
-            var roles = await _context.Users.Where(a => a.UserId == userId).Include(a => a.UserRoles)
-                .ThenInclude(a => a.Role).Select(a => a.UserRoles.Select(b => b.Role).ToList()).FirstAsync();
-
-            return roles;
+           
+            return _userEndpoint.GetUserRolesByUserIdAsync(userId);
         }
 
-        async Task<User> GetUserWithRolesAsync(int userId)
+        Task<User> GetUserWithRolesAsync(int userId)
         {
-
-            var userEntity = await _context.Users.Where(a => a.UserId == userId).Include(a => a.UserRoles)
-                .ThenInclude(a => a.Role).FirstAsync();
-
-            var user = _mapper.Map<User>(userEntity);
-
-
-            return user;
+            return _userEndpoint.GetUserWithRolesAsync(userId);
         }
 
-        private User GetUserFromAccessToken(string accessToken)
+        private async Task<User> GetUserFromAccessTokenAsync(string accessToken)
         {
             try
             {
@@ -579,10 +474,9 @@ namespace ShoppingListWebApi.Controllers
                 {
                     var userId = principle.FindFirst(ClaimTypes.Name)?.Value;
 
-                    var userEnity = _context.Users.Include(u => u.UserRoles).ThenInclude(a => a.Role)
-                                        .Where(u => u.UserId == Convert.ToInt32(userId)).FirstOrDefault();
+                    var user = await _userEndpoint.GetUserWithRolesAsync(int.Parse(userId));
 
-                    return _mapper.Map<User>(userEnity);
+                    return user;
                 }
             }
             catch (Exception)
