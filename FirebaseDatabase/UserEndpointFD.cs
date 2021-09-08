@@ -102,16 +102,24 @@ namespace FirebaseDatabase
             return user;
         }
 
-        public async Task<List<User>> FindUserByIdAsync(IEnumerable<int> listUserId)
+        public async Task<List<User>> FindUsersByListOfIdAsync(IEnumerable<int> listUserId)
         {
 
             if (!listUserId.Any()) return null;
 
-            var sanap = await _usersCol.WhereIn(nameof(UserFD.UserId), listUserId).GetSnapshotAsync();
+            var docUsersSnapshotsList = await RestrictQuerryListTo10Async(
+                      listUserId,
+                      (i, list) =>
+                      _usersCol.WhereIn(nameof(UserFD.UserId),
+                           list.Skip(10 * i).Take(10)).GetSnapshotAsync()
+                      );
 
-            if (!sanap.Any()) return null;
 
-            var listUser = sanap.Select(a =>
+            //var sanap = await _usersCol.WhereIn(nameof(UserFD.UserId), listUserId).GetSnapshotAsync();
+
+            if (!docUsersSnapshotsList.Any()) return null;
+
+            var listUser = docUsersSnapshotsList.Select(a =>
             {
                 var us = _mapper.Map<User>(a.ConvertTo<UserFD>());
 
@@ -157,8 +165,16 @@ namespace FirebaseDatabase
 
              if (!userListAggregatorsFD.Any()) return new List<ListAggregationForPermission>(); 
 
-            var listAggrDocSanp =  await  _listAggrCol.WhereIn(nameof(ListAggregatorFD.ListAggregatorId), 
-                                          userListAggregatorsFD.Select(a=>a.ListAggregatorId)).GetSnapshotAsync();
+            //var listAggrDocSanp =  await  _listAggrCol.WhereIn(nameof(ListAggregatorFD.ListAggregatorId), 
+            //                              userListAggregatorsFD.Select(a=>a.ListAggregatorId)).GetSnapshotAsync();
+
+
+            var listAggrDocSanp = await RestrictQuerryListTo10Async(
+                    userListAggregatorsFD.Select(a => a.ListAggregatorId),
+                    (i, list) =>
+                    _listAggrCol.WhereIn(nameof(ListAggregatorFD.ListAggregatorId),
+                         list.Skip(10 * i).Take(10)).GetSnapshotAsync()
+                    );
 
 
 
@@ -183,9 +199,18 @@ namespace FirebaseDatabase
             var dataTransfer = new List<ListAggregationForPermission>();
 
 
-            var userListAggr = (await _userListAggrCol.WhereIn(nameof(UserListAggregatorFD.ListAggregatorId), 
-                                                        listAggregators.Select(a=>a.ListAggregatorId))
-                                                            .GetSnapshotAsync()).Select(a=>a.ConvertTo<UserListAggregatorFD>());
+            var userListAggrDocSanp = await RestrictQuerryListTo10Async(
+                   listAggregators.Select(a => a.ListAggregatorId),
+                   (i, list) =>
+                   _userListAggrCol.WhereIn(nameof(UserListAggregatorFD.ListAggregatorId),
+                        list.Skip(10 * i).Take(10)).GetSnapshotAsync()
+                   );
+
+            var userListAggr = userListAggrDocSanp.Select(a => a.ConvertTo<UserListAggregatorFD>());
+
+            //var userListAggr = (await _userListAggrCol.WhereIn(nameof(UserListAggregatorFD.ListAggregatorId), 
+            //                                            listAggregators.Select(a=>a.ListAggregatorId))
+            //                                                .GetSnapshotAsync()).Select(a=>a.ConvertTo<UserListAggregatorFD>());
 
             foreach (var listAggr in listAggregators)
             {
@@ -217,7 +242,7 @@ namespace FirebaseDatabase
                 }).ToList();
               
 
-                var listUser = await FindUserByIdAsync(tempListUserIdAndPermission.Select(a => a.UserId));
+                var listUser = await FindUsersByListOfIdAsync(tempListUserIdAndPermission.Select(a => a.UserId));
 
 
                 foreach (var userR in listUser)
@@ -301,11 +326,17 @@ namespace FirebaseDatabase
 
             if (!listUserListAggregator.Any()) return userDTO;
 
-            var listAggrQueryySanp = await listAggregatorColection.WhereIn(nameof(ListAggregatorFD.ListAggregatorId),
-                listUserListAggregator.Select(a => a.ListAggregatorId)).GetSnapshotAsync();
+           
+
+            var docListAggerSnapshotsList = await RestrictQuerryListTo10Async(
+                       listUserListAggregator.Select(a => a.ListAggregatorId),
+                       (i, list) =>
+                       listAggregatorColection.WhereIn(nameof(ListAggregatorFD.ListAggregatorId),
+                            list.Skip(10 * i).Take(10)).GetSnapshotAsync()
+                       );
 
 
-            foreach (var listAggrSanapTask in listAggrQueryySanp.Reverse())
+            foreach (var listAggrSanapTask in docListAggerSnapshotsList.Reverse())
             {
                
 
@@ -327,12 +358,17 @@ namespace FirebaseDatabase
                 if (!tempListAggrFD.Lists.Any()) continue;
 
 
-                var listQueryySanp = await listColection.WhereIn(nameof(ListFD.ListId),
-                           tempListAggrFD.Lists.Select(a => a)).GetSnapshotAsync();
+              
+
+                var docListSnapshotsList = await RestrictQuerryListTo10Async(
+                       tempListAggrFD.Lists.Select(a => a),
+                       (i, list) =>
+                       listColection.WhereIn(nameof(ListFD.ListId),
+                            list.Skip(10 * i).Take(10)).GetSnapshotAsync()
+                       );
 
 
-
-                foreach (var listSnapTask in listQueryySanp.Reverse())
+                foreach (var listSnapTask in docListSnapshotsList.Reverse())
                 {
                  
 
@@ -351,13 +387,17 @@ namespace FirebaseDatabase
 
                    
                     if (!tempListFD.ListItems.Any()) continue;
+                                                  
 
-                    var listItemQueryySanp = await listItemColection.WhereIn(nameof(ListItemFD.ListItemId),
-                             tempListFD.ListItems.Select(a => a)).GetSnapshotAsync();
+                    var docListItemSnapshotsList = await RestrictQuerryListTo10Async(
+                        tempListFD.ListItems.Select(a => a),
+                        (i, list) =>
+                        listItemColection.WhereIn(nameof(ListItemFD.ListItemId),
+                             list.Skip(10 * i).Take(10)).GetSnapshotAsync()
+                        );
 
 
-
-                    foreach (var listItemSanpTask in listItemQueryySanp.Reverse())
+                    foreach (var listItemSanpTask in docListItemSnapshotsList.Reverse())
                     {
 
                         var tempListItemFD = listItemSanpTask.ConvertTo<ListItemFD>();
@@ -384,6 +424,29 @@ namespace FirebaseDatabase
             return userDTO;
         }
 
+
+        async Task<IEnumerable<DocumentSnapshot>> RestrictQuerryListTo10Async(IEnumerable<int> argumentList, Func<int, IEnumerable<int>, Task<QuerySnapshot>> func )
+        {
+
+            int index = (int)Math.Ceiling(argumentList.Count() / 10.0);
+
+            var listQuerrySnapTask = new List<Task<QuerySnapshot>>();
+
+
+            for (int i = 0; i < index; i++)
+            {
+                listQuerrySnapTask.Add(func(i, argumentList));
+
+
+
+            }
+
+            await Task.WhenAll(listQuerrySnapTask);
+
+            var documentSnapshotsList = listQuerrySnapTask.SelectMany(a => a.Result);
+
+            return documentSnapshotsList;
+        }
         public async Task<User> GetUserByNameAsync(string userName)
         {
             var snapUserFD = await _usersCol.WhereEqualTo(nameof(UserFD.EmailAddress), userName).GetSnapshotAsync();

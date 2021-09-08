@@ -133,9 +133,11 @@ namespace FirebaseDatabase
 
                 await Task.WhenAll(t1, writeResultTask);
 
+                
+
             });
 
-            if (writeResultTask.Result != null) return 1;
+            if (writeResultTask?.Result != null) return 1;
 
             return 0;
         }
