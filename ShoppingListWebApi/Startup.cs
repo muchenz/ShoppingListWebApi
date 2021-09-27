@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
 using EFDataBase;
+using FirebaseChachedDatabase;
 using FirebaseDatabase;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -51,6 +52,9 @@ namespace ShoppingListWebApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+
+            services.AddControllers();
+
             services.AddControllers().AddNewtonsoftJson(options =>
                   options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
                 ).AddApplicationPart(typeof(Startup).Assembly); ;
@@ -64,17 +68,30 @@ namespace ShoppingListWebApi
             Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", filepath);
 
 
+            services.AddStackExchangeRedisCache(config =>
+            {
+                //config.Configuration = _env.IsDevelopment()
+                //    ? "127.0.0.1:6379"
+                //    : Environment.GetEnvironmentVariable("REDIS_URL");
+
+                config.Configuration = "127.0.0.1:6379";
+            }
+           );
+
+
             //services.AddTransient<IUserEndpoint, UserEndpoint>();
             //services.AddTransient<IListAggregatorEndpoint, ListAggregatorEndpoint>();
             //services.AddTransient<IListItemEndpoint, ListItemEndpoint>();
             //services.AddTransient<IInvitationEndpoint, InvitationEndpoint>();
             //services.AddTransient<IListEndpoint, ListEndpoint>();
 
-            services.AddTransient<IUserEndpoint, UserEndpointFD>();
-            services.AddTransient<IListAggregatorEndpoint, ListAggregatorEndpointFD>();
-            services.AddTransient<IListItemEndpoint, ListItemEndpointFD>();
-            services.AddTransient<IInvitationEndpoint, InvitationEndpointFD>();
-            services.AddTransient<IListEndpoint, ListEndpointFD>();
+            //services.AddTransient<IUserEndpoint, UserEndpointFD>();
+            //services.AddTransient<IListAggregatorEndpoint, ListAggregatorEndpointFD>();
+            //services.AddTransient<IListItemEndpoint, ListItemEndpointFD>();
+            //services.AddTransient<IInvitationEndpoint, InvitationEndpointFD>();
+            //services.AddTransient<IListEndpoint, ListEndpointFD>();
+
+            services.AddFirebaseCaschedDatabas();
 
             services.AddAutoMapper(typeof(MappingProfile));
 
@@ -116,7 +133,8 @@ namespace ShoppingListWebApi
                 options.AddPolicy("ALL", builder =>
                 {
                     builder.WithOrigins("https://localhost:44379", "https://localhost:5003"
-                        , "https://shoppinglist2.mcfly.ml/", "https://shoppinglist.mcfly.ml/");
+                        , "https://shoppinglist2.mcfly.ml", "https://shoppinglist.mcfly.ml");
+                    //builder.AllowAnyOrigin();
                     builder.AllowAnyHeader();
                     builder.AllowAnyMethod();
                     //builder.AllowCredentials();
@@ -194,6 +212,7 @@ namespace ShoppingListWebApi
             {
                 endpoints.MapControllers();
             });
+
         }
     }
 }

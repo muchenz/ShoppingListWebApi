@@ -2,14 +2,17 @@
 
 @using Newtonsoft.Json
 @using Services
-@using BlazorClient.Data 
+@using BlazorClient.Data
 @using Microsoft.Extensions.Logging
+@using Microsoft.Extensions.Configuration;
+
 
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
 @inject Blazored.LocalStorage.ILocalStorageService localStorageService
 @inject UserService userService;
 @inject ILogger<Login> _logger
+@inject IConfiguration configuration
 
 <EditForm OnValidSubmit="@ValidateUser" Model="@this">
     <div>
@@ -55,7 +58,7 @@
     protected override Task OnInitializedAsync()
     {
 
-        if (NavigationManager.GetParameter("error")!=null)
+        if (NavigationManager.GetParameter("error") != null)
         {
             LoginMesssage = NavigationManager.GetParameter("error");
         }
@@ -111,7 +114,7 @@
 
             }
         }
-        catch(NullReferenceException ex)
+        catch (NullReferenceException ex)
         {
             _logger.LogError(ex, "alla");
         }
@@ -119,13 +122,15 @@
 
     void FacebookSignIn()
     {
+        var apiAddress = configuration.GetSection("AppSettings")["ShoppingWebAPIBaseAddress"];
 
         NavigationManager.NavigateTo(string.Format("https://www.facebook.com/v10.0/dialog/oauth?client_id={0}&response_type=code&redirect_uri={1}&state={2}&scope={3}",
-        259675572518658,
-         //"https://localhost:44394/signinfacebook",
-         "https://localhost:5001/api/User",
-        // "https://www.facebook.com/connect/login_success.html",
-        "{st=state123abc,ds=123456789}", "public_profile,email"));
+    259675572518658,
+       //"https://localhost:44394/signinfacebook",
+       //"https://localhost:5001/api/User",
+       apiAddress + "User",
+    // "https://www.facebook.com/connect/login_success.html",
+    "{st=state123abc,ds=123456789}", "public_profile,email"));
     }
 
 

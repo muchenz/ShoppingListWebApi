@@ -121,8 +121,12 @@ namespace ShoppingListWebApi.Controllers
         {
             MeResponse meResponse = null;
 
+            string referer = Request.Headers["Referer"].ToString();
+
+            string myDomain = Request.GetDisplayUrl().Split('?')[0];
+
             if (!string.IsNullOrEmpty(code))
-                meResponse = await WebApiHelper.GetFacebookUserFromCodeAsync(code, state, _configuration);
+                meResponse = await WebApiHelper.GetFacebookUserFromCodeAsync(code, state, _configuration, myDomain);
             else
                 return BadRequest();
 
@@ -133,7 +137,8 @@ namespace ShoppingListWebApi.Controllers
 
                 var res = await Register(meResponse.email, "", LoginType.Facebook);
 
-                return Redirect($"https://localhost:5081/login?token={res.Message}");
+
+                return Redirect($"{referer}login?token={res.Message}");
 
             }
             else
@@ -141,13 +146,13 @@ namespace ShoppingListWebApi.Controllers
                 if (user.LoginType == 2) // 2 ==>> LoginType.Facebook
                 {
                     var token = await GenerateToken2(user.UserId);
-                    return Redirect($"https://localhost:5081/login?token={token}&sss=(rrr)");
+                    return Redirect($"{referer}login?token={token}&sss=(rrr)");
 
                 }
 
             }
 
-            return Redirect("https://localhost:5081/login?error=Email already exist");
+            return Redirect($"{referer}login?error=Email already exist");
 
         }
 

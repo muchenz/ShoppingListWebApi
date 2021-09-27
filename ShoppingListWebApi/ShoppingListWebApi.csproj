@@ -20,6 +20,7 @@
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.6" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="5.0.6" />
+    <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="3.1.19" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="3.1.2" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="Serilog.Extensions.Logging.File" Version="2.0.0" />
@@ -35,7 +36,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EFDataBase\EFDataBase.csproj" />
-    <ProjectReference Include="..\FirebaseDatabase\FirebaseDatabase.csproj" />
+    <ProjectReference Include="..\FirebaseChachedDatabase\FirebaseChachedDatabase.csproj" />
     <ProjectReference Include="..\ServiceMediatR\ServiceMediatR.csproj" />
     <ProjectReference Include="..\Shared\Shared.csproj" />
   </ItemGroup>

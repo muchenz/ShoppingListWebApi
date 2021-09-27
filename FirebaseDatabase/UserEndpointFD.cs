@@ -437,8 +437,6 @@ namespace FirebaseDatabase
             {
                 listQuerrySnapTask.Add(func(i, argumentList));
 
-
-
             }
 
             await Task.WhenAll(listQuerrySnapTask);

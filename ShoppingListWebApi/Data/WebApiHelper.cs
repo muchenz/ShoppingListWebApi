@@ -34,7 +34,8 @@ namespace ShoppingListWebApi.Data
 
 
 
-        public static async Task<MeResponse> GetFacebookUserFromCodeAsync(string code, string state, IConfiguration configuration)
+        public static async Task<MeResponse> GetFacebookUserFromCodeAsync(string code, string state,
+            IConfiguration configuration, string myDomain)
         {
 
             string apiPrivateKey = configuration.GetSection("Secrets")["FacbookApiPrivateKey"];
@@ -43,7 +44,9 @@ namespace ShoppingListWebApi.Data
             var querry = new QueryBuilder();
             querry.Add("client_id", appId);
             querry.Add("client_secret", apiPrivateKey);
-            querry.Add("redirect_uri", "https://localhost:5001/api/User");
+            //querry.Add("redirect_uri", "https://localhost:5001/api/User");
+           // querry.Add("redirect_uri", "https://webapi.mcfly.ml/api/User");
+            querry.Add("redirect_uri", myDomain);
             querry.Add("code", code);
 
 
