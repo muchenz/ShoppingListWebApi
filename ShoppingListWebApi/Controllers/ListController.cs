@@ -47,7 +47,7 @@ namespace ShoppingListWebApi.Controllers
 
             if (res.IsError) Forbid();
 
-            var userList = await _mediator.Send(new GetUserIdFromListAggrIdCommand(listAggregationId));
+            var userList = await _mediator.Send(new GetUserIdFromListAggrIdCommand(listAggregationId, User));
 
             await _mediator.Publish(new DataChangedEvent(userList.Data));
 
@@ -63,7 +63,7 @@ namespace ShoppingListWebApi.Controllers
 
             if (res.IsError) Forbid();
 
-            var userList = await _mediator.Send(new GetUserIdFromListAggrIdCommand(listAggregationId));
+            var userList = await _mediator.Send(new GetUserIdFromListAggrIdCommand(listAggregationId, User));
 
             await _mediator.Publish(new DataChangedEvent(userList.Data));
 
@@ -83,7 +83,7 @@ namespace ShoppingListWebApi.Controllers
             if (res.IsError) return Forbid();
 
 
-            var userList = await _mediator.Send(new GetUserIdFromListAggrIdCommand(listAggregationId));
+            var userList = await _mediator.Send(new GetUserIdFromListAggrIdCommand(listAggregationId, User));
             await _mediator.Publish(new DataChangedEvent(userList.Data));
 
             return await Task.FromResult(res.Data);

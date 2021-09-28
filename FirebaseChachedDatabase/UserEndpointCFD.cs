@@ -65,18 +65,22 @@ namespace FirebaseChachedDatabase
                 UserId = int.Parse(userFD.Id)
             };
 
-            querrySnapshot = await _userListAggrCol.WhereEqualTo("UserId", userFD.UserId).GetSnapshotAsync();
+            //querrySnapshot = await _userListAggrCol.WhereEqualTo("UserId", userFD.UserId).GetSnapshotAsync();
 
 
-            var listUserListAggregator = new List<UserListAggregatorFD>();
+            //var listUserListAggregatorFD = new List<UserListAggregatorFD>();
 
-            foreach (var item in querrySnapshot)
-            {
-                var temp = item.ConvertTo<UserListAggregatorFD>();
-                listUserListAggregator.Add(temp);
-            }
+            //foreach (var item in querrySnapshot)
+            //{
+            //    var temp = item.ConvertTo<UserListAggregatorFD>();
+            //    listUserListAggregator.Add(temp);
+            //}
 
-            return (userDTO, listUserListAggregator);
+            var listUserListAggregator = await GetUserListAggrByUserId(userFD.UserId);
+
+            var listUserListAggregatorFD = _mapper.Map<List<UserListAggregatorFD>>(listUserListAggregator);
+
+            return (userDTO, listUserListAggregatorFD);
         }
 
 
@@ -216,13 +220,15 @@ namespace FirebaseChachedDatabase
 
             var listToRemove = new List<UserListAggregatorFD>();
 
+
             foreach (var item in userAggrList)
             {
 
                 var cashed = await _cache.GetOrAddAsync(item.ListAggregatorId, i => Task.FromResult(new ListAggregator()));
-
+                
                 if (cashed.Cached)
                 {
+                    cashed.value.PermissionLevel = item.PermissionLevel;
                     listToRemove.Add(item);
                     listDTO.Add(cashed.value);
                 }
@@ -236,6 +242,8 @@ namespace FirebaseChachedDatabase
             {
                 await _cache.SetAsync(item.ListAggregatorId, item);
             }
+
+
 
             listDTO.AddRange(listLackDataFromDatabaseDTO);
 
@@ -284,14 +292,16 @@ namespace FirebaseChachedDatabase
             return _userEndpointFD.GetLastAdminIdAsync(listAggregationId);
         }
 
-        public Task SetUserPermissionToListAggrAsync(int userId, int listAggregationId, int permission)
+        public async Task SetUserPermissionToListAggrAsync(int userId, int listAggregationId, int permission)
         {
-            return _userEndpointFD.SetUserPermissionToListAggrAsync(userId, listAggregationId, permission);
+            await _cache.RemoveAsync("userId_" + userId);
+            await  _userEndpointFD.SetUserPermissionToListAggrAsync(userId, listAggregationId, permission);
         }
 
-        public Task DeleteUserListAggrAscync(int userId, int listAggregationId)
+        public async Task DeleteUserListAggrAscync(int userId, int listAggregationId)
         {
-            return _userEndpointFD.DeleteUserListAggrAscync(userId, listAggregationId);
+            await _cache.RemoveAsync("userId_" + userId);
+            await _userEndpointFD.DeleteUserListAggrAscync(userId, listAggregationId);
         }
 
         public Task<List<ListAggregationForPermission>> GetListAggregationForPermission(string userName)
@@ -304,10 +314,23 @@ namespace FirebaseChachedDatabase
             return _userEndpointFD.GetListAggregationForPermission2(userName);
         }
 
-        public Task<List<UserListAggregator>> GetUserListAggrByUserId(int userId)
+        public async Task<List<UserListAggregator>> GetUserListAggrByUserId(int userId)
         {
-            return _userEndpointFD.GetUserListAggrByUserId(userId);
+
+            var cashed = await _cache.GetOrAddAsync("userId_" + userId, i => Task.FromResult(new List<UserListAggregator>()));
+
+            if (cashed.Cached)
+            {
+                return cashed.value;
+            }
+
+            var data = await _userEndpointFD.GetUserListAggrByUserId(userId);
+
+            await _cache.SetAsync("userId_" + userId, data);
+
+            return data;
         }
+
 
         public Task<List<string>> GetUserRolesByUserIdAsync(int userId)
         {

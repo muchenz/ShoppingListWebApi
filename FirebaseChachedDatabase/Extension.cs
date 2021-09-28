@@ -13,8 +13,19 @@ namespace FirebaseChachedDatabase
 
 
 
-    public static class Class1
+    public static class Extension
     {
+        public static Task RemoveAnyKeyAsync<TKey>(this IDistributedCache cache, TKey anyKey)
+        {
+            var key = anyKey switch
+            {
+                string k => k,
+                _ => anyKey.ToString(),
+            };
+          
+
+            return cache.RemoveAsync(key);
+        }
 
         public static Task SetAsync<T, TKey>(this IDistributedCache cache,TKey anyKey, T value)
          where T : class
@@ -62,7 +73,7 @@ namespace FirebaseChachedDatabase
             {
                 return null;
             }
-
+            
             return JsonSerializer.Deserialize<T>(jsonValue);
         }
 

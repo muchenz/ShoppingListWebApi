@@ -42,7 +42,7 @@ namespace FirebaseDatabase
         {
             var listAggrFD = _mapper.Map<ListAggregatorFD>(listAggregator);
 
-
+            
             var userListAggregatorFD = new UserListAggregatorFD { UserId = parentId,  PermissionLevel = 1 };
 
             await Db.RunTransactionAsync(async transation =>
@@ -68,8 +68,10 @@ namespace FirebaseDatabase
                 await Task.WhenAll(t1, t2, t3);
             });
 
+            var listAggr = _mapper.Map<ListAggregator>(listAggrFD);
 
-            return _mapper.Map<ListAggregator>(listAggrFD);
+            listAggr.PermissionLevel = 1;
+            return listAggr;
         }
 
         public Task ChangeOrderListItemAsync(IEnumerable<ListAggregator> items)

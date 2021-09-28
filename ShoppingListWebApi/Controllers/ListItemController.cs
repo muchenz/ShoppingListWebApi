@@ -79,7 +79,7 @@ namespace ShoppingListWebApi.Controllers
         {
             if (!await CheckIntegrityListItemAsync(ItemId, listAggregationId)) return Forbid();
 
-            var amount = await _listItemEndpoint.DeleteListItemAsync(ItemId);
+            var amount = await _listItemEndpoint.DeleteListItemAsync(ItemId, listAggregationId);
 
             var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(listAggregationId, _context, User);
             await _mediator.Publish(new AddEditSaveDeleteListItemEvent(userList, "Delete_ListItem", ItemId, listAggregationId));
@@ -186,7 +186,7 @@ namespace ShoppingListWebApi.Controllers
             var t1 = sw.ElapsedMilliseconds;
             var res = await _mediator.Send(new SavePropertyCommand(item, propertyName, listAggregationId));
 
-            var users = await _mediator.Send(new GetUserIdFromListAggrIdCommand(listAggregationId));
+            var users = await _mediator.Send(new GetUserIdFromListAggrIdCommand(listAggregationId, User));
             Debug.WriteLine(sw.ElapsedMilliseconds - t1);
 
            // await _signarRService.SendRefreshMessageToUsersAsync(users.Data, "Edit/Save_ListItem", item.ListItemId, listAggregationId);

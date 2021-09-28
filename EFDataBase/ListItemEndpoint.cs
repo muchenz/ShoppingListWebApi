@@ -39,7 +39,7 @@ namespace EFDataBase
 
         }
 
-        public async Task<int> DeleteListItemAsync(int listItemId)
+        public async Task<int> DeleteListItemAsync(int listItemId, int listAggregationId)
         {
             _context.ListItems.Remove(_context.ListItems.Single(a => a.ListItemId == listItemId));
             var amount = await _context.SaveChangesAsync();
@@ -108,7 +108,7 @@ namespace EFDataBase
             return amount;
         }
 
-        public async Task<ListItem> SavePropertyAsync(ListItem listItem, string propertyName)
+        public async Task<ListItem> SavePropertyAsync(ListItem listItem, string propertyName, int listAggregationId)
         {
             var listItemEntity = _mapper.Map<ListItemEntity>(listItem);
 

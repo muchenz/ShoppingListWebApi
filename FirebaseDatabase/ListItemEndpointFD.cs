@@ -105,7 +105,7 @@ namespace FirebaseDatabase
             return listItem.ListAggrId == listAggregationId;
         }
 
-        public async Task<int> DeleteListItemAsync(int listItemId)
+        public async Task<int> DeleteListItemAsync(int listItemId, int listAggregationId)
         {
             Task<WriteResult> writeResultTask = null;
 
@@ -162,7 +162,7 @@ namespace FirebaseDatabase
             return _mapper.Map<ListItem>(listItem);
         }
 
-        public async Task<ListItem> SavePropertyAsync(ListItem listItem, string propertyName)
+        public async Task<ListItem> SavePropertyAsync(ListItem listItem, string propertyName, int listAggregationId)
         {
             var listItemDocSnap = await _listItemCol.Document(listItem.ListItemId.ToString())
                 .UpdateAsync(propertyName, listItem.GetType().GetProperty(propertyName).GetValue(listItem));
