@@ -12,6 +12,6 @@ namespace Shared
         Task<int> DeleteListAsync(int listId, int listAggregationId);
         Task<bool> CheckIntegrityListAsync(int listId, int listAggregationId);
         Task<bool> CheckIntegrityListAggrAsync(int listAggrId, int listAggregationId);
-        Task<List> EditListAsync(List list);
+        Task<List> EditListAsync(List list, int listAggregationId);
     }
 }

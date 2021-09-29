@@ -22,11 +22,11 @@ namespace EFDataBase
             _mapper = mapper;
         }
 
-      
+
 
         public async Task<User> FindUserByIdAsync(int id)
         {
-            var user =  await _context.Users.FindAsync(id);
+            var user = await _context.Users.FindAsync(id);
 
             return _mapper.Map<User>(user);
         }
@@ -53,7 +53,7 @@ namespace EFDataBase
 
 
 
-           }
+            }
             catch (Exception ex)
             {
 
@@ -79,8 +79,8 @@ namespace EFDataBase
 
         public Task<bool> IsUserHasListAggregatorAsync(int userId, int listAggregatorId)
         {
-           return  _context.UserListAggregators.AsQueryable()
-                .Where(a => a.User.UserId == userId && a.ListAggregatorId == listAggregatorId).AnyAsync();
+            return _context.UserListAggregators.AsQueryable()
+                 .Where(a => a.User.UserId == userId && a.ListAggregatorId == listAggregatorId).AnyAsync();
         }
 
         public async Task AddUserListAggregationAsync(int userId, int listAggregationId, int permission)
@@ -107,7 +107,7 @@ namespace EFDataBase
         }
 
         public async Task AddInvitationAsync(string toUserName, int listAggregationId, int permission, string fromSenderName)
-{
+        {
 
             var invitationEntity = new InvitationEntity
             {
@@ -124,7 +124,7 @@ namespace EFDataBase
 
         public Task<int> GetNumberOfAdministratorsOfListAggregationsAsync(int listAggregationId)
         {
-            return  _context.UserListAggregators.AsQueryable().Where(a => a.ListAggregatorId == listAggregationId && a.PermissionLevel == 1).CountAsync();
+            return _context.UserListAggregators.AsQueryable().Where(a => a.ListAggregatorId == listAggregationId && a.PermissionLevel == 1).CountAsync();
         }
 
         public async Task<int> GetLastAdminIdAsync(int listAggregationId)
@@ -138,8 +138,8 @@ namespace EFDataBase
             var userListAggr = await _context.UserListAggregators.AsQueryable().Where(a => a.User.UserId == userId && a.ListAggregatorId == listAggregationId)
                 .FirstOrDefaultAsync();
 
-            
-                userListAggr.PermissionLevel = permission;
+
+            userListAggr.PermissionLevel = permission;
 
 
             //  _context.Update(userListAggr);
@@ -158,7 +158,7 @@ namespace EFDataBase
             await _context.SaveChangesAsync();
         }
 
-        public async Task<List<ListAggregationForPermission>> GetListAggregationForPermission(string userName)
+        public async Task<List<ListAggregationForPermission>> GetListAggregationForPermissionAsync(string userName)
         {
             var userListAggregatorsEntities = await _context.UserListAggregators
 
@@ -207,7 +207,7 @@ namespace EFDataBase
 
             return dataTransfer;
         }
-        public async Task<List<ListAggregationForPermission>> GetListAggregationForPermission2(string userName)
+        public async Task<List<ListAggregationForPermission>> GetListAggregationForPermission2Async(string userName)
         {
             var listAggregatorsEntities = await _context.UserListAggregators
 
@@ -267,7 +267,7 @@ namespace EFDataBase
         public Task<List<string>> GetUserRolesByUserIdAsync(int userId)
         {
 
-            var roles =  _context.Users.AsQueryable().Where(a => a.UserId == userId).Include(a => a.UserRoles)
+            var roles = _context.Users.AsQueryable().Where(a => a.UserId == userId).Include(a => a.UserRoles)
                 .ThenInclude(a => a.Role).Select(a => a.UserRoles.Select(b => b.Role.RoleName).ToList()).FirstAsync();
 
             return roles;
@@ -303,10 +303,58 @@ namespace EFDataBase
             UserRolesEntity userRoles = new UserRolesEntity { User = user, RoleId = 1 };
 
             _context.Add(userRoles);
-         
+
             await _context.SaveChangesAsync();
 
             return _mapper.Map<User>(user);
+        }
+
+        public async Task<List<int>> GetUserIdFromListAggrIdAsync(int listAggregationId)
+        {
+            return await _context.UserListAggregators.AsQueryable()
+                .Where(a => a.ListAggregatorId == listAggregationId).Select(a => a.UserId).ToListAsync();
+        }
+
+        public async Task<List<ListAggregationForPermission>> GetListAggregationForPermission_EmptyAsync(int userId)
+        {
+            var listAggregatorsEntities = await _context.UserListAggregators
+               .Include(a => a.ListAggregator).Where(a => a.UserId == userId && a.PermissionLevel == 1)
+               .Select(a => a.ListAggregator).ToListAsync();
+
+            var listAggregators = _mapper.Map<List<ListAggregator>>(listAggregatorsEntities);
+
+            return listAggregators.Select(a => new ListAggregationForPermission { ListAggregatorEntity = a }).ToList();
+        }
+
+        public async Task<ListAggregationForPermission> GetListAggregationForPermissionByListAggrIdAsync(ListAggregationForPermission listAggregationForPermission)
+        { 
+            listAggregationForPermission.Users = new List<UserPermissionToListAggregation>();
+
+
+            var tempList = await _context.UserListAggregators.AsQueryable()
+            .Where(a => a.ListAggregatorId == listAggregationForPermission.ListAggregatorEntity.ListAggregatorId)
+                .Select(a => new { UserId = a.UserId, Permission = a.PermissionLevel }).ToListAsync();
+
+
+            foreach (var item in tempList)
+            {
+                var tempUserEntity = await _context.Users.AsQueryable().Where(a => a.UserId == item.UserId).FirstOrDefaultAsync();
+
+                var tempUser = _mapper.Map<User>(tempUserEntity);
+
+
+                var tempUserPermissionToListAggregation = new UserPermissionToListAggregation();
+
+
+                listAggregationForPermission.Users.Add(tempUserPermissionToListAggregation);
+
+                tempUserPermissionToListAggregation.Permission = item.Permission;
+                tempUserPermissionToListAggregation.User = tempUser;
+
+
+            }
+
+            return listAggregationForPermission;
         }
     }
 }

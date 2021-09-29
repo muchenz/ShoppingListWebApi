@@ -224,13 +224,13 @@ namespace FirebaseChachedDatabase
             foreach (var item in userAggrList)
             {
 
-                var cashed = await _cache.GetOrAddAsync(item.ListAggregatorId, i => Task.FromResult(new ListAggregator()));
+                var cashed = await _cache.GetAsync<ListAggregator>(item.ListAggregatorId);
                 
-                if (cashed.Cached)
+                if (cashed != null)
                 {
-                    cashed.value.PermissionLevel = item.PermissionLevel;
+                    cashed.PermissionLevel = item.PermissionLevel;
                     listToRemove.Add(item);
-                    listDTO.Add(cashed.value);
+                    listDTO.Add(cashed);
                 }
             }
 
@@ -304,24 +304,24 @@ namespace FirebaseChachedDatabase
             await _userEndpointFD.DeleteUserListAggrAscync(userId, listAggregationId);
         }
 
-        public Task<List<ListAggregationForPermission>> GetListAggregationForPermission(string userName)
+        public Task<List<ListAggregationForPermission>> GetListAggregationForPermissionAsync(string userName)
         {
-            return _userEndpointFD.GetListAggregationForPermission(userName);
+            return _userEndpointFD.GetListAggregationForPermissionAsync(userName);
         }
 
-        public Task<List<ListAggregationForPermission>> GetListAggregationForPermission2(string userName)
+        public Task<List<ListAggregationForPermission>> GetListAggregationForPermission2Async(string userName)
         {
-            return _userEndpointFD.GetListAggregationForPermission2(userName);
+            return _userEndpointFD.GetListAggregationForPermission2Async(userName);
         }
 
         public async Task<List<UserListAggregator>> GetUserListAggrByUserId(int userId)
         {
 
-            var cashed = await _cache.GetOrAddAsync("userId_" + userId, i => Task.FromResult(new List<UserListAggregator>()));
+            var cashed = await _cache.GetAsync<List<UserListAggregator>>("userId_" + userId);
 
-            if (cashed.Cached)
+            if (cashed != null)
             {
-                return cashed.value;
+                return cashed;
             }
 
             var data = await _userEndpointFD.GetUserListAggrByUserId(userId);
@@ -350,6 +350,21 @@ namespace FirebaseChachedDatabase
         public Task<User> Register(string userName, string password, LoginType loginType)
         {
             return _userEndpointFD.Register(userName, password, loginType);
+        }
+
+        public Task<List<int>> GetUserIdFromListAggrIdAsync(int listAggregationId)
+        {
+            return _userEndpointFD.GetUserIdFromListAggrIdAsync(listAggregationId);
+        }
+
+        public Task<List<ListAggregationForPermission>> GetListAggregationForPermission_EmptyAsync(int userId)
+        {
+            return _userEndpointFD.GetListAggregationForPermission_EmptyAsync(userId);
+        }
+
+        public Task<ListAggregationForPermission> GetListAggregationForPermissionByListAggrIdAsync(ListAggregationForPermission listAggregationForPermission)
+        {
+            return _userEndpointFD.GetListAggregationForPermissionByListAggrIdAsync(listAggregationForPermission);
         }
     }
 

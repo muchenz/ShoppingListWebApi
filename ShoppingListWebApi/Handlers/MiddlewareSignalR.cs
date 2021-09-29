@@ -2,6 +2,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using ServiceMediatR.SignalREvents;
+using Shared;
 using ShoppingListWebApi.Data;
 using System;
 using System.Collections.Generic;
@@ -25,7 +26,7 @@ namespace ShoppingListWebApi.Handlers
         }
 
 
-        public async Task InvokeAsync(HttpContext context, ShopingListDBContext _context)
+        public async Task InvokeAsync(HttpContext context, IUserEndpoint userEndpoint)
         {
 
 
@@ -41,7 +42,7 @@ namespace ShoppingListWebApi.Handlers
                 int id1 = int.Parse(respons.Headers["id1"]);
                 int id2 = int.Parse(respons.Headers["id2"]);
 
-                var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(id2, _context, context.User);
+                var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(id2, userEndpoint, context.User);
                 await _mediator.Publish(new AddEditSaveDeleteListItemEvent(userList, "Edit/Save_ListItem", id1, id2));
 
             }

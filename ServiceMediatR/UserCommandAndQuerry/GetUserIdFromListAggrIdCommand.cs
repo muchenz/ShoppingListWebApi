@@ -27,15 +27,15 @@ namespace ServiceMediatR.UserCommandAndQuerry
 
     public class GetUserIdFromListAggrIdCommandHandler : IHandlerWrapper<GetUserIdFromListAggrIdCommand, IEnumerable<int>>
     {
-        private readonly ShopingListDBContext _context;
+        private readonly IUserEndpoint _userEndpoint;
 
-        public GetUserIdFromListAggrIdCommandHandler(ShopingListDBContext context)
+        public GetUserIdFromListAggrIdCommandHandler(IUserEndpoint userEndpoint)
         {
-            _context = context;
+            _userEndpoint = userEndpoint;
         }
         public async Task<MessageAndStatusAndData<IEnumerable<int>>> Handle(GetUserIdFromListAggrIdCommand request, CancellationToken cancellationToken)
         {
-            var userList = await _context.UserListAggregators.Where(a => a.ListAggregatorId == request.ListAggrId).Select(a => a.UserId).ToListAsync();
+            var userList = await _userEndpoint.GetUserIdFromListAggrIdAsync(request.ListAggrId);
 
 
             var userId = request.User?.Claims?.Where(a => a.Type == ClaimTypes.NameIdentifier).SingleOrDefault().Value;

@@ -31,15 +31,17 @@ namespace ShoppingListWebApi.Controllers
         private readonly IMapper _mapper;
         private readonly IMediator _mediator;
         private readonly IListItemEndpoint _listItemEndpoint;
+        private readonly IUserEndpoint _userEndpoint;
         private readonly IConfiguration _configuration;              
 
         public ListItemController(ShopingListDBContext context, IConfiguration configuration, IMapper mapper, 
-             IMediator mediator, IListItemEndpoint listItemEndpoint)//, IConfiguration configuration)
+             IMediator mediator, IListItemEndpoint listItemEndpoint, IUserEndpoint userEndpoint)//, IConfiguration configuration)
         {
             _context = context;
             _mapper = mapper;
             _mediator = mediator;
             _listItemEndpoint = listItemEndpoint;
+            _userEndpoint = userEndpoint;
             _configuration = configuration;
             
         }
@@ -60,7 +62,7 @@ namespace ShoppingListWebApi.Controllers
             item.ListItemId = listItem.ListItemId;
 
 
-            var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(listAggregationId, _context, User);
+            var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(listAggregationId, _userEndpoint, User);
             
             
 
@@ -81,7 +83,7 @@ namespace ShoppingListWebApi.Controllers
 
             var amount = await _listItemEndpoint.DeleteListItemAsync(ItemId, listAggregationId);
 
-            var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(listAggregationId, _context, User);
+            var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(listAggregationId, _userEndpoint, User);
             await _mediator.Publish(new AddEditSaveDeleteListItemEvent(userList, "Delete_ListItem", ItemId, listAggregationId));
 
 
@@ -123,10 +125,10 @@ namespace ShoppingListWebApi.Controllers
             if (!await CheckIntegrityListItemAsync(item.ListItemId, listAggregationId)) return Forbid();
 
 
-            var listItem = await _listItemEndpoint.EditListItemAsync(item);
+            var listItem = await _listItemEndpoint.EditListItemAsync(item, listAggregationId);
 
 
-            var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(listAggregationId, _context, User);
+            var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(listAggregationId, _userEndpoint, User);
             await _mediator.Publish(new AddEditSaveDeleteListItemEvent(userList, "Edit/Save_ListItem", listItem.ListItemId, listAggregationId));
 
             return await Task.FromResult(listItem);

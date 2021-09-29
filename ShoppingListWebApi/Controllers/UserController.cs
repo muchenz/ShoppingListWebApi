@@ -355,15 +355,40 @@ namespace ShoppingListWebApi.Controllers
         public async Task<ActionResult<MessageAndStatus>> GetListAggregationForPermission(string userName)
         {
           
-            var dataTransfer = await _userEndpoint.GetListAggregationForPermission2(userName);
+            var dataTransfer = await _userEndpoint.GetListAggregationForPermission2Async(userName);
 
 
             return new MessageAndStatus { Status = "OK", Message = JsonConvert.SerializeObject(dataTransfer) };
 
         }
 
-      
+        [Authorize]
+        [HttpPost("GetListAggregationForPermission_Empty")]
+        public async Task<ActionResult<MessageAndStatusAndData<List<ListAggregationForPermission>>>> GetListAggregationForPermission_Empty()
+        {
 
+            var sUnerId = User.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier).FirstOrDefault().Value;
+
+            var userId = int.Parse(sUnerId);
+
+            var dataTransfer = await _userEndpoint.GetListAggregationForPermission_EmptyAsync(userId);
+
+            
+            return new MessageAndStatusAndData<List<ListAggregationForPermission>>(dataTransfer, "OK", false);
+
+        }
+
+        [Authorize]
+        [HttpPost("GetListAggregationForPermissionByListAggrId")]
+        public async Task<ActionResult<MessageAndStatusAndData<ListAggregationForPermission>>> 
+            GetListAggregationForPermissionByListAggrId([FromBody]ListAggregationForPermission listAggregationForPermission)
+        {
+
+            var data = await _userEndpoint.GetListAggregationForPermissionByListAggrIdAsync(listAggregationForPermission);
+            
+            return new MessageAndStatusAndData<ListAggregationForPermission>(data, "OK", false);
+
+        }
         private async Task<string> GenerateAccessTokenAsync(int userId)
         {
             var tokenHandler = new JwtSecurityTokenHandler();

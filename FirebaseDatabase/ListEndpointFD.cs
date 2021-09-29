@@ -143,7 +143,7 @@ namespace FirebaseDatabase
             return 0;
         }
 
-        public async Task<List> EditListAsync(List list)
+        public async Task<List> EditListAsync(List list, int listAggregationId)
         {
             var listItemDocSnap = await _listCol.Document(list.ListId.ToString())
                    .UpdateAsync(nameof(ListFD.ListName), list.ListName);

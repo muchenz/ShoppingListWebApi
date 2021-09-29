@@ -62,7 +62,7 @@ namespace EFDataBase
             return amount;
         }
 
-        public async Task<List> EditListAsync(List list)
+        public async Task<List> EditListAsync(List list, int listAggregationId)
         {
             var listItemEntity = _mapper.Map<ListEntity>(list);
 

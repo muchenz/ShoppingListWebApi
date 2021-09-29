@@ -25,14 +25,17 @@ namespace ShoppingListWebApi.Controllers
         private readonly IMapper _mapper;
         private readonly IMediator _mediator;
         private readonly IListAggregatorEndpoint _listAggregatorEndpoint;
+        private readonly IUserEndpoint _userEndpoint;
         private readonly IConfiguration _configuration;
         public ListAggregatorController(ShopingListDBContext context, IConfiguration configuration, IMapper mapper
-            , IMediator mediator, IListAggregatorEndpoint listAggregatorEndpoint)//, IConfiguration configuration)
+            , IMediator mediator, IListAggregatorEndpoint listAggregatorEndpoint
+            ,IUserEndpoint userEndpoint)//, IConfiguration configuration)
         {
             _context = context;
             _mapper = mapper;
             _mediator = mediator;
             _listAggregatorEndpoint = listAggregatorEndpoint;
+            _userEndpoint = userEndpoint;
             _configuration = configuration;
         }
 
@@ -54,7 +57,7 @@ namespace ShoppingListWebApi.Controllers
         public async Task<ActionResult<int>> DeleteList(int ItemId, int listAggregationId)
         {
 
-            var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(listAggregationId, _context, User);
+            var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(listAggregationId, _userEndpoint, User);
 
             var amount = await _listAggregatorEndpoint.DeleteListAggrAsync(ItemId);
             await _mediator.Publish(new DataChangedEvent(userList));
@@ -79,7 +82,7 @@ namespace ShoppingListWebApi.Controllers
 
             var listItem = await _listAggregatorEndpoint.EditListAggregatorAsync(item);
 
-             var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(listAggregationId, _context, User);
+             var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(listAggregationId, _userEndpoint, User);
 
             await _mediator.Publish(new DataChangedEvent(userList));
 

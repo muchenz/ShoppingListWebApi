@@ -23,19 +23,18 @@ namespace FirebaseChachedDatabase
 
             await _invitation.AcceptInvitationAsync(invitation, userId);
 
-            var listUsAggr = await _cache.GetOrAddAsync("userId_" + userId, _ => Task.FromResult(
-                  new List<UserListAggregatorFD>()));
+            var listUsAggr = await _cache.GetAsync<List<UserListAggregatorFD>>("userId_" + userId);
 
-            if (listUsAggr.Cached)
+            if (listUsAggr!=null)
             {
-                listUsAggr.value.Add(new UserListAggregatorFD
+                listUsAggr.Add(new UserListAggregatorFD
                 {
                     ListAggregatorId = invitation.ListAggregatorId,
                     PermissionLevel = invitation.PermissionLevel,
                     UserId = userId
                 });
 
-                await _cache.SetAsync("userId_" + userId, listUsAggr.value);
+                await _cache.SetAsync("userId_" + userId, listUsAggr);
             }
         }
 

@@ -25,8 +25,10 @@ namespace Shared
         Task SetUserPermissionToListAggrAsync(int userId, int listAggregationId, int permission);
         Task DeleteUserListAggrAscync(int userId, int listAggregationId);
 
-        Task<List<ListAggregationForPermission>> GetListAggregationForPermission(string userName);
-        Task<List<ListAggregationForPermission>> GetListAggregationForPermission2(string userName);
+        Task<List<ListAggregationForPermission>> GetListAggregationForPermissionAsync(string userName);
+        Task<List<ListAggregationForPermission>> GetListAggregationForPermission2Async(string userName);
+        Task<List<ListAggregationForPermission>> GetListAggregationForPermission_EmptyAsync(int userId);
+        Task<ListAggregationForPermission> GetListAggregationForPermissionByListAggrIdAsync(ListAggregationForPermission listAggregationForPermission);
 
         Task<List<UserListAggregator>> GetUserListAggrByUserId(int userId);
 
@@ -36,6 +38,7 @@ namespace Shared
 
         Task<User> LoginAsync(string userName, string password);
         Task<User> Register(string userName, string password, LoginType loginType);
+        Task<List<int>> GetUserIdFromListAggrIdAsync(int listAggregationId);
 
     }
 

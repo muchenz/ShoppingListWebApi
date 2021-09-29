@@ -42,7 +42,7 @@ namespace ServiceMediatR.ListCommandAndQueries
 
             //_context.ListItems.Remove(_context.ListItems.Single(a => a.ListItemId == ItemId));
 
-            var listItem = await _listEndpoint.EditListAsync(request.List);
+            var listItem = await _listEndpoint.EditListAsync(request.List, request.ListAggregationId);
 
             return await Task.FromResult(MessageAndStatusAndData.Ok(listItem, "OK"));
 

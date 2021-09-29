@@ -82,7 +82,7 @@ namespace EFDataBase
             return exist;
         }
 
-        public async Task<ListItem> EditListItemAsync(ListItem listItem)
+        public async Task<ListItem> EditListItemAsync(ListItem listItem, int listAggregationId)
         {
             var listItemEntity = _mapper.Map<ListItemEntity>(listItem);
 

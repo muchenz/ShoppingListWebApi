@@ -153,6 +153,55 @@ namespace BlazorClient.Services
 
             return await Task.FromResult(dataObjects);
         }
+        public async Task<List<ListAggregationForPermission>> GetListAggregationForPermission_EmptyAsync()
+        {
+
+            var requestMessage = new HttpRequestMessage(HttpMethod.Post, "User/GetListAggregationForPermission_Empty");
+
+
+            await SetRequestBearerAuthorizationHeader(requestMessage);
+
+
+            var response = await _httpClient.SendAsync(requestMessage);
+
+            var data = await response.Content.ReadAsStringAsync();
+
+            var message = JsonConvert.DeserializeObject<MessageAndStatusAndData<List<ListAggregationForPermission>>>(data);
+
+
+            //  var dataObjects = JsonConvert.DeserializeObject<List<ListAggregationForPermissionTransferClass>>(data);
+            var dataObjects = message.Data;
+
+
+            return await Task.FromResult(dataObjects);
+        }
+         
+        public async Task<ListAggregationForPermission> GetListAggregationForPermissionByListAggrId
+            (ListAggregationForPermission listAggregationForPermission)
+        {
+            
+            var requestMessage = new HttpRequestMessage(HttpMethod.Post, "User/GetListAggregationForPermissionByListAggrId");
+
+            requestMessage.Content = new StringContent(JsonConvert.SerializeObject(listAggregationForPermission));
+
+            await SetRequestBearerAuthorizationHeader(requestMessage);
+            requestMessage.Content.Headers.ContentType
+              = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
+
+            var response = await _httpClient.SendAsync(requestMessage);
+
+            var data = await response.Content.ReadAsStringAsync();
+
+            var message = JsonConvert.DeserializeObject<MessageAndStatusAndData<ListAggregationForPermission>>(data);
+
+
+            //  var dataObjects = JsonConvert.DeserializeObject<List<ListAggregationForPermissionTransferClass>>(data);
+            var dataObjects = message.Data;
+
+
+            return await Task.FromResult(dataObjects);
+        }
+        
 
 
 

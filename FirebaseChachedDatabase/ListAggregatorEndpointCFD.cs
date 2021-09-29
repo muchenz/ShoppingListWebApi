@@ -15,7 +15,7 @@ namespace FirebaseChachedDatabase
         private readonly IDistributedCache _cache;
 
         public ListAggregatorEndpointCFD(IMapper mapper, ListAggregatorEndpointFD listAggregatorEndpoint
-            , IDistributedCache cache) 
+            , IDistributedCache cache)
         {
             _listAggregatorEndpoint = listAggregatorEndpoint;
             _cache = cache;
@@ -25,13 +25,17 @@ namespace FirebaseChachedDatabase
         {
             var addedListAggr = await _listAggregatorEndpoint.AddListAggregatorAsync(listAggregator, parentId);
 
-            var cashedListAggr = await _cache.GetOrAddAsync("userId_" + parentId, i => Task.FromResult(new List<UserListAggregator>()));
+            var cashedListAggr = await _cache.GetAsync<List<UserListAggregator>>("userId_" + parentId);
 
-            if (cashedListAggr.Cached)
+            if (cashedListAggr != null)
             {
-                cashedListAggr.value.Add(new UserListAggregator { ListAggregatorId=addedListAggr.ListAggregatorId,
-                 UserId=parentId, PermissionLevel=1});
-                await _cache.SetAsync("userId_" + parentId, cashedListAggr.value);
+                cashedListAggr.Add(new UserListAggregator
+                {
+                    ListAggregatorId = addedListAggr.ListAggregatorId,
+                    UserId = parentId,
+                    PermissionLevel = 1
+                });
+                await _cache.SetAsync("userId_" + parentId, cashedListAggr);
             }
 
             await _cache.SetAsync(addedListAggr.ListAggregatorId, addedListAggr);
@@ -60,21 +64,20 @@ namespace FirebaseChachedDatabase
             var deleted = await _listAggregatorEndpoint.DeleteListAggrAsync(listAggregationId);
 
             await _cache.RemoveAnyKeyAsync(listAggregationId);
-           
-            
+
+
             foreach (var item in listUseListAggr)
             {
-                var listUsAggr = await _cache.GetOrAddAsync("userId_" + item.UserId, _=> Task.FromResult(
-                    new List<UserListAggregatorFD>()));
+                var listUsAggr = await _cache.GetAsync<List<UserListAggregatorFD>>("userId_" + item.UserId);
 
-                var tempToDelete = listUsAggr.value.Where(a => a.ListAggregatorId == listAggregationId)
+                var tempToDelete = listUsAggr?.Where(a => a.ListAggregatorId == listAggregationId)
                     .FirstOrDefault();
 
                 if (tempToDelete != null)
                 {
-                    listUsAggr.value.Remove(tempToDelete);
+                    listUsAggr.Remove(tempToDelete);
 
-                    await _cache.SetAsync("userId_" + item.UserId, listUsAggr.value);
+                    await _cache.SetAsync("userId_" + item.UserId, listUsAggr);
 
                 }
 

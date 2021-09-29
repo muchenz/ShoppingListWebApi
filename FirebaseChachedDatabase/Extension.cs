@@ -59,12 +59,16 @@ namespace FirebaseChachedDatabase
             {
                 value = await factory(anyKey);
                 await cache.SetStringAsync(key, JsonSerializer.Serialize(value));
-                return new GetCachedValue<T> { Cached = false, value = value };
+                return new GetCachedValue<T> { Cached = false, Value = value };
             }
 
-            return new GetCachedValue<T> { Cached = true, value = value };
+            return new GetCachedValue<T> { Cached = true, Value = value };
         }
-
+        public static Task<T> GetAsync<T>(this IDistributedCache cache, int key)
+           where T : class
+        {
+            return cache.GetAsync<T>(key.ToString());
+        }
         public static async Task<T> GetAsync<T>(this IDistributedCache cache, string key)
             where T : class
         {
@@ -101,7 +105,7 @@ namespace FirebaseChachedDatabase
     {
 
         public bool Cached { get; set; }
-        public T value { get; set; }
+        public T Value { get; set; }
 
     }
 

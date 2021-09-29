@@ -339,7 +339,8 @@
             {
                 var authProvider = await authenticationStateProvider.GetAuthenticationStateAsync();
                 var userName = authProvider.User.Identity.Name;
-                data = await userService.GetListAggregationForPermissionAsync(userName);
+                //data = await userService.GetListAggregationForPermissionAsync(userName);
+                data = await userService.GetListAggregationForPermission_EmptyAsync();
             }
             catch
             {
@@ -369,9 +370,19 @@
 
     int chosedListAggrId;
 
-    void ListAggregationClicked(ListAggregationForPermission item)
+    async Task ListAggregationClicked(ListAggregationForPermission item)
     {
 
+        //chosedListPermission = item.Users;
+        //chosedListAggrId = item.ListAggregatorEntity.ListAggregatorId;
+
+        ListAggregationForPermission dataNew = null;
+        if (item.Users == null)
+        {
+
+            dataNew = await userService.GetListAggregationForPermissionByListAggrId(item);
+            item.Users = dataNew.Users;
+        }
         chosedListPermission = item.Users;
         chosedListAggrId = item.ListAggregatorEntity.ListAggregatorId;
     }

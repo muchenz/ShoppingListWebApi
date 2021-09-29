@@ -41,11 +41,11 @@ namespace FirebaseChachedDatabase
             return await _listEndpointFD.DeleteListAsync(listId, listAggregationId);
         }
 
-        public async Task<List> EditListAsync(List list)
+        public async Task<List> EditListAsync(List list, int listAggregationId)
         {
-            await _cache.RemoveAnyKeyAsync(list.ListAggrId);
+            await _cache.RemoveAnyKeyAsync(listAggregationId);
 
-            return await _listEndpointFD.EditListAsync(list);
+            return await _listEndpointFD.EditListAsync(list, listAggregationId);
         }
     }
 

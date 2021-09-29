@@ -91,7 +91,7 @@ namespace ShoppingListWebApi
             //services.AddTransient<IInvitationEndpoint, InvitationEndpointFD>();
             //services.AddTransient<IListEndpoint, ListEndpointFD>();
 
-            services.AddFirebaseCaschedDatabas();
+             services.AddFirebaseCaschedDatabas();
 
             services.AddAutoMapper(typeof(MappingProfile));
 
