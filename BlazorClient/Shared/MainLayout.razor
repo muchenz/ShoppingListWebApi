@@ -12,7 +12,52 @@
                 SuccessClass="success-toast-override"
                 SuccessIcon="fa fa-thumbs-up"
                 ErrorIcon="fa fa-bug" />
-<BlazorClient.Pages.SignalR>
+
+
+    <AuthorizeView>
+    <Authorized>
+
+        <BlazorClient.Pages.SignalR>
+            <div class="sidebar">
+                <NavMenu />
+            </div>
+
+            <div class="main">
+                <div class="top-row px-4">
+                    <LoginDisplay />
+
+                    <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+                </div>
+
+                <div class="content px-4">
+                    @Body
+                </div>
+            </div>
+        </BlazorClient.Pages.SignalR>
+
+        </Authorized>
+        <NotAuthorized>
+            <div class="sidebar">
+                <NavMenu />
+            </div>
+
+            <div class="main">
+                <div class="top-row px-4">
+                    <LoginDisplay />
+
+                    <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+                </div>
+
+                <div class="content px-4">
+                    @Body
+                </div>
+            </div>
+        </NotAuthorized>
+        </AuthorizeView>
+
+
+
+@*<BlazorClient.Pages.SignalR>
 <div class="sidebar">
     <NavMenu />
 </div>
@@ -28,7 +73,7 @@
         @Body
     </div>
 </div>
-</BlazorClient.Pages.SignalR>
+</BlazorClient.Pages.SignalR>*@
 @code{
     //protected override async Task OnInitializedAsync()
     //{

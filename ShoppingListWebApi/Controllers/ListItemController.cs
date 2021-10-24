@@ -32,10 +32,11 @@ namespace ShoppingListWebApi.Controllers
         private readonly IMediator _mediator;
         private readonly IListItemEndpoint _listItemEndpoint;
         private readonly IUserEndpoint _userEndpoint;
-        private readonly IConfiguration _configuration;              
+        private readonly IConfiguration _configuration;
 
-        public ListItemController(ShopingListDBContext context, IConfiguration configuration, IMapper mapper, 
-             IMediator mediator, IListItemEndpoint listItemEndpoint, IUserEndpoint userEndpoint)//, IConfiguration configuration)
+        public ListItemController(ShopingListDBContext context, IConfiguration configuration, IMapper mapper,
+             IMediator mediator, IListItemEndpoint listItemEndpoint, IUserEndpoint userEndpoint
+           )//, IConfiguration configuration)
         {
             _context = context;
             _mapper = mapper;
@@ -43,18 +44,19 @@ namespace ShoppingListWebApi.Controllers
             _listItemEndpoint = listItemEndpoint;
             _userEndpoint = userEndpoint;
             _configuration = configuration;
-            
+
         }
 
 
         [HttpPost("AddListItem")]
         [SecurityLevel(2)]
 
-        public async Task<ActionResult<ListItem>> AddListItemToListt(int parentId, [FromBody]ListItem item, int listAggregationId)
+        public async Task<ActionResult<ListItem>> AddListItemToListt(int parentId, [FromBody] ListItem item
+            , int listAggregationId, [FromHeader] string signalRId)
         {
             //Task task = WebApiHelper.SendMessageToUserAsync(listAggregationId, _context, _hubConnection);
-                        
-            if (!await CheckIntegrityListAsync(parentId,  listAggregationId)) return Forbid();
+
+            if (!await CheckIntegrityListAsync(parentId, listAggregationId)) return Forbid();
 
 
             var listItem = await _listItemEndpoint.AddListItemAsync(parentId, item, listAggregationId);
@@ -62,13 +64,14 @@ namespace ShoppingListWebApi.Controllers
             item.ListItemId = listItem.ListItemId;
 
 
-            var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(listAggregationId, _userEndpoint, User);
-            
-            
+            //var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(listAggregationId, _userEndpoint, User);
+            var userList = await _mediator.Send(new GetUserIdFromListAggrIdCommand(listAggregationId, User));
+
 
             //await _signarRService.SendRefreshMessageToUsersAsync(userList, "Add_ListItem", listItemEntity.ListItemId, listAggregationId, parentId);
             await _mediator.Publish(
-                new AddEditSaveDeleteListItemEvent(userList, "Add_ListItem", listItem.ListItemId, listAggregationId, parentId));
+                new AddEditSaveDeleteListItemEvent(userList.Data, "Add_ListItem", listItem.ListItemId, listAggregationId
+                , parentId, signalRId));
 
 
             return await Task.FromResult(item);
@@ -104,7 +107,7 @@ namespace ShoppingListWebApi.Controllers
         async Task<bool> CheckIntegrityListItemAsync(int listItemId, int listAggregationId)
         {
 
-            return await _listItemEndpoint.CheckIntegrityListItemAsync(listItemId,listAggregationId);
+            return await _listItemEndpoint.CheckIntegrityListItemAsync(listItemId, listAggregationId);
         }
 
         async Task<bool> CheckIntegrityListAsync(int listId, int listAggregationId)
@@ -119,8 +122,8 @@ namespace ShoppingListWebApi.Controllers
         [HttpPost("EditListItem")]
         //[Authorize]
         [SecurityLevel(2)]
-        public async Task<ActionResult<ListItem>> EditListItem([FromBody]ListItem item, int listAggregationId)
-        {           
+        public async Task<ActionResult<ListItem>> EditListItem([FromBody] ListItem item, int listAggregationId)
+        {
 
             if (!await CheckIntegrityListItemAsync(item.ListItemId, listAggregationId)) return Forbid();
 
@@ -136,7 +139,7 @@ namespace ShoppingListWebApi.Controllers
 
         [HttpPost("ChangeOrderListItem")]
         [Authorize]
-        public async Task<ActionResult<bool>> ChangeOrderListItem([FromBody]IEnumerable<ListItem> items)
+        public async Task<ActionResult<bool>> ChangeOrderListItem([FromBody] IEnumerable<ListItem> items)
         {
 
             await _listItemEndpoint.ChangeOrderListItemAsync(items);
@@ -147,7 +150,8 @@ namespace ShoppingListWebApi.Controllers
         [HttpPost("SaveProperty")]
         //[Authorize]
         [SecurityLevel(3)]
-        public async Task<ActionResult<ListItem>> SaveProperty([FromBody]ListItem item, string propertyName, int listAggregationId)
+        public async Task<ActionResult<ListItem>> SaveProperty([FromBody] ListItem item, string propertyName
+            , int listAggregationId, [FromHeader]string signalRId)
         {
             /*
 
@@ -193,7 +197,8 @@ namespace ShoppingListWebApi.Controllers
 
            // await _signarRService.SendRefreshMessageToUsersAsync(users.Data, "Edit/Save_ListItem", item.ListItemId, listAggregationId);
 
-            await _mediator.Publish(new AddEditSaveDeleteListItemEvent(users.Data, "Edit/Save_ListItem", item.ListItemId, listAggregationId));
+            await _mediator.Publish(new AddEditSaveDeleteListItemEvent(users.Data, "Edit/Save_ListItem", item.ListItemId
+                , listAggregationId, signalRId: signalRId));
 
 
             return await Task.FromResult(res.Data);

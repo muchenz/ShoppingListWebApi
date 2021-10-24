@@ -1,5 +1,6 @@
 ﻿using BlazorClient.Models;
 using Blazored.LocalStorage;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
@@ -18,23 +19,26 @@ namespace BlazorClient.Services
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
         private readonly ILocalStorageService _localStorage;
+        private readonly UserInfoService _userInfoService;
+        private readonly AuthenticationStateProvider _stateProvider;
 
-        public ShoppingListService(HttpClient httpClient, IConfiguration configuration, ILocalStorageService localStorage)
+        public ShoppingListService(HttpClient httpClient, IConfiguration configuration, ILocalStorageService localStorage
+            ,UserInfoService userInfoService, AuthenticationStateProvider stateProvider)
         {
             _httpClient = httpClient;
             _configuration = configuration;
             _localStorage = localStorage;
-    
-
+            _userInfoService = userInfoService;
+            _stateProvider = stateProvider;
             _httpClient.BaseAddress = new Uri(_configuration.GetSection("AppSettings")["ShoppingWebAPIBaseAddress"]);
             _httpClient.DefaultRequestHeaders.Add("User-Agent", "BlazorServer");
-           
+                      
         }
 
         string token;
         private async Task SetRequestBearerAuthorizationHeader(HttpRequestMessage httpRequestMessage)
         {
-
+            
             token = await _localStorage.GetItemAsync<string>("accessToken");
             //token += "a";
             if (token != null)
@@ -44,6 +48,12 @@ namespace BlazorClient.Services
                     = new System.Net.Http.Headers.AuthenticationHeaderValue("bearer", token);
                 // _httpClient.DefaultRequestHeaders.Add("Authorization", $"bearer  {token}");
             }
+
+            var stateProvider = await _stateProvider.GetAuthenticationStateAsync();
+
+            var signalRId = _userInfoService.GetUserInfo(stateProvider.User.Identity.Name).ClientSignalRID;
+
+            httpRequestMessage.Headers.Add("SignalRId", signalRId);
         }
 
         void SetRequestAuthorizationLevelHeader(HttpRequestMessage httpRequestMessage,  int listAggregationId)

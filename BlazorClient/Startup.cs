@@ -41,6 +41,7 @@ namespace BlazorClient
             services.AddRazorPages().AddRazorRuntimeCompilation();
             services.AddServerSideBlazor().AddCircuitOptions(options => { options.DetailedErrors = true; }); ;
             services.AddSingleton<WeatherForecastService>();
+            services.AddSingleton<UserInfoService>();
             services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
             services.AddScoped<CustomAuthorizationHeaderHandler>();
 

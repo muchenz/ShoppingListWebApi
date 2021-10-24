@@ -12,13 +12,15 @@ namespace ServiceMediatR.SignalREvents
     {
       
 
-        public AddEditSaveDeleteListItemEvent(IEnumerable<int> usersIds, string command = null, int? id1 = null, int? listAggregationId = null, int? parentId = null)
+        public AddEditSaveDeleteListItemEvent(IEnumerable<int> usersIds, string command = null, int? id1 = null, int? listAggregationId = null
+            , int? parentId = null, string signalRId = null)
         {
             UsersIds = usersIds;
             Command = command;
             Id1 = id1;
             ListAggregationId = listAggregationId;
             ParentId = parentId;
+            SignalRId = signalRId;
         }
 
         public IEnumerable<int> UsersIds { get; }
@@ -26,6 +28,7 @@ namespace ServiceMediatR.SignalREvents
         public int? Id1 { get; }
         public int? ListAggregationId { get; }
         public int? ParentId { get; }
+        public string SignalRId { get; }
     }
 
     public class AddEditSaveDeleteListItemHandler : INotificationHandler<AddEditSaveDeleteListItemEvent>
@@ -43,7 +46,7 @@ namespace ServiceMediatR.SignalREvents
             await _signarRService.SendRefreshMessageToUsersAsync(item.UsersIds,
                 item.Command,
                 item.Id1,
-                item.ListAggregationId,item.ParentId);
+                item.ListAggregationId,item.ParentId, item.SignalRId);
         }
 
 

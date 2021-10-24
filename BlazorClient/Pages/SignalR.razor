@@ -1,9 +1,11 @@
 ﻿@using Microsoft.Extensions.Configuration;
 @using Microsoft.AspNetCore.SignalR.Client;
-
+@using BlazorClient.Services;
 
 
 @inject IConfiguration configuration
+@inject UserInfoService _userInfoService
+@inject AuthenticationStateProvider _authenticationStateProvider
 
 @implements IAsyncDisposable
 
@@ -37,16 +39,26 @@
             opts.HttpMessageHandlerFactory = (message) =>
             {
                 if (message is HttpClientHandler clientHandler)
-                    // bypass SSL certificate
-                    clientHandler.ServerCertificateCustomValidationCallback +=
+                // bypass SSL certificate
+                clientHandler.ServerCertificateCustomValidationCallback +=
                                           (sender, certificate, chain, sslPolicyErrors) => { return true; };
                 return message;
             };
         }).WithAutomaticReconnect().Build();
 
         await _hubConnection.StartAsync();
+        var userName = (await _authenticationStateProvider.GetAuthenticationStateAsync()).User.Identity.Name;
+
+        _userInfoService.SetUserInfo(userName, (a) => a.ClientSignalRID = _hubConnection.ConnectionId);
+
+        _hubConnection.Reconnected += (connectionId) =>
+        {
+          _userInfoService.SetUserInfo(userName, (a) => a.ClientSignalRID = connectionId);
+          return Task.CompletedTask;
+        };
 
     }
+
     public async ValueTask DisposeAsync()
     {
         await _hubConnection?.DisposeAsync();

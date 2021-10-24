@@ -40,8 +40,8 @@ namespace ServiceMediatR.UserCommandAndQuerry
 
             var userId = request.User?.Claims?.Where(a => a.Type == ClaimTypes.NameIdentifier).SingleOrDefault().Value;
 
-            if (userId != null)
-                userList.Remove(int.Parse(userId));
+            //if (userId != null)
+             //   userList.Remove(int.Parse(userId));
 
             return MessageAndStatusAndData.Ok(userList.AsEnumerable(),"Ok");
         }

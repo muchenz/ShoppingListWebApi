@@ -34,7 +34,8 @@ namespace SignalRService
 
         }
 
-        public async Task SendRefreshMessageToUsersAsync(IEnumerable<int> usersIds, string command = null, int? id1 = null, int? listAggregationId = null, int? parentId = null)
+        public async Task SendRefreshMessageToUsersAsync(IEnumerable<int> usersIds, string command = null, int? id1 = null
+            , int? listAggregationId = null, int? parentId = null, string signalRId = null)
         {
             using (var scope = _serviceProvider.CreateScope())
             {
@@ -51,9 +52,10 @@ namespace SignalRService
                     //  var aaa = await _context.UserListAggregators.Where(a => a.ListAggregatorId == listAggrId).Select(a => a.UserId).ToListAsync();
                     if (command == "Edit/Save_ListItem" || command == "Add_ListItem" || command == "Delete_ListItem")
                     {
-                        await _hubConnection.SendAsync("SendAsyncListItem", usersIds, command, id1, listAggregationId, parentId);
+                        await _hubConnection.SendAsync("SendAsyncListItem", usersIds, command, id1, listAggregationId
+                            , parentId, signalRId);
                     }
-                    if (command == "New_Invitation")
+                    else if (command == "New_Invitation")
                     {
                         await _hubConnection.SendAsync("SendAsyncNewIvitation", usersIds);
                     }
