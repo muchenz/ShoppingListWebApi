@@ -20,16 +20,14 @@ namespace BlazorClient.Services
         private readonly IConfiguration _configuration;
         private readonly ILocalStorageService _localStorage;
         private readonly UserInfoService _userInfoService;
-        private readonly AuthenticationStateProvider _stateProvider;
 
         public ShoppingListService(HttpClient httpClient, IConfiguration configuration, ILocalStorageService localStorage
-            ,UserInfoService userInfoService, AuthenticationStateProvider stateProvider)
+            ,UserInfoService userInfoService)
         {
             _httpClient = httpClient;
             _configuration = configuration;
             _localStorage = localStorage;
             _userInfoService = userInfoService;
-            _stateProvider = stateProvider;
             _httpClient.BaseAddress = new Uri(_configuration.GetSection("AppSettings")["ShoppingWebAPIBaseAddress"]);
             _httpClient.DefaultRequestHeaders.Add("User-Agent", "BlazorServer");
                       
@@ -38,7 +36,8 @@ namespace BlazorClient.Services
         string token;
         private async Task SetRequestBearerAuthorizationHeader(HttpRequestMessage httpRequestMessage)
         {
-            
+            var gid = await _localStorage.GetItemAsync<string>("gid");
+
             token = await _localStorage.GetItemAsync<string>("accessToken");
             //token += "a";
             if (token != null)
@@ -49,9 +48,8 @@ namespace BlazorClient.Services
                 // _httpClient.DefaultRequestHeaders.Add("Authorization", $"bearer  {token}");
             }
 
-            var stateProvider = await _stateProvider.GetAuthenticationStateAsync();
 
-            var signalRId = _userInfoService.GetUserInfo(stateProvider.User.Identity.Name).ClientSignalRID;
+            var signalRId = _userInfoService.GetUserInfo(gid).ClientSignalRID;
 
             httpRequestMessage.Headers.Add("SignalRId", signalRId);
         }

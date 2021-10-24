@@ -1,5 +1,6 @@
 ﻿using BlazorClient.Models;
 using Blazored.LocalStorage;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
@@ -19,13 +20,15 @@ namespace BlazorClient.Services
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
         private readonly ILocalStorageService _localStorage;
+        private readonly UserInfoService _userInfoService;
 
-        public UserService(HttpClient httpClient, IConfiguration configuration, ILocalStorageService localStorage)
+        public UserService(HttpClient httpClient, IConfiguration configuration, ILocalStorageService localStorage
+            , UserInfoService userInfoService)
         {
             _httpClient = httpClient;
             _configuration = configuration;
             _localStorage = localStorage;
-
+            _userInfoService = userInfoService;
             _httpClient.BaseAddress = new Uri(_configuration.GetSection("AppSettings")["ShoppingWebAPIBaseAddress"]);
             _httpClient.DefaultRequestHeaders.Add("User-Agent", "BlazorServer");
 
@@ -36,6 +39,7 @@ namespace BlazorClient.Services
         {
 
             token = await _localStorage.GetItemAsync<string>("accessToken");
+            var gid = await _localStorage.GetItemAsync<string>("gid");
 
             if (token != null)
             {
@@ -44,6 +48,11 @@ namespace BlazorClient.Services
                     = new System.Net.Http.Headers.AuthenticationHeaderValue("bearer", token);
                 // _httpClient.DefaultRequestHeaders.Add("Authorization", $"bearer  {token}");
             }
+
+
+            var signalRId = _userInfoService.GetUserInfo(gid).ClientSignalRID;
+
+            httpRequestMessage.Headers.Add("SignalRId", signalRId);
         }
 
 

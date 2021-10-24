@@ -1,6 +1,5 @@
 ﻿@using Microsoft.Extensions.Configuration;
 
-
 @inherits LayoutComponentBase
 @inject IConfiguration configuration
 @using Blazored.Toast.Configuration
@@ -14,7 +13,7 @@
                 ErrorIcon="fa fa-bug" />
 
 
-    <AuthorizeView>
+<AuthorizeView>
     <Authorized>
 
         <BlazorClient.Pages.SignalR>
@@ -35,45 +34,45 @@
             </div>
         </BlazorClient.Pages.SignalR>
 
-        </Authorized>
-        <NotAuthorized>
-            <div class="sidebar">
-                <NavMenu />
+    </Authorized>
+    <NotAuthorized>
+        <div class="sidebar">
+            <NavMenu />
+        </div>
+
+        <div class="main">
+            <div class="top-row px-4">
+                <LoginDisplay />
+
+                <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
             </div>
 
-            <div class="main">
-                <div class="top-row px-4">
-                    <LoginDisplay />
-
-                    <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
-                </div>
-
-                <div class="content px-4">
-                    @Body
-                </div>
+            <div class="content px-4">
+                @Body
             </div>
-        </NotAuthorized>
-        </AuthorizeView>
+        </div>
+    </NotAuthorized>
+</AuthorizeView>
 
 
 
 @*<BlazorClient.Pages.SignalR>
-<div class="sidebar">
-    <NavMenu />
-</div>
-
-<div class="main">
-    <div class="top-row px-4">
-        <LoginDisplay />
-
-        <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+    <div class="sidebar">
+        <NavMenu />
     </div>
 
-    <div class="content px-4">
-        @Body
+    <div class="main">
+        <div class="top-row px-4">
+            <LoginDisplay />
+
+            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+        </div>
+
+        <div class="content px-4">
+            @Body
+        </div>
     </div>
-</div>
-</BlazorClient.Pages.SignalR>*@
+    </BlazorClient.Pages.SignalR>*@
 @code{
     //protected override async Task OnInitializedAsync()
     //{

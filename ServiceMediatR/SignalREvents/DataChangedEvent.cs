@@ -10,12 +10,14 @@ namespace ServiceMediatR.SignalREvents
 {
     public class DataChangedEvent : INotification
     {
-        public DataChangedEvent(IEnumerable<int> userList)
+        public DataChangedEvent(IEnumerable<int> userList, string signalRId)
         {
             UserList = userList;
+            SignalRId = signalRId;
         }
 
         public IEnumerable<int> UserList { get; }
+        public string SignalRId { get; }
     }
 
     public class DataChangedEventHandler : INotificationHandler<DataChangedEvent>
@@ -28,7 +30,7 @@ namespace ServiceMediatR.SignalREvents
         }
         public async Task Handle(DataChangedEvent notification, CancellationToken cancellationToken)
         {
-            await _signarRService.SendRefreshMessageToUsersAsync(notification.UserList);
+            await _signarRService.SendRefreshMessageToUsersAsync(notification.UserList, signalRId:notification.SignalRId);
         }
     }
 }

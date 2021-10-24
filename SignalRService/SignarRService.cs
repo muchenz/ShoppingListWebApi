@@ -57,11 +57,11 @@ namespace SignalRService
                     }
                     else if (command == "New_Invitation")
                     {
-                        await _hubConnection.SendAsync("SendAsyncNewIvitation", usersIds);
+                        await _hubConnection.SendAsync("SendAsyncNewIvitation", usersIds, signalRId);
                     }
                     else
                     {
-                        await _hubConnection.SendAsync("SendAsyncAllTree", usersIds);
+                        await _hubConnection.SendAsync("SendAsyncAllTree", usersIds, signalRId);
                     }
 
                 }

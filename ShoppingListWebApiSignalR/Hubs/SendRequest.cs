@@ -29,7 +29,6 @@ namespace ShoppingListWebApiSignalR.Hubs
 
         public async Task SendAsyncAllTree(IEnumerable<int> list, string signalRId)
         {
-            //await Clients.All.SendAsync("DataAreChanged");
 
             Task[] tasks = new Task[list.Count()];
             int i = 0;
@@ -37,16 +36,15 @@ namespace ShoppingListWebApiSignalR.Hubs
             foreach (var item in list)
             {
 
-                    tasks[i++] =  Clients.AllExcept("").SendAsync("DataAreChanged_"+item);
+                    tasks[i++] =  Clients.AllExcept(signalRId).SendAsync("DataAreChanged_"+item);
 
             }
 
             await Task.WhenAll(tasks);
         }
 
-        public async Task SendAsyncNewIvitation(IEnumerable<int> list)
+        public async Task SendAsyncNewIvitation(IEnumerable<int> list, string signalRId)
         {
-            //await Clients.All.SendAsync("DataAreChanged");
 
             Task[] tasks = new Task[list.Count()];
             int i = 0;
@@ -54,7 +52,7 @@ namespace ShoppingListWebApiSignalR.Hubs
             foreach (var item in list)
             {
 
-                tasks[i++] = Clients.Others.SendAsync("NewInvitation_" + item);
+                tasks[i++] = Clients.AllExcept(signalRId).SendAsync("NewInvitation_" + item);
 
             }
 
@@ -64,7 +62,6 @@ namespace ShoppingListWebApiSignalR.Hubs
         public async Task SendAsyncListItem(IEnumerable<int> list, string command, int? id1, int? listAggregationId
             , int? parentId, string signalRId)
         {
-            //await Clients.All.SendAsync("DataAreChanged");
 
             Task[] tasks = new Task[list.Count()];
             int i = 0;
@@ -96,6 +93,7 @@ namespace ShoppingListWebApiSignalR.Hubs
         //}
         //public static class ConnectedUser
         //{
+              //// to do safe thead list
         //    public static List<string> Ids = new List<string>();
         //}
     }

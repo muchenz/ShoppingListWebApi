@@ -40,7 +40,8 @@ namespace ShoppingListWebApi.Controllers
         [HttpPost("AddList")]
         [SecurityLevel(2)]
 
-        public async Task<ActionResult<List>> AddListtoListt(int parentId, [FromBody]List item, int listAggregationId)
+        public async Task<ActionResult<List>> AddListtoListt(int parentId, [FromBody]List item, int listAggregationId
+            ,[FromHeader]string signalRId)
         {           
 
             var res = await _mediator.Send(new AddListCommand(parentId, item, listAggregationId));
@@ -49,7 +50,7 @@ namespace ShoppingListWebApi.Controllers
 
             var userList = await _mediator.Send(new GetUserIdFromListAggrIdCommand(listAggregationId, User));
 
-            await _mediator.Publish(new DataChangedEvent(userList.Data));
+            await _mediator.Publish(new DataChangedEvent(userList.Data, signalRId));
 
             return await Task.FromResult(res.Data);
 
@@ -57,7 +58,7 @@ namespace ShoppingListWebApi.Controllers
 
         [HttpPost("DeleteList")]
         [SecurityLevel(1)]
-        public async Task<ActionResult<int>> DeleteList(int ItemId, int listAggregationId)
+        public async Task<ActionResult<int>> DeleteList(int ItemId, int listAggregationId, [FromHeader]string signalRId)
         {
             var res = await _mediator.Send(new DeleteListCommand(ItemId, listAggregationId));
 
@@ -65,7 +66,7 @@ namespace ShoppingListWebApi.Controllers
 
             var userList = await _mediator.Send(new GetUserIdFromListAggrIdCommand(listAggregationId, User));
 
-            await _mediator.Publish(new DataChangedEvent(userList.Data));
+            await _mediator.Publish(new DataChangedEvent(userList.Data, signalRId));
 
             return await Task.FromResult(res.Data);
                        
@@ -75,7 +76,8 @@ namespace ShoppingListWebApi.Controllers
         [HttpPost("EditList")]
         [SecurityLevel(2)]
 
-        public async Task<ActionResult<List>> EditListItem([FromBody]List item, int listAggregationId)
+        public async Task<ActionResult<List>> EditListItem([FromBody]List item, int listAggregationId
+            , [FromHeader]string signalRId)
         {
 
             var res = await _mediator.Send(new EditListCommand(item, listAggregationId));
@@ -84,7 +86,7 @@ namespace ShoppingListWebApi.Controllers
 
 
             var userList = await _mediator.Send(new GetUserIdFromListAggrIdCommand(listAggregationId, User));
-            await _mediator.Publish(new DataChangedEvent(userList.Data));
+            await _mediator.Publish(new DataChangedEvent(userList.Data, signalRId));
 
             return await Task.FromResult(res.Data);
         }

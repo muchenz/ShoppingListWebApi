@@ -235,7 +235,8 @@ namespace ShoppingListWebApi.Controllers
 
         [HttpPost("InviteUserPermission")]
         [SecurityLevel(2)]
-        public async Task<ActionResult<MessageAndStatus>> InviteUserPermission(int listAggregationId, [FromBody] UserPermissionToListAggregation item)
+        public async Task<ActionResult<MessageAndStatus>> InviteUserPermission(int listAggregationId, 
+            [FromBody] UserPermissionToListAggregation item, [FromHeader]string signalRId)
         {
 
             var user = await _userEndpoint.GetUserByNameAsync(item.User.EmailAddress);
@@ -260,7 +261,7 @@ namespace ShoppingListWebApi.Controllers
             await _userEndpoint.AddInvitationAsync(item.User.EmailAddress, listAggregationId, item.Permission, senderName);
 
 
-            await _signarRService.SendRefreshMessageToUsersAsync(new List<int> { user.UserId}, "New_Invitation");
+            await _signarRService.SendRefreshMessageToUsersAsync(new List<int> { user.UserId}, "New_Invitation",signalRId: signalRId);
 
             return await Task.FromResult(new MessageAndStatus { Status = "OK", Message = "Ivitation was added." });
         }
@@ -271,7 +272,8 @@ namespace ShoppingListWebApi.Controllers
 
         [HttpPost("ChangeUserPermission")]
         [SecurityLevel(1)]
-        public async Task<ActionResult<MessageAndStatus>> ChangeUserPermission(int listAggregationId, [FromBody] UserPermissionToListAggregation item)
+        public async Task<ActionResult<MessageAndStatus>> ChangeUserPermission(int listAggregationId
+            , [FromBody] UserPermissionToListAggregation item, [FromHeader]string signalRId)
         {
 
             var user = await _userEndpoint.GetUserByNameAsync(item.User.EmailAddress);
@@ -310,14 +312,15 @@ namespace ShoppingListWebApi.Controllers
             else
                 await _userEndpoint.SetUserPermissionToListAggrAsync(user.UserId, listAggregationId, item.Permission);
 
-            await _mediator.Publish(new DataChangedEvent(new int[] { user.UserId }));
+            await _mediator.Publish(new DataChangedEvent(new int[] { user.UserId }, signalRId));
 
             return new MessageAndStatus { Status = "OK", Message = "Permission has changed." };
         }
 
         [HttpPost("DeleteUserPermission")]
         [SecurityLevel(1)]
-        public async Task<ActionResult<MessageAndStatus>> DeleteUserPermission(int listAggregationId, [FromBody] UserPermissionToListAggregation item)
+        public async Task<ActionResult<MessageAndStatus>> DeleteUserPermission(int listAggregationId
+            , [FromBody] UserPermissionToListAggregation item, [FromHeader]string signalRId)
         {
 
             var user = await _userEndpoint.GetUserByNameAsync(item.User.EmailAddress);
@@ -344,7 +347,7 @@ namespace ShoppingListWebApi.Controllers
                 await _userEndpoint.DeleteUserListAggrAscync(item.User.UserId, listAggregationId);
 
 
-            await _mediator.Publish(new DataChangedEvent(new int[] { user.UserId }));
+            await _mediator.Publish(new DataChangedEvent(new int[] { user.UserId }, signalRId));
 
             return new MessageAndStatus { Status = "OK", Message = "User permission was deleted." };
         }

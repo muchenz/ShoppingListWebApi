@@ -54,13 +54,13 @@ namespace ShoppingListWebApi.Controllers
 
         [HttpPost("DeleteListAggregator")]
         [SecurityLevel(1)]
-        public async Task<ActionResult<int>> DeleteList(int ItemId, int listAggregationId)
+        public async Task<ActionResult<int>> DeleteList(int ItemId, int listAggregationId,[FromHeader]string signalRId)
         {
 
             var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(listAggregationId, _userEndpoint, User);
 
             var amount = await _listAggregatorEndpoint.DeleteListAggrAsync(ItemId);
-            await _mediator.Publish(new DataChangedEvent(userList));
+            await _mediator.Publish(new DataChangedEvent(userList, signalRId));
 
             return await Task.FromResult(amount);
         }
@@ -75,7 +75,8 @@ namespace ShoppingListWebApi.Controllers
 
         [HttpPost("EditListAggregator")]
         [SecurityLevel(2)]
-        public async Task<ActionResult<ListAggregator>> EditListAggregator([FromBody]ListAggregator item, int listAggregationId)
+        public async Task<ActionResult<ListAggregator>> EditListAggregator([FromBody]ListAggregator item, int listAggregationId
+            ,[FromHeader]string signalRId)
         {
 
             if (!CheckIntegrity(item.ListAggregatorId, listAggregationId)) return Forbid();
@@ -84,7 +85,7 @@ namespace ShoppingListWebApi.Controllers
 
              var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(listAggregationId, _userEndpoint, User);
 
-            await _mediator.Publish(new DataChangedEvent(userList));
+            await _mediator.Publish(new DataChangedEvent(userList, signalRId));
 
 
             return await Task.FromResult(listItem);

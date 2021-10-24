@@ -80,14 +80,15 @@ namespace ShoppingListWebApi.Controllers
 
         [HttpPost("DeleteListItem")]
         [SecurityLevel(1)]
-        public async Task<ActionResult<int>> DeleteListItem(int ItemId, int listAggregationId)
+        public async Task<ActionResult<int>> DeleteListItem(int ItemId, int listAggregationId, [FromHeader] string signalRId)
         {
             if (!await CheckIntegrityListItemAsync(ItemId, listAggregationId)) return Forbid();
 
             var amount = await _listItemEndpoint.DeleteListItemAsync(ItemId, listAggregationId);
 
             var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(listAggregationId, _userEndpoint, User);
-            await _mediator.Publish(new AddEditSaveDeleteListItemEvent(userList, "Delete_ListItem", ItemId, listAggregationId));
+            await _mediator.Publish(new AddEditSaveDeleteListItemEvent(userList, "Delete_ListItem", ItemId
+                , listAggregationId, signalRId: signalRId));
 
 
             return await Task.FromResult(amount);
@@ -122,7 +123,8 @@ namespace ShoppingListWebApi.Controllers
         [HttpPost("EditListItem")]
         //[Authorize]
         [SecurityLevel(2)]
-        public async Task<ActionResult<ListItem>> EditListItem([FromBody] ListItem item, int listAggregationId)
+        public async Task<ActionResult<ListItem>> EditListItem([FromBody] ListItem item, int listAggregationId
+            , [FromHeader]string signalRId)
         {
 
             if (!await CheckIntegrityListItemAsync(item.ListItemId, listAggregationId)) return Forbid();
@@ -132,7 +134,8 @@ namespace ShoppingListWebApi.Controllers
 
 
             var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(listAggregationId, _userEndpoint, User);
-            await _mediator.Publish(new AddEditSaveDeleteListItemEvent(userList, "Edit/Save_ListItem", listItem.ListItemId, listAggregationId));
+            await _mediator.Publish(new AddEditSaveDeleteListItemEvent(userList, "Edit/Save_ListItem", listItem.ListItemId
+                , listAggregationId, signalRId: signalRId));
 
             return await Task.FromResult(listItem);
         }

@@ -1,11 +1,13 @@
 ﻿@using Microsoft.Extensions.Configuration;
 @using Microsoft.AspNetCore.SignalR.Client;
 @using BlazorClient.Services;
+@using Blazored.LocalStorage;
 
 
 @inject IConfiguration configuration
 @inject UserInfoService _userInfoService
 @inject AuthenticationStateProvider _authenticationStateProvider
+@inject ILocalStorageService localStorage
 
 @implements IAsyncDisposable
 
@@ -28,6 +30,11 @@
         await base.OnInitializedAsync();
 
 
+
+        var gid = Guid.NewGuid().ToString();
+        await localStorage.SetItemAsync("gid", gid);
+
+
         Console.WriteLine("singnalR amount" + amount++);
         Console.WriteLine("singnalR ststus" + _hubConnection?.State);
         //_hubConnection = new HubConnectionBuilder().WithUrl("https://94.251.148.92:5013/chatHub", (opts) =>
@@ -39,22 +46,21 @@
             opts.HttpMessageHandlerFactory = (message) =>
             {
                 if (message is HttpClientHandler clientHandler)
-                // bypass SSL certificate
-                clientHandler.ServerCertificateCustomValidationCallback +=
-                                          (sender, certificate, chain, sslPolicyErrors) => { return true; };
+                    // bypass SSL certificate
+                    clientHandler.ServerCertificateCustomValidationCallback +=
+                                              (sender, certificate, chain, sslPolicyErrors) => { return true; };
                 return message;
             };
         }).WithAutomaticReconnect().Build();
 
         await _hubConnection.StartAsync();
-        var userName = (await _authenticationStateProvider.GetAuthenticationStateAsync()).User.Identity.Name;
 
-        _userInfoService.SetUserInfo(userName, (a) => a.ClientSignalRID = _hubConnection.ConnectionId);
+        _userInfoService.SetUserInfo(gid, (a) => a.ClientSignalRID = _hubConnection.ConnectionId);
 
         _hubConnection.Reconnected += (connectionId) =>
         {
-          _userInfoService.SetUserInfo(userName, (a) => a.ClientSignalRID = connectionId);
-          return Task.CompletedTask;
+            _userInfoService.SetUserInfo(gid, (a) => a.ClientSignalRID = connectionId);
+            return Task.CompletedTask;
         };
 
     }

@@ -25,8 +25,8 @@ namespace ShoppingListWebApi.Data
 
             var userId = user?.Claims?.Where(a => a.Type == ClaimTypes.NameIdentifier).SingleOrDefault().Value;
 
-            if(userId!=null)
-                userList.Remove(int.Parse(userId));
+            //if(userId!=null)
+            //    userList.Remove(int.Parse(userId));
 
 
             return userList;
