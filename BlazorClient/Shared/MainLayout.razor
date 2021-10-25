@@ -13,7 +13,7 @@
                 ErrorIcon="fa fa-bug" />
 
 
-<AuthorizeView>
+@*<AuthorizeView>
     <Authorized>
 
         <BlazorClient.Pages.SignalR>
@@ -52,11 +52,11 @@
             </div>
         </div>
     </NotAuthorized>
-</AuthorizeView>
+</AuthorizeView>*@
 
 
 
-@*<BlazorClient.Pages.SignalR>
+<BlazorClient.Pages.SignalR>
     <div class="sidebar">
         <NavMenu />
     </div>
@@ -72,7 +72,7 @@
             @Body
         </div>
     </div>
-    </BlazorClient.Pages.SignalR>*@
+    </BlazorClient.Pages.SignalR>
 @code{
     //protected override async Task OnInitializedAsync()
     //{
