@@ -5,68 +5,107 @@
 
 
 @inject IConfiguration configuration
-@inject UserInfoService _userInfoService
+@inject StateService _userInfoService
 @inject ILocalStorageService localStorage
+@inject AuthenticationStateProvider authenticationStateProvider
 
 @implements IAsyncDisposable
 
 
 <CascadingValue Value=_hubConnection>
-    @ChildContent
+    <CascadingValue Value=_gid>
+        @ChildContent
+    </CascadingValue>
 </CascadingValue>
 
 
-@code {
-
-    [Parameter]
-    public RenderFragment ChildContent { get; set; }
-
-    HubConnection _hubConnection;
-    int amount = 0;
-
-    protected override async Task OnInitializedAsync()
-    {
-        await base.OnInitializedAsync();
+    @code {
 
 
+        [Parameter]
+        public RenderFragment ChildContent { get; set; }
 
-        var gid = Guid.NewGuid().ToString();
-        await localStorage.SetItemAsync("gid", gid);
+        HubConnection _hubConnection;
 
+        string _gid=Guid.NewGuid().ToString();
 
-        Console.WriteLine("singnalR amount" + amount++);
-        Console.WriteLine("singnalR ststus" + _hubConnection?.State);
-        //_hubConnection = new HubConnectionBuilder().WithUrl("https://94.251.148.92:5013/chatHub", (opts) =>
-        //{
-        //_hubConnection = new HubConnectionBuilder().WithUrl("https://192.168.8.222:91/chatHub", (opts) =>
-        //{
-        _hubConnection = new HubConnectionBuilder().WithUrl(configuration.GetSection("AppSettings")["SignlRAddress"], (opts) =>
+        int amount = 0;
+
+        protected async override Task OnParametersSetAsync()
         {
-            opts.HttpMessageHandlerFactory = (message) =>
+
+            var authState = await authenticationStateProvider.GetAuthenticationStateAsync();
+
+            if (!authState.User.Identity.IsAuthenticated || _hubConnection != null)
             {
-                if (message is HttpClientHandler clientHandler)
-                    // bypass SSL certificate
-                    clientHandler.ServerCertificateCustomValidationCallback +=
-                                              (sender, certificate, chain, sslPolicyErrors) => { return true; };
-                return message;
-            };
-        }).WithAutomaticReconnect().Build();
+                Console.WriteLine("!____________ not authenticaced");
+                return;
+            }
+            else
+            {
+                Console.WriteLine("!____________ authenticaced");
 
-        await _hubConnection.StartAsync();
+                await SetHubConnectionAsync();
+            }
 
-        _userInfoService.SetUserInfo(gid, (a) => a.ClientSignalRID = _hubConnection.ConnectionId);
+            await base.OnParametersSetAsync();
+        }
 
-        _hubConnection.Reconnected += (connectionId) =>
+
+        bool _tryingSignalRStart;
+
+        async Task SetHubConnectionAsync()
         {
-            _userInfoService.SetUserInfo(gid, (a) => a.ClientSignalRID = connectionId);
-            return Task.CompletedTask;
-        };
+
+            if (_tryingSignalRStart) return;
+
+            _tryingSignalRStart = true;
+
+
+            var isAccessToken = await localStorage.ContainKeyAsync("accessToken");
+
+            if (!isAccessToken) return;
+
+            var accessToken = await localStorage.GetItemAsync<string>("accessToken");
+
+
+            Console.WriteLine("singnalR amount" + amount++);
+            Console.WriteLine("singnalR ststus" + _hubConnection?.State);
+
+
+            _hubConnection = new HubConnectionBuilder().WithUrl(configuration.GetSection("AppSettings")["SignlRAddress"], (opts) =>
+            {
+                opts.Headers.Add("Access_Token", accessToken);
+
+                opts.HttpMessageHandlerFactory = (message) =>
+                {
+                    if (message is HttpClientHandler clientHandler)
+                        // bypass SSL certificate
+                        clientHandler.ServerCertificateCustomValidationCallback +=
+                                                              (sender, certificate, chain, sslPolicyErrors) => { return true; };
+                    return message;
+                };
+            }).WithAutomaticReconnect().Build();
+
+
+
+            await _hubConnection.StartAsync();
+        //    var gid = await localStorage.GetItemAsync<string>("gid");
+            _userInfoService.SetStateInfo(_gid, (a) => a.ClientSignalRID = _hubConnection.ConnectionId);
+            _userInfoService.GetStateInfo(_gid).CallHuBReady(_hubConnection);
+
+            _hubConnection.Reconnected += (connectionId) =>
+            {
+                _userInfoService.SetStateInfo(_gid, (a) => a.ClientSignalRID = connectionId);
+                return Task.CompletedTask;
+            };
+            _tryingSignalRStart = false;
+        }
+
+
+        public async ValueTask DisposeAsync()
+        {
+            _hubConnection?.DisposeAsync();
+        }
 
     }
-
-    public async ValueTask DisposeAsync()
-    {
-        await _hubConnection?.DisposeAsync();
-    }
-
-}

@@ -79,11 +79,11 @@ namespace ShoppingListWebApi
            );
 
 
-            //services.AddTransient<IUserEndpoint, UserEndpoint>();
-            //services.AddTransient<IListAggregatorEndpoint, ListAggregatorEndpoint>();
-            //services.AddTransient<IListItemEndpoint, ListItemEndpoint>();
-            //services.AddTransient<IInvitationEndpoint, InvitationEndpoint>();
-            //services.AddTransient<IListEndpoint, ListEndpoint>();
+            services.AddTransient<IUserEndpoint, UserEndpoint>();
+            services.AddTransient<IListAggregatorEndpoint, ListAggregatorEndpoint>();
+            services.AddTransient<IListItemEndpoint, ListItemEndpoint>();
+            services.AddTransient<IInvitationEndpoint, InvitationEndpoint>();
+            services.AddTransient<IListEndpoint, ListEndpoint>();
 
             //services.AddTransient<IUserEndpoint, UserEndpointFD>();
             //services.AddTransient<IListAggregatorEndpoint, ListAggregatorEndpointFD>();
@@ -91,7 +91,7 @@ namespace ShoppingListWebApi
             //services.AddTransient<IInvitationEndpoint, InvitationEndpointFD>();
             //services.AddTransient<IListEndpoint, ListEndpointFD>();
 
-             services.AddFirebaseCaschedDatabas();
+            //services.AddFirebaseCaschedDatabas();
 
             services.AddAutoMapper(typeof(MappingProfile));
 

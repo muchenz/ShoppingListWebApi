@@ -14,6 +14,8 @@
 @inject UserService userService
 @inject ShoppingListService shoppingListService
 @inject ILocalStorageService localStorage
+@inject StateService stateService;
+
 @inject IModalService Modal
 @inject AuthenticationStateProvider authenticationStateProvider
 @inject NavigationManager navigationManager
@@ -95,7 +97,7 @@
 
 
             if (userId != null)
-                await SignalRInitAsync(int.Parse(userId));
+                SignalRInit(int.Parse(userId));
         }
         catch
         {
@@ -106,6 +108,8 @@
 
         }
     }
+
+
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -122,19 +126,27 @@
     }
     [CascadingParameter]
     public HubConnection _hubConnection { get; set; }
+    [CascadingParameter]
+    public string _gid { get; set; }
 
-    async Task SignalRInitAsync(int userId)
+    void SignalRInit(int userId)
     {
+        async Task RunHub(HubConnection _con)
+        {
 
+            SignalRToDispose = await SignalRHelper.SignalRInvitationInitAsync(
+             _hubConnection,
+            userId,
+            authenticationStateProvider,
+             userService,
+              (a) => invitationsList = a,
+              (_) => { },
+              StateHasChanged);
+        }
 
-        SignalRToDispose = await SignalRHelper.SignalRInvitationInitAsync(
-            _hubConnection,
-       userId,
-        authenticationStateProvider,
-        userService,
-        (a) => invitationsList = a,
-        (_) => { },
-        StateHasChanged);
+        var stateInfo = stateService.GetStateInfo(_gid);
+
+        stateInfo.JoinToHub(RunHub);
 
     }
 

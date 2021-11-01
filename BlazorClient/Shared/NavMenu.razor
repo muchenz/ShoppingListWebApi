@@ -4,6 +4,10 @@
 @using Data
 @using System.Security.Claims;
 @using Microsoft.AspNetCore.SignalR.Client;
+@using Blazored.LocalStorage;
+
+@inject ILocalStorageService localStorage
+@inject StateService stateService;
 
 
 @inject UserService userService
@@ -60,9 +64,14 @@
     [CascadingParameter]
     public HubConnection _hubConnection { get; set; }
 
+    [CascadingParameter]
+    public string _gid { get; set; }
     private bool collapseNavMenu = true;
 
     private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    int userId;
+   
 
     protected override async Task OnInitializedAsync()
     {
@@ -77,11 +86,14 @@
 
             NuberOfInvitations = (await userService.GetInvitationsListAsync(userName)).Count;
 
-            var userId = authProvider.User.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier).FirstOrDefault()?.Value;
+            var sUserId = authProvider.User.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier).FirstOrDefault()?.Value;
+            if (sUserId != null)
+            {
+                userId = int.Parse(sUserId);
+                SignalRInit();
+            }
 
 
-            if (userId != null)
-                await SignalRInitAsync(int.Parse(userId));
         }
         catch (Exception ex)
         {
@@ -98,19 +110,27 @@
 
     int NuberOfInvitations;
 
-    async Task SignalRInitAsync(int userId)
+    void SignalRInit()
     {
 
+        var stateInfo = stateService.GetStateInfo(_gid);
+
+        stateInfo.JoinToHub(RunHub);
+
+    }
+
+
+    async Task RunHub(HubConnection _con)
+    {
 
         SignalRToDispose = await SignalRHelper.SignalRInvitationInitAsync(
-       _hubConnection,
+       _con,
        userId,
         authenticationStateProvider,
         userService,
         (_) => { },
         (a) => NuberOfInvitations = a,
         StateHasChanged);
-
     }
 
     List<IDisposable> SignalRToDispose;

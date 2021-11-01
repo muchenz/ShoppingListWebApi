@@ -91,7 +91,7 @@ namespace BlazorClient.Data
             return new List<IDisposable> { dataAreChanged };
         }
 
-        public static List<IDisposable> SignalRShoppingListInitAsync(
+        public static List<IDisposable> SignalRShoppingListInit(
              HubConnection _hubConnection,
             User data,
             Action<User> SetData,

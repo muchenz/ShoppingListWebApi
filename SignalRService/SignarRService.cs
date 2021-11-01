@@ -21,6 +21,8 @@ namespace SignalRService
             _serviceProvider = serviceProvider;
             _hubConnection = new HubConnectionBuilder().WithUrl(_configuration.GetSection("SignalR")["ChatHub"], (opts) =>
            {
+               opts.Headers.Add("Access_Token", "I am a god of hellfire.");
+
                opts.HttpMessageHandlerFactory = (message) =>
                {
                    if (message is HttpClientHandler clientHandler)

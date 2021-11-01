@@ -19,10 +19,10 @@ namespace BlazorClient.Services
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
         private readonly ILocalStorageService _localStorage;
-        private readonly UserInfoService _userInfoService;
+        private readonly StateService _userInfoService;
 
         public ShoppingListService(HttpClient httpClient, IConfiguration configuration, ILocalStorageService localStorage
-            ,UserInfoService userInfoService)
+            ,StateService userInfoService)
         {
             _httpClient = httpClient;
             _configuration = configuration;
@@ -49,7 +49,7 @@ namespace BlazorClient.Services
             }
 
 
-            var signalRId = _userInfoService.GetUserInfo(gid).ClientSignalRID;
+            var signalRId = _userInfoService.GetStateInfo(gid).ClientSignalRID;
 
             httpRequestMessage.Headers.Add("SignalRId", signalRId);
         }

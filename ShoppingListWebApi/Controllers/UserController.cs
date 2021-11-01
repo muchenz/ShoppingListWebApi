@@ -483,7 +483,8 @@ namespace ShoppingListWebApi.Controllers
             return _userEndpoint.GetUserWithRolesAsync(userId);
         }
 
-        private async Task<User> GetUserFromAccessTokenAsync(string accessToken)
+        [HttpGet("VerifyToken")]
+        public bool GetUserFromAccessTokenAsync(string accessToken)
         {
             try
             {
@@ -505,19 +506,16 @@ namespace ShoppingListWebApi.Controllers
 
                 if (jwtSecurityToken != null && jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    var userId = principle.FindFirst(ClaimTypes.Name)?.Value;
-
-                    var user = await _userEndpoint.GetUserWithRolesAsync(int.Parse(userId));
-
-                    return user;
+                    
+                    return true;
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return new User();
+                return false;
             }
 
-            return new User();
+            return true;
         }
 
 

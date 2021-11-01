@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.SignalR;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,27 +7,10 @@ using System.Threading.Tasks;
 
 namespace ShoppingListWebApiSignalR.Hubs
 {
+    [Authorize(AuthenticationSchemes = Startup.CustomScheme)]
     public class SendRequest:Hub
     {
-         
-        public SendRequest()
-        {
-
-            //Task.Run(async () => {
-
-            //    while (true)
-            //    {
-            //        await Task.Delay(1000);
-
-            //        await Clients.Others.SendAsync("DataAreChanged");
-            //    }
-            
-            //});
-
-
-        }
-
-
+      
         public async Task SendAsyncAllTree(IEnumerable<int> list, string signalRId)
         {
 
@@ -59,6 +43,7 @@ namespace ShoppingListWebApiSignalR.Hubs
             await Task.WhenAll(tasks);
         }
 
+       //[Authorize(policy:"HUB")]
         public async Task SendAsyncListItem(IEnumerable<int> list, string command, int? id1, int? listAggregationId
             , int? parentId, string signalRId)
         {
