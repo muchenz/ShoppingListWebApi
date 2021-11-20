@@ -367,3 +367,4 @@ AspFacebookLogin
 
 #Test integrationtest
 T.WebApi.integration.test
+ShoppingListWebApi\Controllers\TestController.cs
