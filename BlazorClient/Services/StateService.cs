@@ -49,6 +49,13 @@ namespace BlazorClient.Services
         public string Token { get; set; }
         public string ClientSignalRID { get; set; }
 
+        public HubState HubState { get; set; } = new HubState();
+       
+    }
+
+    public class HubState
+    {
+
         event Action<HubConnection> HuBReady;
         event Func<HubConnection, Task> HuBReadyAsync;
         public HubConnection Hub { get; private set; }
@@ -80,5 +87,6 @@ namespace BlazorClient.Services
             else
                 func(Hub);
         }
+
     }
 }

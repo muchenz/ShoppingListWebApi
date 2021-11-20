@@ -64,6 +64,8 @@ namespace ShoppingListWebApiSignalR
 
         }
 
+
+
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
@@ -86,6 +88,7 @@ namespace ShoppingListWebApiSignalR
                 builder.AllowAnyOrigin()
                     .AllowAnyHeader()
                     .WithMethods("GET", "POST");
+                    //.AllowAnyMethod();
             });
             app.UseRouting();
 
@@ -122,18 +125,20 @@ namespace ShoppingListWebApiSignalR
             {
                 try
                 {
+                    //goto god;
                     var isToken = Request.Headers.ContainsKey("Access_Token");
-
-                    if (!isToken) return await Task.FromResult(AuthenticateResult.Fail("Not authorized. Lack Access_Token."));
+                   
+                    if (!isToken) 
+                        return await Task.FromResult(AuthenticateResult.Fail("Not authorized. Lack Access_Token."));
 
                     var accessToken = Request.Headers["Access_Token"].ToString();
 
                     var isTokenGood = await _authService.IsValidateTokenAsync(accessToken);
 
-                    //var  isTokenGood = true;
-                    if (!isTokenGood) return await Task.FromResult(AuthenticateResult.Fail("Not authorized.  Access_Token is bad."));
+                    if (!isTokenGood) 
+                        return await Task.FromResult(AuthenticateResult.Fail("Not authorized.  Access_Token is bad."));
 
-                    var claims = new Claim[]
+ god:                   var claims = new Claim[]
                         {
                             // new("user_id", cookie),
                             //new("cookie", "cookie_claim"),
@@ -149,8 +154,6 @@ namespace ShoppingListWebApiSignalR
                 {
                     return await Task.FromResult(AuthenticateResult.Fail("Not authorized.  Access_Token is bad."));
                 }
-
-                //return Task.FromResult(AuthenticateResult.Fail("Not authorized."));
             }
         }
 
