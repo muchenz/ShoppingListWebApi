@@ -5,10 +5,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Controllers\TestController.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Remove="ShippingListDB_SQLite.db" />
   </ItemGroup>
 
