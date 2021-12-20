@@ -13,7 +13,7 @@ namespace FirebaseChachedDatabase
 
 
 
-    public static class Extension
+    public static class ExtensionCFD
     {
         public static Task RemoveAnyKeyAsync<TKey>(this IDistributedCache cache, TKey anyKey)
         {

@@ -68,30 +68,23 @@ namespace ShoppingListWebApi
             Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", filepath);
 
 
-            services.AddStackExchangeRedisCache(config =>
-            {
-                //config.Configuration = _env.IsDevelopment()
-                //    ? "127.0.0.1:6379"
-                //    : Environment.GetEnvironmentVariable("REDIS_URL");
+            // services.AddStackExchangeRedisCache(config =>
+            // {
+            //     //config.Configuration = _env.IsDevelopment()
+            //     //    ? "127.0.0.1:6379"
+            //     //    : Environment.GetEnvironmentVariable("REDIS_URL");
 
-                config.Configuration = "127.0.0.1:6379";
-            }
-           );
+            //     config.Configuration = "127.0.0.1:6379";
+            // }
+            //);
+            services.AddDistributedMemoryCache();
+                       
 
+            //services.AddEFDatabase();
 
-            services.AddTransient<IUserEndpoint, UserEndpoint>();
-            services.AddTransient<IListAggregatorEndpoint, ListAggregatorEndpoint>();
-            services.AddTransient<IListItemEndpoint, ListItemEndpoint>();
-            services.AddTransient<IInvitationEndpoint, InvitationEndpoint>();
-            services.AddTransient<IListEndpoint, ListEndpoint>();
+            //services.AddFirebasedDatabase();
 
-            //services.AddTransient<IUserEndpoint, UserEndpointFD>();
-            //services.AddTransient<IListAggregatorEndpoint, ListAggregatorEndpointFD>();
-            //services.AddTransient<IListItemEndpoint, ListItemEndpointFD>();
-            //services.AddTransient<IInvitationEndpoint, InvitationEndpointFD>();
-            //services.AddTransient<IListEndpoint, ListEndpointFD>();
-
-            //services.AddFirebaseCaschedDatabas();
+            services.AddFirebaseCaschedDatabas();
 
             services.AddAutoMapper(typeof(MappingProfile));
 
