@@ -46,7 +46,7 @@ namespace ShoppingListWebApi.Data
             querry.Add("client_id", appId);
             querry.Add("client_secret", apiPrivateKey);
             //querry.Add("redirect_uri", "https://localhost:5001/api/User");
-           // querry.Add("redirect_uri", "https://webapi.mcfly.ml/api/User");
+           // querry.Add("redirect_uri", "https://webapi.mcfly.ga/api/User");
             querry.Add("redirect_uri", myDomain);
             querry.Add("code", code);
 

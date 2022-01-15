@@ -24,7 +24,7 @@ namespace BlazorClient.Data
         {
             Console.WriteLine("singnalR amount" + amount++);
             Console.WriteLine("singnalR ststus" + _hubConnection?.State);
-            //_hubConnection = new HubConnectionBuilder().WithUrl("https://94.251.148.92:5013/chatHub", (opts) =>
+            //_hubConnection = new HubConnectionBuilder().WithUrl("https://94.251.148.187:5013/chatHub", (opts) =>
             //{
             //_hubConnection = new HubConnectionBuilder().WithUrl("https://192.168.8.222:91/chatHub", (opts) =>
             //{
@@ -108,7 +108,7 @@ namespace BlazorClient.Data
 
             List<IDisposable> disposables = new List<IDisposable>();
 
-            ////_hubConnection = new HubConnectionBuilder().WithUrl("https://94.251.148.92:5013/chatHub", (opts) =>
+            ////_hubConnection = new HubConnectionBuilder().WithUrl("https://94.251.148.187:5013/chatHub", (opts) =>
             ////{
             ////_hubConnection = new HubConnectionBuilder().WithUrl("https://192.168.8.222:91/chatHub", (opts) =>
             ////{

@@ -126,7 +126,7 @@ namespace ShoppingListWebApi
                 options.AddPolicy("ALL", builder =>
                 {
                     builder.WithOrigins("https://localhost:44379", "https://localhost:5003"
-                        , "https://shoppinglist2.mcfly.ml", "https://shoppinglist.mcfly.ml");
+                        , "https://shoppinglist2.mcfly.ga", "https://shoppinglist.mcfly.ga");
                     //builder.AllowAnyOrigin();
                     builder.AllowAnyHeader();
                     builder.AllowAnyMethod();
