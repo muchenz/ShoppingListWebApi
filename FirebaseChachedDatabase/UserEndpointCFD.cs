@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using FirebaseDatabase;
 using Google.Cloud.Firestore;
+using Google.Type;
 using Microsoft.Extensions.Caching.Distributed;
 using Shared;
 using System;
@@ -295,12 +296,27 @@ namespace FirebaseChachedDatabase
         public async Task SetUserPermissionToListAggrAsync(int userId, int listAggregationId, int permission)
         {
             await _cache.RemoveAsync("userId_" + userId);
+            await _cache.UpdateAsync<ListAggregationForPermission, string>("ListAggregationForPermission_" + listAggregationId,
+
+                (listAggrForPerm) => {
+                    listAggrForPerm.Users.First(a => a.User.UserId == userId).Permission=permission;
+
+                    return Task.FromResult(listAggrForPerm);
+                });
             await _userEndpointFD.SetUserPermissionToListAggrAsync(userId, listAggregationId, permission);
         }
 
         public async Task DeleteUserListAggrAscync(int userId, int listAggregationId)
         {
             await _cache.RemoveAsync("userId_" + userId);
+
+            await _cache.UpdateAsync<ListAggregationForPermission, string>("ListAggregationForPermission_" + listAggregationId,
+
+                 (listAggrForPerm) => {
+                     listAggrForPerm.Users.Remove(listAggrForPerm.Users.First(a => a.User.UserId == userId));
+
+                     return Task.FromResult(listAggrForPerm);
+                 });
             await _userEndpointFD.DeleteUserListAggrAscync(userId, listAggregationId);
         }
 
@@ -388,9 +404,27 @@ namespace FirebaseChachedDatabase
            // return _userEndpointFD.GetListAggregationForPermission_EmptyAsync(userId);
         }
 
-        public Task<ListAggregationForPermission> GetListAggregationForPermissionByListAggrIdAsync(ListAggregationForPermission listAggregationForPermission)
+        public async  Task<ListAggregationForPermission> GetListAggregationForPermissionByListAggrIdAsync(ListAggregationForPermission listAggregationForPermission)
         {
-            return _userEndpointFD.GetListAggregationForPermissionByListAggrIdAsync(listAggregationForPermission);
+            //var cashed = await _cache
+            //    .GetAsync<ListAggregationForPermission>("ListAggregationForPermission_" + listAggregationForPermission.ListAggregatorEntity.ListAggregatorId);
+
+            //if (cashed != null)
+            //{
+            //    return cashed;
+            //}
+
+            //var data = await _userEndpointFD.GetListAggregationForPermissionByListAggrIdAsync(listAggregationForPermission);
+
+            //await _cache.SetAsync("ListAggregationForPermission_" + listAggregationForPermission.ListAggregatorEntity.ListAggregatorId, data);
+
+            var result =  await _cache.GetOrAddAsync(
+                "ListAggregationForPermission_" + listAggregationForPermission.ListAggregatorEntity.ListAggregatorId
+                ,  ()=>_userEndpointFD.GetListAggregationForPermissionByListAggrIdAsync(listAggregationForPermission));
+
+            var data = result.Value;
+            return data;
+
         }
     }
 

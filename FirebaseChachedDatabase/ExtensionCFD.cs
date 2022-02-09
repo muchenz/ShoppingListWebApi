@@ -64,6 +64,53 @@ namespace FirebaseChachedDatabase
 
             return new GetCachedValue<T> { Cached = true, Value = value };
         }
+
+        public static async Task<GetCachedValue<T>> GetOrAddAsync<T, TKey>(
+           this IDistributedCache cache,
+           TKey anyKey,
+           Func<Task<T>> factory
+       )
+           where T : class
+        {
+            var key = anyKey switch
+            {
+                string k => k,
+                _ => anyKey.ToString(),
+            };
+
+            var value = await cache.GetAsync<T>(key);
+            if (value == null)
+            {
+                value = await factory();
+                await cache.SetStringAsync(key, JsonSerializer.Serialize(value));
+                return new GetCachedValue<T> { Cached = false, Value = value };
+            }
+
+            return new GetCachedValue<T> { Cached = true, Value = value };
+        }
+
+        public static async Task UpdateAsync<T, TKey>(
+         this IDistributedCache cache,
+         TKey anyKey,
+         Func<T,Task<T>> factory
+     )
+         where T : class
+        {
+            var key = anyKey switch
+            {
+                string k => k,
+                _ => anyKey.ToString(),
+            };
+
+            var value = await cache.GetAsync<T>(key);
+            if (value != null)
+            {
+                value = await factory(value);
+                await cache.SetStringAsync(key, JsonSerializer.Serialize(value));
+            }
+        }
+
+
         public static Task<T> GetAsync<T>(this IDistributedCache cache, int key)
            where T : class
         {

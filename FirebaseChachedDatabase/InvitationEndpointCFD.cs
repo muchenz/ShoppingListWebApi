@@ -25,7 +25,7 @@ namespace FirebaseChachedDatabase
 
             var listUsAggr = await _cache.GetAsync<List<UserListAggregatorFD>>("userId_" + userId);
 
-            if (listUsAggr!=null)
+            if (listUsAggr != null)
             {
                 listUsAggr.Add(new UserListAggregatorFD
                 {
@@ -36,6 +36,21 @@ namespace FirebaseChachedDatabase
 
                 await _cache.SetAsync("userId_" + userId, listUsAggr);
             }
+
+            var listPermCached = await _cache.GetAsync<ListAggregationForPermission>("ListAggregationForPermission_" + invitation.ListAggregatorId);
+
+            if (listPermCached != null)
+            {
+                listPermCached.Users.Add(new UserPermissionToListAggregation
+                {
+                    Permission = invitation.PermissionLevel
+                    , User=new User { UserId=userId, EmailAddress=invitation.EmailAddress }
+
+                }) ;
+
+                await _cache.SetAsync("ListAggregationForPermission_" + invitation.ListAggregatorId, listPermCached);
+            }
+
         }
 
         public Task<List<Invitation>> GetInvitationsListAsync(string userName)
