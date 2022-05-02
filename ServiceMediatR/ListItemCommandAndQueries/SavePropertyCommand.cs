@@ -31,7 +31,7 @@ namespace ServiceMediatR.ListItemCommandAndQueries
     {
         private readonly IListItemEndpoint _listItemEndpoint;
 
-        public SavePropertyCommandHandler(ShopingListDBContext context, IMapper mapper, IListItemEndpoint listItemEndpoint)
+        public SavePropertyCommandHandler(IMapper mapper, IListItemEndpoint listItemEndpoint)
         {
             _listItemEndpoint = listItemEndpoint;
         }

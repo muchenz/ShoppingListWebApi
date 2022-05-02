@@ -10,11 +10,11 @@ namespace FirebaseDatabase
     {
         public static void AddFirebasedDatabase(this IServiceCollection services)
         {
-            services.AddTransient<UserEndpointFD, UserEndpointFD>();
-            services.AddTransient<ListAggregatorEndpointFD, ListAggregatorEndpointFD>();
-            services.AddTransient<ListItemEndpointFD, ListItemEndpointFD>();
-            services.AddTransient<InvitationEndpointFD, InvitationEndpointFD>();
-            services.AddTransient<ListEndpointFD, ListEndpointFD>();
+            services.AddTransient<IUserEndpoint, UserEndpointFD>();
+            services.AddTransient<IListAggregatorEndpoint, ListAggregatorEndpointFD>();
+            services.AddTransient<IListItemEndpoint, ListItemEndpointFD>();
+            services.AddTransient<IInvitationEndpoint, InvitationEndpointFD>();
+            services.AddTransient<IListEndpoint, ListEndpointFD>();
 
         }
 

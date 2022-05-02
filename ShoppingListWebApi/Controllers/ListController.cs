@@ -27,10 +27,9 @@ namespace ShoppingListWebApi.Controllers
         private readonly IMapper _mapper;
         private readonly IMediator _mediator;
        
-        public ListController(ShopingListDBContext context, IMapper mapper,
+        public ListController(IMapper mapper,
             IMediator mediator)//, IConfiguration configuration)
         {
-            _context = context;
             _mapper = mapper;
             _mediator = mediator;
            

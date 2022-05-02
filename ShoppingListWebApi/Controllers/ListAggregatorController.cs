@@ -27,11 +27,10 @@ namespace ShoppingListWebApi.Controllers
         private readonly IListAggregatorEndpoint _listAggregatorEndpoint;
         private readonly IUserEndpoint _userEndpoint;
         private readonly IConfiguration _configuration;
-        public ListAggregatorController(ShopingListDBContext context, IConfiguration configuration, IMapper mapper
+        public ListAggregatorController(IConfiguration configuration, IMapper mapper
             , IMediator mediator, IListAggregatorEndpoint listAggregatorEndpoint
             ,IUserEndpoint userEndpoint)//, IConfiguration configuration)
         {
-            _context = context;
             _mapper = mapper;
             _mediator = mediator;
             _listAggregatorEndpoint = listAggregatorEndpoint;

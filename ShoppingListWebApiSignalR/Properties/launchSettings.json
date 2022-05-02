@@ -2,13 +2,9 @@
   "iisSettings": {
     "windowsAuthentication": false,
     "anonymousAuthentication": true,
-    "iis": {
-      "applicationUrl": "http://localhost/ShoppingListWebApiSignalR",
-      "sslPort": 0
-    },
     "iisExpress": {
-      "applicationUrl": "http://localhost:8024",
-      "sslPort": 44323
+      "applicationUrl": "http://localhost:1390/",
+      "sslPort": 44360
     }
   },
   "profiles": {
@@ -25,7 +21,8 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
-      "applicationUrl": "https://localhost:5011;http://localhost:5010;https://192.168.8.222:5013"
+      "applicationUrl": "https://localhost:5011;http://localhost:5010;https://192.168.8.222:5013",
+      //"applicationUrl": "https://127.0.0.1:5013"
     }
   }
 }

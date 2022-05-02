@@ -21,6 +21,8 @@ namespace ShoppingListWebApiSignalR
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
+                    //webBuilder.UseUrls("https://0.0.0.0:5013");
+                    //webBuilder.UseUrls("https://127.0.0.1:5013");
                 });
     }
 }

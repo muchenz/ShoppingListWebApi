@@ -136,7 +136,7 @@ namespace ShoppingListWebApiSignalR
                     var isTokenGood = await _authService.IsValidateTokenAsync(accessToken);
 
                     if (!isTokenGood) 
-                        return await Task.FromResult(AuthenticateResult.Fail("Not authorized.  Access_Token is bad."));
+                        return await Task.FromResult(AuthenticateResult.Fail("Not authorized.  Access_Token is wrong."));
 
  god:                   var claims = new Claim[]
                         {
@@ -152,7 +152,12 @@ namespace ShoppingListWebApiSignalR
                 }
                 catch (Exception ex)
                 {
-                    return await Task.FromResult(AuthenticateResult.Fail("Not authorized.  Access_Token is bad."));
+                    Console.WriteLine("--------------");
+                    Console.WriteLine(ex);
+                    Console.WriteLine("--------------");
+
+
+                    return await Task.FromResult(AuthenticateResult.Fail("Not authorized.  Someting go wrong."));
                 }
             }
         }

@@ -20,13 +20,11 @@ namespace ShoppingListWebApi.Controllers
     [ApiController]
     public class LogsController : ControllerBase
     {
-        private readonly ShopingListDBContext _context;
         private readonly ILogger<LogsController> _logger;
         private readonly IMapper _mapper;
 
-        public LogsController(ShopingListDBContext context, ILogger<LogsController> logger, IMapper mapper)
+        public LogsController(ILogger<LogsController> logger, IMapper mapper)
         {
-            _context = context;
             _logger = logger;
             _mapper = mapper;
         }
@@ -34,26 +32,27 @@ namespace ShoppingListWebApi.Controllers
         [HttpGet()]
         public async Task<IEnumerable<LogEntity>> GetAllLogs()
         {
-            var logs = await _context.Logs.AsQueryable().ToListAsync();
-            logs.Reverse();
+            //var logs = await _context.Logs.AsQueryable().ToListAsync();
+            //logs.Reverse();
 
-            return logs;
+            //return logs;
+            return new List<LogEntity>();
 
         }
 
         [HttpPost("LogTest")]
         public async Task Log()
         {
-            var logEntity = new LogEntity();
+            //var logEntity = new LogEntity();
 
-            logEntity.LogLevel = "aaaaaaaaa";
-            logEntity.StackTrace = "aaaaaaaaa";
-            logEntity.ExceptionMessage = "aaaaaaaaa";
-            logEntity.CreatedDate = DateTime.Now.ToString();
-            logEntity.Source = "Server";
+            //logEntity.LogLevel = "aaaaaaaaa";
+            //logEntity.StackTrace = "aaaaaaaaa";
+            //logEntity.ExceptionMessage = "aaaaaaaaa";
+            //logEntity.CreatedDate = DateTime.Now.ToString();
+            //logEntity.Source = "Server";
 
-            _context.Add(logEntity);
-            await _context.SaveChangesAsync();
+            //_context.Add(logEntity);
+            //await _context.SaveChangesAsync();
 
         }
 
@@ -61,31 +60,31 @@ namespace ShoppingListWebApi.Controllers
         [HttpPost("LoggerTest2")]
         public async Task Log2()
         {
-            _logger.LogInformation("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+            //_logger.LogInformation("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
 
-            _logger.LogInformation(new Exception("111111111"), "aaaa");
+            //_logger.LogInformation(new Exception("111111111"), "aaaa");
 
-            try
-            {
-                try
-                {
-                    throw new Exception("ala");
-                }
-                catch (Exception ex)
-                {
+            //try
+            //{
+            //    try
+            //    {
+            //        throw new Exception("ala");
+            //    }
+            //    catch (Exception ex)
+            //    {
 
-                    throw new Exception("ela", ex);
-
-
-                }
-            }
-
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "aaaa");
+            //        throw new Exception("ela", ex);
 
 
-            }
+            //    }
+            //}
+
+            //catch (Exception ex)
+            //{
+            //    _logger.LogError(ex, "aaaa");
+
+
+            //}
 
         }
         
@@ -93,11 +92,11 @@ namespace ShoppingListWebApi.Controllers
         [HttpPost("Logger")]
         public async Task Log3([FromBody]Log log)
         {
-            var logEntity = _mapper.Map<LogEntity>(log);
+            //var logEntity = _mapper.Map<LogEntity>(log);
 
 
-            _context.Add(logEntity);
-            await _context.SaveChangesAsync();
+            //_context.Add(logEntity);
+            //await _context.SaveChangesAsync();
         }
     }
 }

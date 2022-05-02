@@ -14,12 +14,13 @@ namespace SignalRService
         private readonly IConfiguration _configuration;
         private readonly IServiceProvider _serviceProvider;
         HubConnection _hubConnection;
-
+       
         public SignarRService(IConfiguration configuration, IServiceProvider serviceProvider)
         {
             _configuration = configuration;
             _serviceProvider = serviceProvider;
             _hubConnection = new HubConnectionBuilder().WithUrl(_configuration.GetSection("SignalR")["ChatHub"], (opts) =>
+            //_hubConnection = new HubConnectionBuilder().WithUrl(" https://127.0.0.1:5013/chatHub", (opts) =>
            {
                opts.Headers.Add("Access_Token", "I am a god of hellfire.");
 

@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Google.Cloud.Firestore;
+using Microsoft.Extensions.Logging;
 using Shared;
 using System;
 using System.Collections.Generic;
@@ -12,6 +13,7 @@ namespace FirebaseDatabase
     public class UserEndpointFD : IUserEndpoint
     {
         private readonly IMapper _mapper;
+        private readonly ILogger<UserEndpointFD> _logger;
         FirestoreDb Db;
 
         CollectionReference _listAggrCol;
@@ -22,13 +24,13 @@ namespace FirebaseDatabase
         CollectionReference _usersCol;
         CollectionReference _indexesCol;
 
-        public UserEndpointFD(IMapper mapper)
+        public UserEndpointFD(IMapper mapper,ILogger<UserEndpointFD> logger)
         {
+            logger.LogInformation($"constructor UserEndpointFD ");
 
             Db = FirestoreDb.Create("testnosqldb1");
             _mapper = mapper;
-
-
+            _logger = logger;
             _listAggrCol = Db.Collection("listAggregator");
             _listCol = Db.Collection("list");
             _listItemCol = Db.Collection("listItem");
@@ -495,12 +497,17 @@ namespace FirebaseDatabase
 
         public async Task<User> LoginAsync(string userName, string password)
         {
+            Console.WriteLine($"firebase login ");
+            _logger.LogInformation($"firebase login entry ");
+
+
             var userFDSnap = await _usersCol.WhereEqualTo(nameof(UserFD.EmailAddress), userName)
                .WhereEqualTo(nameof(UserFD.Password), password).GetSnapshotAsync();
 
             if (!userFDSnap.Documents.Any()) return null;
 
             var userFD = userFDSnap.First().ConvertTo<UserFD>();
+            _logger.LogInformation($"firebase login out ");
 
             return _mapper.Map<User>(userFD);
         }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -9,6 +10,7 @@ using EFDataBase;
 using FirebaseChachedDatabase;
 using FirebaseDatabase;
 using MediatR;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -28,6 +30,7 @@ using ServiceMediatR.ListCommandAndQueries;
 using Shared;
 using ShoppingListWebApi.Data;
 using ShoppingListWebApi.Handlers;
+using ShoppingListWebApi.Hub;
 using SignalRService;
 
 namespace ShoppingListWebApi
@@ -62,9 +65,9 @@ namespace ShoppingListWebApi
             //services.AddDbContext<ShopingListDBContext>(options =>
             //        options.UseSqlServer(Configuration.GetConnectionString("ShopingListDB2")));
 
-            ConfigureDB(services);
+            //ConfigureDB(services);
 
-            string filepath = @"e:\testnosqldb1-firebase-adminsdk-c123k-89b708d87e.json";
+            string filepath = @"testnosqldb1-firebase-adminsdk-c123k-89b708d87e.json";
             Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", filepath);
 
 
@@ -77,14 +80,15 @@ namespace ShoppingListWebApi
             //     config.Configuration = "127.0.0.1:6379";
             // }
             //);
-            services.AddDistributedMemoryCache();
+
+           // services.AddDistributedMemoryCache();
                        
 
             //services.AddEFDatabase();
 
-            //services.AddFirebasedDatabase();
+            services.AddFirebasedDatabase();
 
-            services.AddFirebaseCaschedDatabas();
+            //services.AddFirebaseCaschedDatabas();
 
             services.AddAutoMapper(typeof(MappingProfile));
 
@@ -106,8 +110,8 @@ namespace ShoppingListWebApi
               x.TokenValidationParameters = new TokenValidationParameters
               {
                   ValidateIssuerSigningKey = true,
-                  IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration.GetSection("Secrets")["JWTSecurityKey"])),
-                  //IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes("iausdfhseui68t776t8t8gt6gb8igt8ogtolgt8o7gt8o7gt8gt80weidh0wehidn")),
+                  //IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration.GetSection("Secrets")["JWTSecurityKey"])),
+                  IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("eashfisahfihgiuashrilghas9ifhiuhvi9uashblvh938hen48239")),
                   ValidateIssuer = false,
                   ValidateAudience = false,
                   ValidateLifetime = true,
@@ -126,7 +130,8 @@ namespace ShoppingListWebApi
                 options.AddPolicy("ALL", builder =>
                 {
                     builder.WithOrigins("https://localhost:44379", "https://localhost:5003"
-                        , "https://shoppinglist2.mcfly.ga", "https://shoppinglist.mcfly.ga");
+                        , "https://shoppinglist2.mcfly.ga", "https://shoppinglist.mcfly.ga"
+                        ,"");
                     //builder.AllowAnyOrigin();
                     builder.AllowAnyHeader();
                     builder.AllowAnyMethod();
@@ -134,6 +139,27 @@ namespace ShoppingListWebApi
 
                 });
             });
+            //------------------------------------------------
+            services.AddAuthentication()
+               .AddScheme<AuthenticationSchemeOptions, CustomSchemeHandler>(CustomSchemeHandler.CustomScheme, _ =>
+               {
+               });
+            services.AddHttpClient("api", client =>
+            {
+                //code to configure headers etc..
+                client.BaseAddress = new Uri(Configuration.GetSection("AppSettings")["ShoppingWebAPIBaseAddress"]);
+
+            }).ConfigurePrimaryHttpMessageHandler(() =>
+            {
+                var handler = new HttpClientHandler();
+
+                handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => { return true; };
+
+                return handler;
+            });
+            services.AddScoped<AuthService>();
+            services.AddSignalR();
+            //------------------------------------------------
 
         }
 
@@ -144,8 +170,8 @@ namespace ShoppingListWebApi
             var httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();
             //var dbContext = serviceProvider.GetRequiredService<ShopingListDBContext>();
 
-            loggerFactory.AddFile("R:\\111.txt");
-            loggerFactory.AddProvider(new Logging.AppLoggerProvider(app.ApplicationServices, httpContextAccessor));
+            //loggerFactory.AddFile("R:\\111.txt");
+            //loggerFactory.AddProvider(new Logging.AppLoggerProvider(app.ApplicationServices, httpContextAccessor));
 
             if (env.IsDevelopment())
             {
@@ -204,6 +230,7 @@ namespace ShoppingListWebApi
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHub<SendRequest>("/chatHub");
             });
 
         }

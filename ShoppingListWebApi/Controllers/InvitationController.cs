@@ -26,10 +26,9 @@ namespace ShoppingListWebApi.Controllers
         private readonly SignarRService _signarRService;
         private readonly IInvitationEndpoint _invitationEndpoint;
 
-        public InvitationController(ShopingListDBContext context, IMapper mapper, SignarRService signarRService
+        public InvitationController(IMapper mapper, SignarRService signarRService
             , IInvitationEndpoint invitationEndpoint)
         {
-            _context = context;
             _mapper = mapper;
             _signarRService = signarRService;
             _invitationEndpoint = invitationEndpoint;

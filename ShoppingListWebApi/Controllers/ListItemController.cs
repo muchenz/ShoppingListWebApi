@@ -34,11 +34,10 @@ namespace ShoppingListWebApi.Controllers
         private readonly IUserEndpoint _userEndpoint;
         private readonly IConfiguration _configuration;
 
-        public ListItemController(ShopingListDBContext context, IConfiguration configuration, IMapper mapper,
+        public ListItemController(IConfiguration configuration, IMapper mapper,
              IMediator mediator, IListItemEndpoint listItemEndpoint, IUserEndpoint userEndpoint
            )//, IConfiguration configuration)
         {
-            _context = context;
             _mapper = mapper;
             _mediator = mediator;
             _listItemEndpoint = listItemEndpoint;

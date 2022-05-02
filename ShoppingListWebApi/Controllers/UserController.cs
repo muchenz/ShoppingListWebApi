@@ -5,6 +5,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Net.Http;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -17,6 +18,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using ServiceMediatR.SignalREvents;
@@ -32,22 +34,22 @@ namespace ShoppingListWebApi.Controllers
     [ApiController]
     public class UserController : ControllerBase
     {
-        private readonly ShopingListDBContext _context;
         private readonly IMapper _mapper;
         private readonly IConfiguration _configuration;
         private readonly IMediator _mediator;
         private readonly SignarRService _signarRService;
         private readonly IUserEndpoint _userEndpoint;
+        private readonly ILogger<UserController> _logger;
 
-        public UserController(ShopingListDBContext context, IMapper mapper, IConfiguration configuration, IMediator mediator
-            , SignarRService signarRService, IUserEndpoint userEndpoint)
+        public UserController(IMapper mapper, IConfiguration configuration, IMediator mediator
+            , SignarRService signarRService, IUserEndpoint userEndpoint, ILogger<UserController> logger)
         {
-            _context = context;
             _mapper = mapper;
             _configuration = configuration;
             _mediator = mediator;
             _signarRService = signarRService;
             _userEndpoint = userEndpoint;
+            _logger = logger;
         }
 
 
@@ -159,10 +161,13 @@ namespace ShoppingListWebApi.Controllers
         [HttpPost("Login")]
         public async Task<MessageAndStatus> Login(string userName, string password)
         {
+            _logger.LogInformation($"user controlel log in {userName} {password} ");
+
             var a = (byte)LoginType.Facebook;
 
             var user = await _userEndpoint.LoginAsync(userName, password);
 
+            _logger.LogInformation($"user controlel log out ");
 
             if (user == null)
                 return new MessageAndStatus { Status = "ERROR", Message = "User" };
@@ -396,7 +401,7 @@ namespace ShoppingListWebApi.Controllers
         {
             var tokenHandler = new JwtSecurityTokenHandler();
 
-            var key = Encoding.ASCII.GetBytes(_configuration.GetSection("Secrets")["JWTSecurityKey"]);
+            var key = Encoding.UTF8.GetBytes(_configuration.GetSection("Secrets")["JWTSecurityKey"]);
 
 
             var roles = await GetUserRolesByUserIdAsync(userId);
@@ -450,7 +455,9 @@ namespace ShoppingListWebApi.Controllers
 
             var token = new JwtSecurityToken(
                 new JwtHeader(
-                    new SigningCredentials(new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_configuration.GetSection("Secrets")["JWTSecurityKey"])),
+                    new SigningCredentials(
+                        //new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.GetSection("Secrets")["JWTSecurityKey"])),
+                        new SymmetricSecurityKey(Encoding.UTF8.GetBytes("eashfisahfihgiuashrilghas9ifhiuhvi9uashblvh938hen48239")),
                     SecurityAlgorithms.HmacSha256)),
                 new JwtPayload(claims)
                 );
@@ -462,7 +469,7 @@ namespace ShoppingListWebApi.Controllers
 
             catch (Exception ex)
             {
-
+                Console.WriteLine(ex.Message);
 
             }
 
@@ -489,7 +496,8 @@ namespace ShoppingListWebApi.Controllers
             try
             {
                 var tokenHandler = new JwtSecurityTokenHandler();
-                var key = Encoding.ASCII.GetBytes(_configuration.GetSection("Secrets")["JWTSecurityKey"]);
+                //var key = Encoding.UTF8.GetBytes(_configuration.GetSection("Secrets")["JWTSecurityKey"]);
+                var key = Encoding.UTF8.GetBytes("eashfisahfihgiuashrilghas9ifhiuhvi9uashblvh938hen48239");
 
                 var tokenValidationParameters = new TokenValidationParameters
                 {
