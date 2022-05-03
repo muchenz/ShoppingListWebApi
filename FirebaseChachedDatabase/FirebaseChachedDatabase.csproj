@@ -8,4 +8,8 @@
     <ProjectReference Include="..\FirebaseDatabase\FirebaseDatabase.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Cache\" />
+  </ItemGroup>
+
 </Project>

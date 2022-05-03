@@ -10,9 +10,9 @@ namespace FirebaseChachedDatabase
     public class InvitationEndpointCFD : IInvitationEndpoint
     {
         private readonly InvitationEndpointFD _invitation;
-        private readonly IDistributedCache _cache;
+        private readonly CacheConveinient _cache;
 
-        public InvitationEndpointCFD(IMapper mapper, InvitationEndpointFD invitation, IDistributedCache cache)
+        public InvitationEndpointCFD(IMapper mapper, InvitationEndpointFD invitation, CacheConveinient cache)
         {
             _invitation = invitation;
             _cache = cache;

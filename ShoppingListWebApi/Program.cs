@@ -38,7 +38,7 @@ namespace ShoppingListWebApi
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
-                     webBuilder.UseUrls("http://0.0.0.0:5003");
+                     //webBuilder.UseUrls("http://0.0.0.0:5003");
                      //webBuilder.UseUrls("https://127.0.0.1:5003");
                 });
     }

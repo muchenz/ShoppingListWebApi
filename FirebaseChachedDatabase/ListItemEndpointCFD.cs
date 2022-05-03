@@ -13,9 +13,9 @@ namespace FirebaseChachedDatabase
     public class ListItemEndpointCFD : IListItemEndpoint
     {
         private readonly ListItemEndpointFD _listItemEndpointFD;
-        private readonly IDistributedCache _cache;
+        private readonly CacheConveinient _cache;
 
-        public ListItemEndpointCFD(IMapper mapper, ListItemEndpointFD listItemEndpointFD, IDistributedCache cache)
+        public ListItemEndpointCFD(IMapper mapper, ListItemEndpointFD listItemEndpointFD, CacheConveinient cache)
         {
             _listItemEndpointFD = listItemEndpointFD;
             _cache = cache;

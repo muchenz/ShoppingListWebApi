@@ -12,10 +12,10 @@ namespace FirebaseChachedDatabase
     public class ListAggregatorEndpointCFD : IListAggregatorEndpoint
     {
         private readonly ListAggregatorEndpointFD _listAggregatorEndpoint;
-        private readonly IDistributedCache _cache;
+        private readonly CacheConveinient _cache;
 
         public ListAggregatorEndpointCFD(IMapper mapper, ListAggregatorEndpointFD listAggregatorEndpoint
-            , IDistributedCache cache)
+            , CacheConveinient cache)
         {
             _listAggregatorEndpoint = listAggregatorEndpoint;
             _cache = cache;

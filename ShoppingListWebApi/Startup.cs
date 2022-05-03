@@ -86,9 +86,12 @@ namespace ShoppingListWebApi
 
             //services.AddEFDatabase();
 
-            services.AddFirebasedDatabase();
+            //services.AddFirebasedDatabase();
 
-            //services.AddFirebaseCaschedDatabas();
+            services.AddFirebaseCaschedDatabas();
+            services.AddSingleton<CacheConveinient>();
+            services.AddSingleton<IMiniDistributedCache, FirabaseCache>();
+            
 
             services.AddAutoMapper(typeof(MappingProfile));
 
@@ -131,7 +134,7 @@ namespace ShoppingListWebApi
                 {
                     builder.WithOrigins("https://localhost:44379", "https://localhost:5003"
                         , "https://shoppinglist2.mcfly.ga", "https://shoppinglist.mcfly.ga"
-                        ,"");
+                        , "http://localhost:52735");
                     //builder.AllowAnyOrigin();
                     builder.AllowAnyHeader();
                     builder.AllowAnyMethod();

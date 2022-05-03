@@ -16,7 +16,7 @@ namespace FirebaseChachedDatabase
     {
 
         private readonly IMapper _mapper;
-        private readonly IDistributedCache _cache;
+        private readonly CacheConveinient _cache;
         private readonly UserEndpointFD _userEndpointFD;
         FirestoreDb Db;
 
@@ -29,7 +29,7 @@ namespace FirebaseChachedDatabase
         CollectionReference _indexesCol;
 
 
-        public UserEndpointCFD(IMapper mapper, IDistributedCache cache, UserEndpointFD userEndpointFD)
+        public UserEndpointCFD(IMapper mapper, CacheConveinient cache, UserEndpointFD userEndpointFD)
         {
             Db = FirestoreDb.Create("testnosqldb1");
             _mapper = mapper;
