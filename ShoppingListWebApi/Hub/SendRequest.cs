@@ -22,6 +22,7 @@ namespace ShoppingListWebApi.Hub
             {
 
                 tasks[i++] = Clients.AllExcept(signalRId).SendAsync("DataAreChanged_" + item);
+                //tasks[i++] =  Clients.User(item.ToString()).SendAsync("DataAreChanged_"+item); only to user with concret ID
 
             }
 

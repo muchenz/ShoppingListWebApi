@@ -24,12 +24,8 @@ namespace ShoppingListWebApi.Handlers
             _next = next;
             _mediator = mediator;
         }
-
-
         public async Task InvokeAsync(HttpContext context, IUserEndpoint userEndpoint)
         {
-
-
             // Call the next delegate/middleware in the pipeline
             await _next(context);
 

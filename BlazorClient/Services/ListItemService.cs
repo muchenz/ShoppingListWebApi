@@ -227,6 +227,8 @@ namespace BlazorClient.Services
             string typeName = typeof(T).ToString().Split(".").LastOrDefault();
 
             // var requestMessage = new HttpRequestMessage(HttpMethod.Post, "ListItem/AddItemListItemToList"+querry.ToString());
+            var q = querry.ToString();
+
             var requestMessage = new HttpRequestMessage(HttpMethod.Post, typeName + "/SaveProperty" + querry);
 
 

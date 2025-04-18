@@ -511,7 +511,7 @@ namespace ShoppingListWebApi.Controllers
                 var principle = tokenHandler.ValidateToken(accessToken, tokenValidationParameters, out securityToken);
 
                 JwtSecurityToken jwtSecurityToken = securityToken as JwtSecurityToken;
-
+               
                 if (jwtSecurityToken != null && jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
                 {
                     

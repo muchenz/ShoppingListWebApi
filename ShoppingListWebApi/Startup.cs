@@ -48,8 +48,8 @@ namespace ShoppingListWebApi
 
         protected virtual void ConfigureDB(IServiceCollection services)
         {
-            services.AddDbContext<ShopingListDBContext>(options =>
-                   options.UseSqlite(Configuration.GetConnectionString("ShopingListDB3"), b => b.MigrationsAssembly("ShoppingListWebApi")));
+           // services.AddDbContext<ShopingListDBContext>(options =>
+           //        options.UseSqlite(Configuration.GetConnectionString("ShopingListDB3"), b => b.MigrationsAssembly("ShoppingListWebApi")));
         }
 
         // This method gets called by the runtime. Use this method to add services to the container.
@@ -65,7 +65,7 @@ namespace ShoppingListWebApi
             //services.AddDbContext<ShopingListDBContext>(options =>
             //        options.UseSqlServer(Configuration.GetConnectionString("ShopingListDB2")));
 
-            //ConfigureDB(services);
+            ConfigureDB(services);
 
             string filepath = @"testnosqldb1-firebase-adminsdk-c123k-89b708d87e.json";
             Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", filepath);

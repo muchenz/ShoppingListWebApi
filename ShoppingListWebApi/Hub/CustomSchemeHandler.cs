@@ -43,6 +43,11 @@ namespace ShoppingListWebApi.Hub
                 if (!isTokenGood)
                     return await Task.FromResult(AuthenticateResult.Fail("Not authorized.  Access_Token is wrong."));
 
+
+                // pozyskać nameidentifier (user ID)
+                // ustawić claim  nameidentifier na UserID
+                // to to żeby SignaR wukoszytsał to w Clients.User(item.ToString()).SendAsync("DataAreChanged_"+item)
+
                 god: var claims = new Claim[]
                      {
                          // new("user_id", cookie),
