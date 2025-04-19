@@ -130,7 +130,7 @@
         userService,
         (_) => { },
         (a) => NuberOfInvitations = a,
-        StateHasChanged);
+        () => InvokeAsync(StateHasChanged));
     }
 
     List<IDisposable> SignalRToDispose;

@@ -436,6 +436,8 @@
 
     async Task ListClicked(List e)
     {
+        await SaveAllOrder(data.ListAggregators);
+
         listChoosed = e;
         listChoosed.ListItems = listChoosed?.ListItems.OrderByDescending(a => a.Order).ToList();
 
@@ -561,7 +563,7 @@
         AddListItem.ListItemName = "";
         AddListItemEditContext.MarkAsUnmodified();
 
-        //await SaveAllOrder(data.ListAggregators);
+        await SaveAllOrder(data.ListAggregators);
     }
 
     async Task AddToList()
@@ -605,7 +607,7 @@
 
         data.ListAggregators = data.ListAggregators.OrderByDescending(a => a.Order).ToList();
 
-        //  await SaveAllOrder(data.ListAggregators);
+         await SaveAllOrder(data.ListAggregators);
         //listAggregatorChoosed = newItem;
         //listChoosed = null;
     }
@@ -770,7 +772,7 @@
            (a) => listAggregatorChoosed = a,
            (a) => listChoosed = a,
           authenticationStateProvider, userService,
-          navigationManager, StateHasChanged,
+          navigationManager, () => InvokeAsync(StateHasChanged),
           shoppingListService,
           localStorage);
     }

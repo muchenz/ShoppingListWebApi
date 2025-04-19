@@ -141,7 +141,7 @@
              userService,
               (a) => invitationsList = a,
               (_) => { },
-              StateHasChanged);
+              () => InvokeAsync(StateHasChanged));
         }
 
         var stateInfo = stateService.GetStateInfo(_gid);

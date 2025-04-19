@@ -5,6 +5,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="_publish\**" />
+    <Content Remove="_publish\**" />
+    <EmbeddedResource Remove="_publish\**" />
+    <None Remove="_publish\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="ShippingListDB_SQLite.db" />
   </ItemGroup>
 
@@ -21,6 +28,7 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="6.0.4" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.4" />
     <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="6.0.4" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.0" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="6.0.3" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="Serilog.Extensions.Logging.File" Version="2.0.0" />
@@ -47,6 +55,8 @@
   <PropertyGroup><!--<IsTransformWebConfigDisabled>true</IsTransformWebConfigDisabled>-->
   
     <UserSecretsId>be90ca2d-c5db-4b5d-b061-23b4f305990e</UserSecretsId>
+  
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
   </PropertyGroup>
 
 </Project>

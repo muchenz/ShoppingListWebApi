@@ -54,9 +54,7 @@ namespace BlazorClient.Data
             UserService userService,
              Action<List<Invitation>> SetInvitation,
              Action<int> SetInvitationCount,
-             Action StateHasChanged
-
-
+             Func<Task> StateHasChangedAsync
             )
         {
 
@@ -78,7 +76,7 @@ namespace BlazorClient.Data
 
                     SetInvitation(invitationsList);
                     SetInvitationCount(count);
-                    StateHasChanged();
+                    await StateHasChangedAsync();
 
                 });
 
@@ -99,7 +97,7 @@ namespace BlazorClient.Data
             Action<List> SetListChoosed,
 
             AuthenticationStateProvider authenticationStateProvider, UserService userService,
-            NavigationManager navigationManager, Action StateHasChanged,
+            NavigationManager navigationManager, Func<Task> StateHasChangedAysnc,
             ShoppingListService shoppingListService,
             ILocalStorageService localStorage
 
@@ -158,7 +156,7 @@ namespace BlazorClient.Data
 
                await LoadSaveOrderHelper.LoadListAggregatorsOrder(localStorage, data, authenticationStateProvider);
 
-               StateHasChanged();
+               await StateHasChangedAysnc();
 
                return;
 
@@ -186,7 +184,7 @@ namespace BlazorClient.Data
                         if (foundListItem == null) return;
                         foundListItem.ListItemName = item.ListItemName;
                         foundListItem.State = item.State;
-                        StateHasChanged();
+                        await StateHasChangedAysnc();
 
 
                     }
@@ -195,10 +193,12 @@ namespace BlazorClient.Data
                     {
 
 
-                        data.ListAggregators.Where(a => a.ListAggregatorId == listAggregationId).FirstOrDefault().
-                       Lists.Where(a => a.ListId == parentId).FirstOrDefault().ListItems.Add(item);
+                        var tempList = data.ListAggregators.Where(a => a.ListAggregatorId == listAggregationId).FirstOrDefault().
+                       Lists.Where(a => a.ListId == parentId).FirstOrDefault();
+                       tempList.ListItems.Insert(0,item);
+                        //tempList.ListItems=new List<ListItem>() { };
 
-                        StateHasChanged();
+                        await StateHasChangedAysnc();
                     }
                     else
                              if (command == "Delete_ListItem")
@@ -219,7 +219,7 @@ namespace BlazorClient.Data
 
                         founfList.ListItems.Remove(foundListItem);
 
-                        StateHasChanged();
+                        await StateHasChangedAysnc();
 
                     }
                 }

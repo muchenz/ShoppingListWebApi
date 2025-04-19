@@ -133,6 +133,7 @@ namespace ShoppingListWebApi
                 options.AddPolicy("ALL", builder =>
                 {
                     builder.WithOrigins("https://localhost:44379", "https://localhost:5003"
+                        , "https://localhost:5023"
                         , "https://shoppinglist2.mcfly.ga", "https://shoppinglist.mcfly.ga"
                         , "http://localhost:52735");
                     //builder.AllowAnyOrigin();
@@ -223,7 +224,7 @@ namespace ShoppingListWebApi
             });
 
             // app.UseMiddleware<MiddlewareSignalR>();
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
 
             app.UseRouting();
             app.UseCors("ALL");
