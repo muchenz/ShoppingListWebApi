@@ -52,7 +52,7 @@ namespace BlazorClient.Data
             if (data == null || data.ListAggregators == null || !data.ListAggregators.Any()) return;
 
 
-            SetEntryOrder(data.ListAggregators);
+            SetEntryOrder2(data.ListAggregators);
 
 
             var tempListFromFile = await localStorage.GetItemAsync<List<OrderListAggrItem>>(user.User.Identity.Name);
@@ -75,7 +75,7 @@ namespace BlazorClient.Data
 
 
                 ////////////////////
-                SetEntryOrder(listAggr.Lists);
+                SetEntryOrder2(listAggr.Lists);
 
 
                 foreach (var listList in listAggr.Lists)
@@ -91,7 +91,7 @@ namespace BlazorClient.Data
                     }
 
 
-                    SetEntryOrder(listList.ListItems);
+                    SetEntryOrder2(listList.ListItems);
 
 
                     foreach (var listItem in listList.ListItems)
@@ -140,6 +140,13 @@ namespace BlazorClient.Data
                 //}
 
                 item.Order = i++;
+            }
+        }
+        static void SetEntryOrder2(IEnumerable<IModelItemOrder> list)
+        {
+            foreach (var item in list)
+            {
+                item.Order = item.Id;
             }
         }
 

@@ -563,7 +563,7 @@
         AddListItem.ListItemName = "";
         AddListItemEditContext.MarkAsUnmodified();
 
-        await SaveAllOrder(data.ListAggregators);
+        //await SaveAllOrder(data.ListAggregators);
     }
 
     async Task AddToList()
@@ -585,7 +585,7 @@
         listAggregatorChoosed.Lists = listAggregatorChoosed.Lists.OrderByDescending(a => a.Order).ToList();
 
         //listChoosed = newItem;
-        await SaveAllOrder(data.ListAggregators);
+        //await SaveAllOrder(data.ListAggregators);
     }
 
 
@@ -607,7 +607,7 @@
 
         data.ListAggregators = data.ListAggregators.OrderByDescending(a => a.Order).ToList();
 
-         await SaveAllOrder(data.ListAggregators);
+         //await SaveAllOrder(data.ListAggregators);
         //listAggregatorChoosed = newItem;
         //listChoosed = null;
     }
