@@ -89,7 +89,7 @@ namespace ShoppingListWebApi.Data
             querry.Add("access_token", token);
 
             var requestMessage = new HttpRequestMessage(HttpMethod.Get, "/me" + querry.ToString());
-            requestMessage.Content = new StringContent("");
+            requestMessage.Content = new StringContent(string.Empty);
 
             requestMessage.Content.Headers.ContentType
                 = new System.Net.Http.Headers.MediaTypeHeaderValue("application/x-www-form-urlencoded");

@@ -46,7 +46,7 @@ namespace ShoppingListWebApi.Controllers
 
 
         [HttpPost("RejectInvitaion")]
-        public async Task<ActionResult<MessageAndStatus>> RejectInvitaion([FromBody] Invitation invitation)
+        public async Task<ActionResult<MessageAndStatus>> RejectInvitaion([FromBody] Invitation invitation, [FromHeader] string signalRId)
         {
 
             await _invitationEndpoint.RejectInvitaionAsync(invitation);   
@@ -54,19 +54,20 @@ namespace ShoppingListWebApi.Controllers
             var userId = User.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier).FirstOrDefault()?.Value;
 
             if (userId != null)
-                await _signarRService.SendRefreshMessageToUsersAsync(new List<int> { int.Parse(userId) }, "New_Invitation");
+                await _signarRService.SendRefreshMessageToUsersAsync(new List<int> { int.Parse(userId) }, 
+                    "New_Invitation", signalRId: signalRId);
 
             return await Task.FromResult(new MessageAndStatus { Status = "OK" });
         }
 
         [HttpPost("AcceptInvitation")]
-        public async Task<ActionResult<MessageAndStatus>> AcceptInvitation([FromBody] Invitation invitation)
+        public async Task<ActionResult<MessageAndStatus>> AcceptInvitation([FromBody] Invitation invitation, [FromHeader] string signalRId)
         {
             var userId = int.Parse(User.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier).FirstOrDefault().Value);
 
             await _invitationEndpoint.AcceptInvitationAsync(invitation, userId);
 
-           await _signarRService.SendRefreshMessageToUsersAsync(new List<int> { userId }, "New_Invitation");
+           await _signarRService.SendRefreshMessageToUsersAsync(new List<int> { userId }, "New_Invitation", signalRId: signalRId);
 
             return await Task.FromResult(new MessageAndStatus { Status = "OK" });
         }
