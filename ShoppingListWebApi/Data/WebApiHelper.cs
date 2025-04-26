@@ -2,8 +2,8 @@
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Shared;
-using ShoppingListWebApi.Controllers;
+using Shared.DataEndpoints.Abstaractions;
+using ShoppingListWebApi.Models.Response;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,10 +17,10 @@ namespace ShoppingListWebApi.Data
     {
 
 
-        public static async Task<List<int>> GetuUserIdFromListAggrIdAsync(int listAggrId, IUserEndpoint userEndpoint
+        public static async Task<List<int>> GetuUserIdsFromListAggrIdAsync(int listAggrId, IUserEndpoint userEndpoint
             , ClaimsPrincipal user)
         {
-            var userList = await userEndpoint.GetUserIdFromListAggrIdAsync(listAggrId);
+            var userList = await userEndpoint.GetUserIdsFromListAggrIdAsync(listAggrId);
 
 
             var userId = user?.Claims?.Where(a => a.Type == ClaimTypes.NameIdentifier).SingleOrDefault().Value;

@@ -105,7 +105,7 @@
         await _hubConnection.StartAsync();
         //    var gid = await localStorage.GetItemAsync<string>("gid");
         _userInfoService.SetStateInfo(_gid, (a) => a.ClientSignalRID = _hubConnection.ConnectionId);
-        _userInfoService.GetStateInfo(_gid).HubState.CallHuBReady(_hubConnection);
+        await _userInfoService.GetStateInfo(_gid).HubState.CallHuBReadyAsync(_hubConnection);
 
         _hubConnection.Reconnected += (connectionId) =>
         {

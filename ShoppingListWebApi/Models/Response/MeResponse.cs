@@ -1,4 +1,4 @@
-﻿namespace ShoppingListWebApi.Controllers
+﻿namespace ShoppingListWebApi.Models.Response
 {
     public class MeResponse
     {

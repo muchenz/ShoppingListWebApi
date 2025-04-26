@@ -5,7 +5,7 @@ using Google.Cloud.Firestore;
 using Microsoft.Extensions.Caching.Distributed;
 
 using Microsoft.Extensions.DependencyInjection;
-using Shared;
+using Shared.DataEndpoints.Abstaractions;
 using System;
 using System.Text.Json;
 using System.Threading.Tasks;

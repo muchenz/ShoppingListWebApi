@@ -1,7 +1,8 @@
 ﻿using AutoMapper;
 using Google.Cloud.Firestore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using Shared;
+using Shared.DataEndpoints;
+using Shared.DataEndpoints.Abstaractions;
 using System;
 using System.Collections.Generic;
 using System.Text;

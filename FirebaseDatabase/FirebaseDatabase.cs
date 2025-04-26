@@ -2,7 +2,7 @@
 using EFDataBase;
 using Google.Api;
 using Google.Cloud.Firestore;
-using Shared;
+using Shared.DataEndpoints;
 using System;
 using System.Collections.Generic;
 using System.Linq;

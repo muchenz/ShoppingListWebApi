@@ -59,11 +59,52 @@ namespace BlazorClient.Services
         event Action<HubConnection> HuBReady;
         event Func<HubConnection, Task> HuBReadyAsync;
         public HubConnection Hub { get; private set; }
-        public void CallHuBReady(HubConnection _con)
+        //public void CallHuBReady2(HubConnection _con)
+        //{
+        //    Hub = _con;
+        //    HuBReady?.Invoke(_con);
+        //    HuBReadyAsync?.Invoke(_con);
+        //}
+
+        public async Task CallHuBReadyAsync(HubConnection _con)
         {
             Hub = _con;
-            HuBReady?.Invoke(_con);
-            HuBReadyAsync?.Invoke(_con);
+
+            foreach (var handler in HuBReadyAsync?.GetInvocationList() ?? Array.Empty<Delegate>())
+            {
+                if (handler is Func<HubConnection, Task> callback)
+                {
+                    try
+                    {
+                        await callback(_con);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"error in signar registration: {ex.Message}");
+                    }
+
+                    HuBReadyAsync -= callback;
+                }
+            }
+
+
+            foreach (var handler in HuBReady?.GetInvocationList() ?? Array.Empty<Delegate>())
+            {
+                if (handler is Action<HubConnection> callback)
+                {
+                    try
+                    {
+                        callback(_con);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"error in signar registration: {ex.Message}");
+
+                    }
+
+                    HuBReady -= callback;
+                }
+            }
         }
 
         public void JoinToHub(Action<HubConnection> func)

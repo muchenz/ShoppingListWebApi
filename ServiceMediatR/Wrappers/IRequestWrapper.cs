@@ -1,6 +1,5 @@
 ﻿using MediatR;
-using ServiceMediatR.Models;
-using Shared;
+using Shared.DataEndpoints;
 using System;
 using System.Collections.Generic;
 using System.Text;

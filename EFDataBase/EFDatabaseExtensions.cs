@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Shared;
+using Shared.DataEndpoints.Abstaractions;
 using System;
 using System.Collections.Generic;
 using System.Text;

@@ -28,9 +28,11 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using ServiceMediatR.ListCommandAndQueries;
 using Shared;
+using ShoppingListWebApi.Auth.Api;
 using ShoppingListWebApi.Data;
 using ShoppingListWebApi.Handlers;
 using ShoppingListWebApi.Hub;
+using ShoppingListWebApi.Hub.Auth;
 using SignalRService;
 
 namespace ShoppingListWebApi

@@ -1,7 +1,8 @@
 ﻿using EFDataBase;
 using Microsoft.EntityFrameworkCore;
 using ServiceMediatR.Wrappers;
-using Shared;
+using Shared.DataEndpoints;
+using Shared.DataEndpoints.Abstaractions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -35,7 +36,7 @@ namespace ServiceMediatR.UserCommandAndQuerry
         }
         public async Task<MessageAndStatusAndData<IEnumerable<int>>> Handle(GetUserIdFromListAggrIdCommand request, CancellationToken cancellationToken)
         {
-            var userList = await _userEndpoint.GetUserIdFromListAggrIdAsync(request.ListAggrId);
+            var userList = await _userEndpoint.GetUserIdsFromListAggrIdAsync(request.ListAggrId);
 
 
             var userId = request.User?.Claims?.Where(a => a.Type == ClaimTypes.NameIdentifier).SingleOrDefault().Value;

@@ -6,7 +6,7 @@ using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using System;
 
-namespace ShoppingListWebApi.Hub
+namespace ShoppingListWebApi.Hub.Auth
 {
     public class CustomSchemeHandler : AuthenticationHandler<AuthenticationSchemeOptions>
     {

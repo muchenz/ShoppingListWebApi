@@ -165,7 +165,7 @@ namespace BlazorClient.Services
         public async Task<List<ListAggregationForPermission>> GetListAggregationForPermission_EmptyAsync()
         {
 
-            var requestMessage = new HttpRequestMessage(HttpMethod.Post, "User/GetListAggregationForPermission_Empty");
+            var requestMessage = new HttpRequestMessage(HttpMethod.Post, "Permissions/GetListAggregationForPermission_Empty");
 
 
             await SetRequestBearerAuthorizationHeader(requestMessage);
@@ -189,7 +189,7 @@ namespace BlazorClient.Services
             (ListAggregationForPermission listAggregationForPermission)
         {
             
-            var requestMessage = new HttpRequestMessage(HttpMethod.Post, "User/GetListAggregationForPermissionByListAggrId");
+            var requestMessage = new HttpRequestMessage(HttpMethod.Post, "Permissions/GetListAggregationForPermissionByListAggrId");
 
             requestMessage.Content = new StringContent(JsonConvert.SerializeObject(listAggregationForPermission));
 
@@ -261,7 +261,7 @@ namespace BlazorClient.Services
 
             string serializedUser = JsonConvert.SerializeObject(userPermissionToList);
 
-            var requestMessage = new HttpRequestMessage(HttpMethod.Post, "User/" + actionName + querry.ToString());
+            var requestMessage = new HttpRequestMessage(HttpMethod.Post, "Permissions/" + actionName + querry.ToString());
 
 
             requestMessage.Content = new StringContent(serializedUser);

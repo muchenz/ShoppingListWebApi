@@ -10,7 +10,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using ServiceMediatR.SignalREvents;
-using Shared;
+using Shared.DataEndpoints;
+using Shared.DataEndpoints.Abstaractions;
+using ShoppingListWebApi.Auth.Api;
 using ShoppingListWebApi.Data;
 
 
@@ -56,7 +58,7 @@ namespace ShoppingListWebApi.Controllers
         public async Task<ActionResult<int>> DeleteList(int ItemId, int listAggregationId,[FromHeader]string signalRId)
         {
 
-            var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(listAggregationId, _userEndpoint, User);
+            var userList = await WebApiHelper.GetuUserIdsFromListAggrIdAsync(listAggregationId, _userEndpoint, User);
 
             var amount = await _listAggregatorEndpoint.DeleteListAggrAsync(ItemId);
             await _mediator.Publish(new DataChangedEvent(userList, signalRId));
@@ -82,7 +84,7 @@ namespace ShoppingListWebApi.Controllers
 
             var listItem = await _listAggregatorEndpoint.EditListAggregatorAsync(item);
 
-             var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(listAggregationId, _userEndpoint, User);
+             var userList = await WebApiHelper.GetuUserIdsFromListAggrIdAsync(listAggregationId, _userEndpoint, User);
 
             await _mediator.Publish(new DataChangedEvent(userList, signalRId));
 

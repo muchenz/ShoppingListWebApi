@@ -1,4 +1,4 @@
-﻿namespace ShoppingListWebApi.Controllers
+﻿namespace ShoppingListWebApi.Models.Response
 {
     internal class TokenResponse
     {

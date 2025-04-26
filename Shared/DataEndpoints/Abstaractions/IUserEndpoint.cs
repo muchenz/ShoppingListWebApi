@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Shared
+namespace Shared.DataEndpoints.Abstaractions
 {
     public interface IUserEndpoint
     {
@@ -38,7 +38,7 @@ namespace Shared
 
         Task<User> LoginAsync(string userName, string password);
         Task<User> Register(string userName, string password, LoginType loginType);
-        Task<List<int>> GetUserIdFromListAggrIdAsync(int listAggregationId);
+        Task<List<int>> GetUserIdsFromListAggrIdAsync(int listAggregationId);
 
     }
 

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Shared
+namespace Shared.DataEndpoints.Abstaractions
 {
     public interface IInvitationEndpoint
     {

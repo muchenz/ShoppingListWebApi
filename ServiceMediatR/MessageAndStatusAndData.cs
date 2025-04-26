@@ -1,7 +1,6 @@
 ﻿
 
-using ServiceMediatR.Models;
-using Shared;
+using Shared.DataEndpoints;
 
 namespace ServiceMediatR
 {

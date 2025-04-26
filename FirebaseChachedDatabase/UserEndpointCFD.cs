@@ -3,7 +3,8 @@ using FirebaseDatabase;
 using Google.Cloud.Firestore;
 using Google.Type;
 using Microsoft.Extensions.Caching.Distributed;
-using Shared;
+using Shared.DataEndpoints;
+using Shared.DataEndpoints.Abstaractions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -408,9 +409,9 @@ namespace FirebaseChachedDatabase
             return _userEndpointFD.Register(userName, password, loginType);
         }
 
-        public Task<List<int>> GetUserIdFromListAggrIdAsync(int listAggregationId)
+        public Task<List<int>> GetUserIdsFromListAggrIdAsync(int listAggregationId)
         {
-            return _userEndpointFD.GetUserIdFromListAggrIdAsync(listAggregationId);
+            return _userEndpointFD.GetUserIdsFromListAggrIdAsync(listAggregationId);
         }
 
         public async Task<User> GetUserById(int userId)

@@ -1,7 +1,8 @@
 ﻿using AutoMapper;
 using FirebaseDatabase;
 using Microsoft.Extensions.Caching.Distributed;
-using Shared;
+using Shared.DataEndpoints;
+using Shared.DataEndpoints.Abstaractions;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 

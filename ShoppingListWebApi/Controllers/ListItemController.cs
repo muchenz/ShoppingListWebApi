@@ -17,7 +17,9 @@ using Microsoft.Extensions.Logging;
 using ServiceMediatR.ListItemCommandAndQueries;
 using ServiceMediatR.SignalREvents;
 using ServiceMediatR.UserCommandAndQuerry;
-using Shared;
+using Shared.DataEndpoints;
+using Shared.DataEndpoints.Abstaractions;
+using ShoppingListWebApi.Auth.Api;
 using ShoppingListWebApi.Data;
 
 
@@ -85,7 +87,7 @@ namespace ShoppingListWebApi.Controllers
 
             var amount = await _listItemEndpoint.DeleteListItemAsync(ItemId, listAggregationId);
 
-            var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(listAggregationId, _userEndpoint, User);
+            var userList = await WebApiHelper.GetuUserIdsFromListAggrIdAsync(listAggregationId, _userEndpoint, User);
             await _mediator.Publish(new AddEditSaveDeleteListItemEvent(userList, "Delete_ListItem", ItemId
                 , listAggregationId, signalRId: signalRId));
 
@@ -132,7 +134,7 @@ namespace ShoppingListWebApi.Controllers
             var listItem = await _listItemEndpoint.EditListItemAsync(item, listAggregationId);
 
 
-            var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(listAggregationId, _userEndpoint, User);
+            var userList = await WebApiHelper.GetuUserIdsFromListAggrIdAsync(listAggregationId, _userEndpoint, User);
             await _mediator.Publish(new AddEditSaveDeleteListItemEvent(userList, "Edit/Save_ListItem", listItem.ListItemId
                 , listAggregationId, signalRId: signalRId));
 

@@ -1,7 +1,8 @@
 ﻿using AutoMapper;
 using Google.Cloud.Firestore;
 using Microsoft.Extensions.Logging;
-using Shared;
+using Shared.DataEndpoints;
+using Shared.DataEndpoints.Abstaractions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -553,7 +554,7 @@ namespace FirebaseDatabase
             await _userListAggrCol.Document(docId).UpdateAsync(nameof(UserListAggregatorFD.PermissionLevel), permission);
         }
 
-        public async Task<List<int>> GetUserIdFromListAggrIdAsync(int listAggregationId)
+        public async Task<List<int>> GetUserIdsFromListAggrIdAsync(int listAggregationId)
         {
             var querrySnapshot = await _userListAggrCol
                .WhereEqualTo(nameof(UserListAggregatorFD.ListAggregatorId), listAggregationId).GetSnapshotAsync();

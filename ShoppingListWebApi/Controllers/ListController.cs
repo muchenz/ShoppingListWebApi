@@ -12,7 +12,8 @@ using Microsoft.Extensions.Configuration;
 using ServiceMediatR.ListCommandAndQueries;
 using ServiceMediatR.SignalREvents;
 using ServiceMediatR.UserCommandAndQuerry;
-using Shared;
+using Shared.DataEndpoints;
+using ShoppingListWebApi.Auth.Api;
 using ShoppingListWebApi.Data;
 
 

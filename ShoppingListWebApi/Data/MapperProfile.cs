@@ -4,8 +4,8 @@ using System.Threading.Tasks;
 using AutoMapper;
 using EFDataBase;
 using FirebaseDatabase;
-using Shared;
 using System;
+using Shared.DataEndpoints;
 
 namespace ShoppingListWebApi.Data
 {

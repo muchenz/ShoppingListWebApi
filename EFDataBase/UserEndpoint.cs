@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
-using Shared;
+using Shared.DataEndpoints;
+using Shared.DataEndpoints.Abstaractions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -309,7 +310,7 @@ namespace EFDataBase
             return _mapper.Map<User>(user);
         }
 
-        public async Task<List<int>> GetUserIdFromListAggrIdAsync(int listAggregationId)
+        public async Task<List<int>> GetUserIdsFromListAggrIdAsync(int listAggregationId)
         {
             return await _context.UserListAggregators.AsQueryable()
                 .Where(a => a.ListAggregatorId == listAggregationId).Select(a => a.UserId).ToListAsync();
