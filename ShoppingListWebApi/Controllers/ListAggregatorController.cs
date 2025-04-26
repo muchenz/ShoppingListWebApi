@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using EFDataBase;
+using FirebaseDatabase;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -58,7 +59,7 @@ namespace ShoppingListWebApi.Controllers
         public async Task<ActionResult<int>> DeleteList(int ItemId, int listAggregationId,[FromHeader]string signalRId)
         {
 
-            var userList = await WebApiHelper.GetuUserIdsFromListAggrIdAsync(listAggregationId, _userEndpoint, User);
+            var userList = await _userEndpoint.GetUserIdsFromListAggrIdAsync(listAggregationId); 
 
             var amount = await _listAggregatorEndpoint.DeleteListAggrAsync(ItemId);
             await _mediator.Publish(new DataChangedEvent(userList, signalRId));
@@ -84,7 +85,7 @@ namespace ShoppingListWebApi.Controllers
 
             var listItem = await _listAggregatorEndpoint.EditListAggregatorAsync(item);
 
-             var userList = await WebApiHelper.GetuUserIdsFromListAggrIdAsync(listAggregationId, _userEndpoint, User);
+             var userList = await _userEndpoint.GetUserIdsFromListAggrIdAsync(listAggregationId);
 
             await _mediator.Publish(new DataChangedEvent(userList, signalRId));
 

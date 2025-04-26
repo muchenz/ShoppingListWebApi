@@ -15,26 +15,7 @@ namespace ShoppingListWebApi.Data
 {
     public class WebApiHelper
     {
-
-
-        public static async Task<List<int>> GetuUserIdsFromListAggrIdAsync(int listAggrId, IUserEndpoint userEndpoint
-            , ClaimsPrincipal user)
-        {
-            var userList = await userEndpoint.GetUserIdsFromListAggrIdAsync(listAggrId);
-
-
-            var userId = user?.Claims?.Where(a => a.Type == ClaimTypes.NameIdentifier).SingleOrDefault().Value;
-
-            //if(userId!=null)
-            //    userList.Remove(int.Parse(userId));
-
-
-            return userList;
-        }
-
-
-
-
+                      
         public static async Task<MeResponse> GetFacebookUserFromCodeAsync(string code, string state,
             IConfiguration configuration, string myDomain)
         {

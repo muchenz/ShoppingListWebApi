@@ -8,6 +8,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 using AutoMapper;
 using EFDataBase;
 using MediatR;
@@ -126,6 +127,7 @@ namespace ShoppingListWebApi.Controllers
             MeResponse meResponse = null;
 
             string referer = Request.Headers["Referer"].ToString();
+            var returnUrl = state.Split(",").Last().Split("=").Last();
 
             string myDomain = Request.GetDisplayUrl().Split('?')[0];
 
@@ -142,7 +144,7 @@ namespace ShoppingListWebApi.Controllers
                 var res = await Register(meResponse.email, "", LoginType.Facebook);
 
 
-                return Redirect($"{referer}login?token={res.Message}");
+                return Redirect($"{returnUrl}?token={res.Message}");
 
             }
             else
@@ -150,13 +152,13 @@ namespace ShoppingListWebApi.Controllers
                 if (user.LoginType == 2) // 2 ==>> LoginType.Facebook
                 {
                     var token = await GenerateToken2(user.UserId);
-                    return Redirect($"{referer}login?token={token}&sss=(rrr)");
+                    return Redirect($"{returnUrl}?token={token}&sss=(rrr)");
 
                 }
 
             }
 
-            return Redirect($"{referer}login?error=Email already exist");
+            return Redirect($"{returnUrl}?error=Email already exist");
 
         }
 
