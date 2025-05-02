@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Shared.DataEndpoints.Abstaractions;
-using Shared.DataEndpoints;
+using Shared.DataEndpoints.Models;
 
 namespace EFDataBase
 {

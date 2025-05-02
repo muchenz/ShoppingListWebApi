@@ -2,8 +2,8 @@
 using FirebaseDatabase;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Caching.Distributed;
-using Shared.DataEndpoints;
 using Shared.DataEndpoints.Abstaractions;
+using Shared.DataEndpoints.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;

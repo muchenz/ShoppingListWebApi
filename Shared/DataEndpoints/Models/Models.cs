@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Shared.DataEndpoints
+namespace Shared.DataEndpoints.Models
 {
     public  class Log
     {
@@ -18,8 +18,15 @@ namespace Shared.DataEndpoints
         public Log Inner { get; set; }
 
     }
+    public class MessageSatus
+    {
+        public const string OK = "OK";
+        public const string Error = "ERROR";
+
+    }
     public class MessageAndStatus
     {
+        public bool IsError => Status == MessageSatus.Error;
         public string Status { get; set; }
         public string Message { get; set; }
 
@@ -33,17 +40,30 @@ namespace Shared.DataEndpoints
 
     public class MessageAndStatusAndData<T> : MessageAndStatus
     {
-        public MessageAndStatusAndData(T data, string msg, bool error)
+        private MessageAndStatusAndData(T data, string msg, string status)
         {
             Data = data;
             Message = msg;
-            IsError = error;
+            Status = status;
         }
 
         public T Data { get; set; }
-        public bool IsError { get; set; }
 
+        public static MessageAndStatusAndData<T> Ok(T data) =>
+            new MessageAndStatusAndData<T>(data, string.Empty, MessageSatus.OK);
+
+        public static MessageAndStatusAndData<T> Fail(string msg) =>
+           new MessageAndStatusAndData<T>(default, msg, MessageSatus.Error);
     }
+
+    //public class MessageAndStatusAndData
+    //{
+    //    public static MessageAndStatusAndData<T> Ok<T>(T data) =>
+    //       new MessageAndStatusAndData<T>(data, string.Empty, MessageSatus.OK);
+
+    //    public static MessageAndStatusAndData<T> Fail<T>(string msg) =>
+    //       new MessageAndStatusAndData<T>(default, msg, MessageSatus.Error);
+    //}
 
     public class Invitation
     {

@@ -4,8 +4,8 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using ServiceMediatR.Wrappers;
-using Shared.DataEndpoints;
 using Shared.DataEndpoints.Abstaractions;
+using Shared.DataEndpoints.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -53,13 +53,13 @@ namespace ServiceMediatR.ListCommandAndQueries
         {
 
             if (!await _listEndpoint.CheckIntegrityListAggrAsync(request.ParentId, request.ListAggregationId)) 
-                return await Task.FromResult(MessageAndStatusAndData.Fail<List>("Forbbidden."));
+                return MessageAndStatusAndData<List>.Fail("Forbbidden.");
 
 
             var res =  await _listEndpoint.AddListAsync(request.ParentId, request.Item, request.ListAggregationId);
 
 
-            return await Task.FromResult(MessageAndStatusAndData.Ok<List>(res, "OK"));
+            return MessageAndStatusAndData<List>.Ok(res);
 
         }       
 

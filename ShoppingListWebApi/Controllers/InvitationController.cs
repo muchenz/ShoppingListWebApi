@@ -10,8 +10,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
-using Shared.DataEndpoints;
 using Shared.DataEndpoints.Abstaractions;
+using Shared.DataEndpoints.Models;
 using SignalRService;
 
 

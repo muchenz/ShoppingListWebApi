@@ -12,7 +12,7 @@ using Microsoft.Extensions.Configuration;
 using ServiceMediatR.ListCommandAndQueries;
 using ServiceMediatR.SignalREvents;
 using ServiceMediatR.UserCommandAndQuerry;
-using Shared.DataEndpoints;
+using Shared.DataEndpoints.Models;
 using ShoppingListWebApi.Auth.Api;
 using ShoppingListWebApi.Data;
 

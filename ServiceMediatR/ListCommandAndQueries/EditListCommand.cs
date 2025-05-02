@@ -1,8 +1,8 @@
 ﻿using AutoMapper;
 using EFDataBase;
 using ServiceMediatR.Wrappers;
-using Shared.DataEndpoints;
 using Shared.DataEndpoints.Abstaractions;
+using Shared.DataEndpoints.Models;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -39,13 +39,13 @@ namespace ServiceMediatR.ListCommandAndQueries
 
 
              if (!await _listEndpoint.CheckIntegrityListAsync(request.List.ListId, request.ListAggregationId)) 
-                return MessageAndStatusAndData.Fail<List>("Forbbidden");
+                return MessageAndStatusAndData<List>.Fail("Forbbidden");
 
             //_context.ListItems.Remove(_context.ListItems.Single(a => a.ListItemId == ItemId));
 
             var listItem = await _listEndpoint.EditListAsync(request.List, request.ListAggregationId);
 
-            return await Task.FromResult(MessageAndStatusAndData.Ok(listItem, "OK"));
+            return MessageAndStatusAndData<List>.Ok(listItem);
 
         }
     }

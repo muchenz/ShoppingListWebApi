@@ -11,8 +11,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using ServiceMediatR.SignalREvents;
-using Shared.DataEndpoints;
 using Shared.DataEndpoints.Abstaractions;
+using Shared.DataEndpoints.Models;
 using ShoppingListWebApi.Auth.Api;
 using ShoppingListWebApi.Data;
 

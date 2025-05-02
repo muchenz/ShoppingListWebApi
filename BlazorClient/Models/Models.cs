@@ -22,26 +22,42 @@ namespace BlazorClient.Models
 
     }
 
+    public class MessageSatus
+    {
+        public const string OK = "OK";
+        public const string Error = "ERROR";
+
+    }
     public class MessageAndStatus
     {
+        public bool IsError => Status == MessageSatus.Error;
         public string Status { get; set; }
         public string Message { get; set; }
 
     }
 
-    public class MessageAndStatusAndData<T> : MessageAndStatus where T :class
+    public class TokenAndEmailData
     {
-        public MessageAndStatusAndData(T data, bool error = false, string msg = "")
+        public string Token { get; set; }
+        public string Email { get; set; }
+    }
+
+    public class MessageAndStatusAndData<T> : MessageAndStatus
+    {
+        public MessageAndStatusAndData(T data, string msg, string status)
         {
             Data = data;
             Message = msg;
-            IsError = error;
+            Status = status;
         }
 
-
         public T Data { get; set; }
-        public bool IsError { get; set; }
 
+        public static MessageAndStatusAndData<T> Ok(T data) =>
+            new MessageAndStatusAndData<T>(data, string.Empty, MessageSatus.OK);
+
+        public static MessageAndStatusAndData<T> Fail(string msg) =>
+           new MessageAndStatusAndData<T>(default, msg, MessageSatus.Error);
     }
     public  static class ItemState
     {

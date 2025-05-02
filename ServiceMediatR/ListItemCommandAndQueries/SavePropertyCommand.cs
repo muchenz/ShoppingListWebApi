@@ -2,7 +2,6 @@
 using EFDataBase;
 using Microsoft.EntityFrameworkCore;
 using ServiceMediatR.Wrappers;
-using Shared.DataEndpoints;
 using Shared.DataEndpoints.Abstaractions;
 using System;
 using System.Collections.Generic;
@@ -10,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Shared.DataEndpoints.Models;
 
 namespace ServiceMediatR.ListItemCommandAndQueries
 {
@@ -41,11 +41,11 @@ namespace ServiceMediatR.ListItemCommandAndQueries
         {
 
             if (!await CheckIntegrityListItemAsync(request.Item.ListItemId, request.ListAggregationId))
-                return await Task.FromResult(MessageAndStatusAndData.Fail<ListItem>("Forbbidden"));
+                return MessageAndStatusAndData<ListItem>.Fail("Forbbidden");
 
             var listItem = await _listItemEndpoint.SavePropertyAsync(request.Item, request.PropertyName, request.ListAggregationId);
 
-            return await Task.FromResult(MessageAndStatusAndData.Ok(listItem, "OK"));
+            return MessageAndStatusAndData<ListItem>.Ok(listItem);
         }
 
         Task<bool> CheckIntegrityListItemAsync(int listItemId, int listAggregationId)

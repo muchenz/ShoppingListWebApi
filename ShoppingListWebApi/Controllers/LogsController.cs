@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 using ServiceMediatR.ListCommandAndQueries;
 using ServiceMediatR.SignalREvents;
 using ServiceMediatR.UserCommandAndQuerry;
-using Shared.DataEndpoints;
+using Shared.DataEndpoints.Models;
 using ShoppingListWebApi.Data;
 using System;
 using System.Collections.Generic;

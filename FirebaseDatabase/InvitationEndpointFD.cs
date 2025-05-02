@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using Google.Cloud.Firestore;
-using Shared.DataEndpoints;
 using Shared.DataEndpoints.Abstaractions;
+using Shared.DataEndpoints.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;

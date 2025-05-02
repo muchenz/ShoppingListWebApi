@@ -1,8 +1,8 @@
 ﻿using EFDataBase;
 using Microsoft.EntityFrameworkCore;
 using ServiceMediatR.Wrappers;
-using Shared.DataEndpoints;
 using Shared.DataEndpoints.Abstaractions;
+using Shared.DataEndpoints.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -44,7 +44,7 @@ namespace ServiceMediatR.UserCommandAndQuerry
             //if (userId != null)
              //   userList.Remove(int.Parse(userId));
 
-            return MessageAndStatusAndData.Ok(userList.AsEnumerable(),"Ok");
+            return MessageAndStatusAndData<IEnumerable<int>>.Ok(userList.AsEnumerable());
         }
     }
 }

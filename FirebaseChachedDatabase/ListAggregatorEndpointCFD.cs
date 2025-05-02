@@ -2,8 +2,8 @@
 using FirebaseDatabase;
 using Google.Cloud.Firestore;
 using Microsoft.Extensions.Caching.Distributed;
-using Shared.DataEndpoints;
 using Shared.DataEndpoints.Abstaractions;
+using Shared.DataEndpoints.Models;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;

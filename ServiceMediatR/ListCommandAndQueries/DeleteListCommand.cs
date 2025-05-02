@@ -2,8 +2,8 @@
 using EFDataBase;
 using Microsoft.EntityFrameworkCore;
 using ServiceMediatR.Wrappers;
-using Shared.DataEndpoints;
 using Shared.DataEndpoints.Abstaractions;
+using Shared.DataEndpoints.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -41,12 +41,12 @@ namespace ServiceMediatR.ListCommandAndQueries
         public async Task<MessageAndStatusAndData<int>> Handle(DeleteListCommand request, CancellationToken cancellationToken)
         {
 
-            if (!await _listEndpoint.CheckIntegrityListAsync(request.ItemId,  request.ListAggregationId)) return MessageAndStatusAndData.Fail<int>("Forbbidden");
+            if (!await _listEndpoint.CheckIntegrityListAsync(request.ItemId,  request.ListAggregationId)) return MessageAndStatusAndData<int>.Fail("Forbbidden");
 
 
            var amount = await _listEndpoint.DeleteListAsync(request.ItemId, request.ListAggregationId);
 
-            return await Task.FromResult(MessageAndStatusAndData.Ok(amount, "OK"));
+            return MessageAndStatusAndData<int>.Ok(amount);
         }
        
     }

@@ -17,8 +17,8 @@ using Microsoft.Extensions.Logging;
 using ServiceMediatR.ListItemCommandAndQueries;
 using ServiceMediatR.SignalREvents;
 using ServiceMediatR.UserCommandAndQuerry;
-using Shared.DataEndpoints;
 using Shared.DataEndpoints.Abstaractions;
+using Shared.DataEndpoints.Models;
 using ShoppingListWebApi.Auth.Api;
 using ShoppingListWebApi.Data;
 

@@ -5,7 +5,7 @@ using AutoMapper;
 using EFDataBase;
 using FirebaseDatabase;
 using System;
-using Shared.DataEndpoints;
+using Shared.DataEndpoints.Models;
 
 namespace ShoppingListWebApi.Data
 {

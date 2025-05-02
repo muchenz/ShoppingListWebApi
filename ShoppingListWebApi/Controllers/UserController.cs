@@ -23,8 +23,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using ServiceMediatR.SignalREvents;
-using Shared.DataEndpoints;
 using Shared.DataEndpoints.Abstaractions;
+using Shared.DataEndpoints.Models;
 using ShoppingListWebApi.Data;
 using ShoppingListWebApi.Models.Response;
 using SignalRService;
@@ -86,7 +86,7 @@ namespace ShoppingListWebApi.Controllers
             if (!string.IsNullOrEmpty(access_token))
                 meResponse = await WebApiHelper.GetFacebookUserFromTokenAsync(access_token, state, _configuration);
             else
-                return new MessageAndStatusAndData<TokenAndEmailData>(null, "Some Errors", true);
+                return MessageAndStatusAndData<TokenAndEmailData>.Fail("Some Errors");
 
             var user = await _userEndpoint.GetUserByNameAsync(meResponse.email);
 
@@ -95,10 +95,10 @@ namespace ShoppingListWebApi.Controllers
 
                 var res = await Register(meResponse.email, "", LoginType.Facebook);
 
-                return new MessageAndStatusAndData<TokenAndEmailData>(
+                return MessageAndStatusAndData<TokenAndEmailData>.Ok(
 
                        new TokenAndEmailData { Token = res.Message, Email = user.EmailAddress }
-                       , "", false);
+                       );
 
             }
             else
@@ -107,16 +107,16 @@ namespace ShoppingListWebApi.Controllers
                 {
                     var token = await GenerateToken2(user.UserId);
                     
-                    return new MessageAndStatusAndData<TokenAndEmailData>(
+                    return MessageAndStatusAndData<TokenAndEmailData>.Ok(
                         
                         new TokenAndEmailData {Token=token, Email=user.EmailAddress }
-                        , null, false);
+                        );
 
                 }
 
             }
 
-            return new MessageAndStatusAndData<TokenAndEmailData>(null, "User Exist", true);
+            return MessageAndStatusAndData<TokenAndEmailData>.Fail("User Exist");
 
         }
 

@@ -1,8 +1,8 @@
 ﻿using AutoMapper;
 using FirebaseDatabase;
 using Microsoft.Extensions.Caching.Distributed;
-using Shared.DataEndpoints;
 using Shared.DataEndpoints.Abstaractions;
+using Shared.DataEndpoints.Models;
 using System.Threading.Tasks;
 
 namespace FirebaseChachedDatabase

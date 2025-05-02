@@ -6,8 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using ServiceMediatR.SignalREvents;
-using Shared.DataEndpoints;
 using Shared.DataEndpoints.Abstaractions;
+using Shared.DataEndpoints.Models;
 using ShoppingListWebApi.Auth.Api;
 using ShoppingListWebApi.Data;
 using SignalRService;
@@ -205,7 +205,7 @@ public class PermissionsController : ControllerBase
         var dataTransfer = await _userEndpoint.GetListAggregationForPermission_EmptyAsync(userId);
 
 
-        return new MessageAndStatusAndData<List<ListAggregationForPermission>>(dataTransfer, "OK", false);
+        return MessageAndStatusAndData<List<ListAggregationForPermission>>.Ok(dataTransfer);
 
     }
 
@@ -217,7 +217,7 @@ public class PermissionsController : ControllerBase
 
         var data = await _userEndpoint.GetListAggregationForPermissionByListAggrIdAsync(listAggregationForPermission);
 
-        return new MessageAndStatusAndData<ListAggregationForPermission>(data, "OK", false);
+        return MessageAndStatusAndData<ListAggregationForPermission>.Ok(data);
 
     }
 }
