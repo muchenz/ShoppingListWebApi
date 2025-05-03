@@ -28,6 +28,7 @@ using ServiceMediatR.SignalREvents;
 using Shared.DataEndpoints.Abstaractions;
 using Shared.DataEndpoints.Models;
 using ShoppingListWebApi.Data;
+using ShoppingListWebApi.Models.Requests;
 using ShoppingListWebApi.Models.Response;
 using SignalRService;
 
@@ -166,22 +167,24 @@ namespace ShoppingListWebApi.Controllers
         }
 
         [HttpPost("Login")]
-        public async Task<MessageAndStatus> Login(string userName, string password)
+        public async Task<ActionResult<UserNameAndTokenResponse>> Login(LoginRequest login )
         {
-            _logger.LogInformation($"user controlel log in {userName} {password} ");
+            _logger.LogInformation($"user controlel log in {login.UserName} ");
 
             var a = (byte)LoginType.Facebook;
 
-            var user = await _userEndpoint.LoginAsync(userName, password);
+            var user = await _userEndpoint.LoginAsync(login.UserName, login.Password);
 
             _logger.LogInformation($"user controlel log out ");
 
             if (user == null)
-                return new MessageAndStatus { Status = "ERROR", Message = "User" };
+                return Unauthorized(new ProblemDetails { Title = "Invalid username or password." });
             else
-                return
-                    new MessageAndStatus { Status = "OK", Message = await GenerateToken2(user.UserId) };
-            // Ok(await GenerateAccessTokenAsync(user.UserId));
+                return new UserNameAndTokenResponse
+                {
+                    UserName = login.UserName,
+                    Token = await GenerateToken2(user.UserId)
+                };
         }
 
 

@@ -47,7 +47,7 @@ namespace ShoppingListWebApi.Data
 
             var restponse = await clientHttp.SendAsync(requestMessage);
 
-            var tokenResponse = await System.Text.Json.JsonSerializer.DeserializeAsync<TokenResponse>(await restponse.Content.ReadAsStreamAsync());
+            var tokenResponse = await System.Text.Json.JsonSerializer.DeserializeAsync<TokenFacebookResponse>(await restponse.Content.ReadAsStreamAsync());
 
             querry = new QueryBuilder();
             querry.Add("fields", "id,name,email");
