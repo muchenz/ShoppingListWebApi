@@ -33,10 +33,10 @@ namespace ShoppingListWebApi.Data
 
 
             var requestMessage = new HttpRequestMessage(HttpMethod.Get, "/oauth/access_token" + querry.ToString());
-            requestMessage.Content = new StringContent("");
+            //requestMessage.Content = new StringContent("");
 
-            requestMessage.Content.Headers.ContentType
-                = new System.Net.Http.Headers.MediaTypeHeaderValue("application/x-www-form-urlencoded");
+            //requestMessage.Content.Headers.ContentType
+            //    = new System.Net.Http.Headers.MediaTypeHeaderValue("application/x-www-form-urlencoded");
 
 
             //return RedirectPermanent("https://graph.facebook.com/oauth/access_token?client_id=259675572518658&client_secret=da7b7d35c4755ff27bb2051d803d7eef"
@@ -70,10 +70,10 @@ namespace ShoppingListWebApi.Data
             querry.Add("access_token", token);
 
             var requestMessage = new HttpRequestMessage(HttpMethod.Get, "/me" + querry.ToString());
-            requestMessage.Content = new StringContent(string.Empty);
+            //requestMessage.Content = new StringContent(string.Empty);
 
-            requestMessage.Content.Headers.ContentType
-                = new System.Net.Http.Headers.MediaTypeHeaderValue("application/x-www-form-urlencoded");
+            //requestMessage.Content.Headers.ContentType
+            //    = new System.Net.Http.Headers.MediaTypeHeaderValue("application/x-www-form-urlencoded");
 
             using var clientHttp = new HttpClient();
             clientHttp.BaseAddress = new Uri("https://graph.facebook.com");

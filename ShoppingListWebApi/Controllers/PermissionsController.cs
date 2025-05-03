@@ -46,19 +46,19 @@ public class PermissionsController : ControllerBase
         var user = await _userEndpoint.GetUserByNameAsync(item.User.EmailAddress);
 
         if (user == null)
-            return await Task.FromResult(new MessageAndStatus { Status = "ERROR", Message = "User not exist." });
+            return new MessageAndStatus { Status = "ERROR", Message = "User not exist." };
 
         var IsUserInvitatedToListAggregation = await _userEndpoint.IsUserInvitatedToListAggregationAsync(item.User.EmailAddress, listAggregationId);
 
         if (IsUserInvitatedToListAggregation)
-            return await Task.FromResult(new MessageAndStatus { Status = "ERROR", Message = "Ivitation is on list" });
+            return new MessageAndStatus { Status = "ERROR", Message = "Ivitation is on list" };
 
         //bbbb = _context.UserListAggregators.AsQueryable().Where(a => a.UserId == user.UserId && a.ListAggregatorId == listAggregationId).Any();
 
         var isUserHasListAgregation = await _userEndpoint.IsUserHasListAggregatorAsync(user.UserId, listAggregationId);
 
         if (isUserHasListAgregation)
-            return await Task.FromResult(new MessageAndStatus { Status = "ERROR", Message = "User already has permission." });
+            return new MessageAndStatus { Status = "ERROR", Message = "User already has permission." };
 
         var senderName = HttpContext.User.Identity.Name;
 
@@ -67,7 +67,7 @@ public class PermissionsController : ControllerBase
 
         await _signarRService.SendRefreshMessageToUsersAsync(new List<int> { user.UserId }, "New_Invitation", signalRId: signalRId);
 
-        return await Task.FromResult(new MessageAndStatus { Status = "OK", Message = "Ivitation was added." });
+        return new MessageAndStatus { Status = "OK", Message = "Ivitation was added." };
     }
 
     [HttpPost("AddUserPermission")]

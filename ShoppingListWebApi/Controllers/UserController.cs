@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -22,6 +23,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
+using NuGet.Protocol;
 using ServiceMediatR.SignalREvents;
 using Shared.DataEndpoints.Abstaractions;
 using Shared.DataEndpoints.Models;
@@ -58,16 +60,16 @@ namespace ShoppingListWebApi.Controllers
 
         [HttpGet("{id}")]
         [Authorize]
-        public async Task<ActionResult<MessageAndStatus>> GetUser(int id)
+        public async Task<ActionResult<User>> GetUser(int id)
         {
             var user = await _userEndpoint.FindUserByIdAsync(id);
 
             if (user == null)
             {
-                return new MessageAndStatus { Status = "ERROR", Message = "User not found." };
+                return NotFound(new ProblemDetails { Title= "User not found." });
             }
 
-            return new MessageAndStatus { Status = "OK", Message = JsonConvert.SerializeObject(user) };
+            return user;
         }
 
 
@@ -79,14 +81,17 @@ namespace ShoppingListWebApi.Controllers
 
 
         [HttpGet("FacebookToken")]
-        public async Task<MessageAndStatusAndData<TokenAndEmailData>> FacebookToken(string access_token, string state)
+        public async Task<ActionResult<TokenAndEmailData>> FacebookToken(string access_token, string state)
         {
             MeResponse meResponse = null;
 
-            if (!string.IsNullOrEmpty(access_token))
-                meResponse = await WebApiHelper.GetFacebookUserFromTokenAsync(access_token, state, _configuration);
-            else
-                return MessageAndStatusAndData<TokenAndEmailData>.Fail("Some Errors");
+            if (string.IsNullOrEmpty(access_token))
+            {
+                return Problem(title: "Some errors occurred.", statusCode: StatusCodes.Status503ServiceUnavailable);
+            }
+            
+            meResponse = await WebApiHelper.GetFacebookUserFromTokenAsync(access_token, state, _configuration);
+                
 
             var user = await _userEndpoint.GetUserByNameAsync(meResponse.email);
 
@@ -95,10 +100,8 @@ namespace ShoppingListWebApi.Controllers
 
                 var res = await Register(meResponse.email, "", LoginType.Facebook);
 
-                return MessageAndStatusAndData<TokenAndEmailData>.Ok(
-
-                       new TokenAndEmailData { Token = res.Message, Email = user.EmailAddress }
-                       );
+                return new TokenAndEmailData { Token = res.Message, Email = user.EmailAddress };
+                       
 
             }
             else
@@ -107,7 +110,7 @@ namespace ShoppingListWebApi.Controllers
                 {
                     var token = await GenerateToken2(user.UserId);
                     
-                    return MessageAndStatusAndData<TokenAndEmailData>.Ok(
+                    return Ok(
                         
                         new TokenAndEmailData {Token=token, Email=user.EmailAddress }
                         );
@@ -116,7 +119,7 @@ namespace ShoppingListWebApi.Controllers
 
             }
 
-            return MessageAndStatusAndData<TokenAndEmailData>.Fail("User Exist");
+            return Conflict(new ProblemDetails { Title= "User Exist" });
 
         }
 
@@ -141,7 +144,7 @@ namespace ShoppingListWebApi.Controllers
             if (user == null)
             {
 
-                var res = await Register(meResponse.email, "", LoginType.Facebook);
+                var res = await Register(meResponse.email, string.Empty, LoginType.Facebook);
 
 
                 return Redirect($"{returnUrl}?token={res.Message}");
@@ -280,8 +283,8 @@ namespace ShoppingListWebApi.Controllers
             var token = new JwtSecurityToken(
                 new JwtHeader(
                     new SigningCredentials(
-                        //new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.GetSection("Secrets")["JWTSecurityKey"])),
-                        new SymmetricSecurityKey(Encoding.UTF8.GetBytes("eashfisahfihgiuashrilghas9ifhiuhvi9uashblvh938hen48239")),
+                        new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.GetSection("Secrets")["JWTSecurityKey"])),
+                       // new SymmetricSecurityKey(Encoding.UTF8.GetBytes("eashfisahfihgiuashrilghas9ifhiuhvi9uashblvh938hen48239")),
                     SecurityAlgorithms.HmacSha256)),
                 new JwtPayload(claims)
                 );
@@ -320,8 +323,8 @@ namespace ShoppingListWebApi.Controllers
             try
             {
                 var tokenHandler = new JwtSecurityTokenHandler();
-                //var key = Encoding.UTF8.GetBytes(_configuration.GetSection("Secrets")["JWTSecurityKey"]);
-                var key = Encoding.UTF8.GetBytes("eashfisahfihgiuashrilghas9ifhiuhvi9uashblvh938hen48239");
+                var key = Encoding.UTF8.GetBytes(_configuration.GetSection("Secrets")["JWTSecurityKey"]);
+                //var key = Encoding.UTF8.GetBytes("eashfisahfihgiuashrilghas9ifhiuhvi9uashblvh938hen48239");
 
                 var tokenValidationParameters = new TokenValidationParameters
                 {

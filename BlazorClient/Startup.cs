@@ -22,6 +22,8 @@ using ShoppingListWebApi.Logging;
 using BlazorClient.Pages.LoginPages;
 using Microsoft.AspNetCore.Http;
 using BlazorClient.Handlers;
+using System.Net;
+using System.Threading;
 
 namespace BlazorClient
 {
@@ -45,6 +47,7 @@ namespace BlazorClient
             services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
             services.AddScoped<CustomAuthorizationHeaderHandler>();
 
+            services.AddScoped<AuthRedirectHandler>();
 
             // services.AddHttpClient<UserService>();
             // services.AddHttpClient<ShoppingListService>();
@@ -57,7 +60,7 @@ namespace BlazorClient
                 handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => { return true; };
 
                 return handler;
-            });//.AddHttpMessageHandler<CustomAuthorizationHeaderHandler>(); ;
+            }).AddHttpMessageHandler<AuthRedirectHandler>(); ;//.AddHttpMessageHandler<CustomAuthorizationHeaderHandler>(); ;
 
             services.AddHttpClient<ShoppingListService>(client => {
                 // code to configure headers etc..
@@ -67,7 +70,7 @@ namespace BlazorClient
                 handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => { return true; };
 
                 return handler;
-            });
+            }).AddHttpMessageHandler<AuthRedirectHandler>();
 
             services.AddHttpClient("log", client => {
                 // code to configure headers etc..
@@ -131,5 +134,26 @@ namespace BlazorClient
                 endpoints.MapFallbackToPage("/_Host");
             });
         }
+    }
+}
+public class AuthRedirectHandler : DelegatingHandler
+{
+    private readonly NavigationManager _navigation;
+
+    public AuthRedirectHandler(NavigationManager navigation)
+    {
+        _navigation = navigation;
+    }
+
+    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        var response = await base.SendAsync(request, cancellationToken);
+
+        if (response.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            _navigation.NavigateTo("/login", forceLoad: true);
+        }
+
+        return response;
     }
 }
