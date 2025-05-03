@@ -4,12 +4,22 @@
 @inject IToastService _toastService
 
 @inject IWebHostEnvironment _webHostEnvironment
+@inject NavigationManager navigationManager
 
+<ErrorBoundary>
+    <ChildContent>
 
-<CascadingValue Value=this>
-    @ChildContent
-</CascadingValue>
-        @navigationManager.NavigateTo("/login")
+        <CascadingValue Value=this>
+            @ChildContent
+        </CascadingValue>
+    </ChildContent>
+    <ErrorContent>
+        @{
+
+            navigationManager.NavigateTo("/", true);
+        }
+    </ErrorContent>
+</ErrorBoundary>
 
 @code
 {
@@ -22,7 +32,7 @@
         //if (!_webHostEnvironment.IsDevelopment())
         //    _toastService.ShowError("Somting went wrong");
         //else
-        _toastService.ShowError("Somting went wrong - check log  "+ ex.Message);
+        _toastService.ShowError("Somting went wrong - check log  " + ex.Message);
 
     }
 

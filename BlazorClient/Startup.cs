@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -152,7 +152,10 @@ public class AuthRedirectHandler : DelegatingHandler
         if (response.StatusCode == HttpStatusCode.Unauthorized &&
     !       request.RequestUri.AbsolutePath.Contains("user/login", StringComparison.OrdinalIgnoreCase))
         {
-            _navigation.NavigateTo("/login", forceLoad: true);
+           throw new UnauthorizedAccessException();
+
+            //nie działa: 
+            //_navigation.NavigateTo("/login", forceLoad: true);`
         }
 
         return response;

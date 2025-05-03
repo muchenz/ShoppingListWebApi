@@ -3,6 +3,7 @@
 @using BlazorClient.Services;
 @using Blazored.LocalStorage;
 
+@inject NavigationManager Navigation
 
 @inject IConfiguration configuration
 @inject StateService _userInfoService
@@ -19,7 +20,7 @@
 </CascadingValue>
 
 
-    @code {
+@code {
 
 
     [Parameter]
@@ -35,7 +36,7 @@
     {
 
         var isGid = await localStorage.ContainKeyAsync("gid");
-        
+
         if (isGid)
         {
             _gid = await localStorage.GetItemAsync<string>("gid");
@@ -51,12 +52,12 @@
 
         if (!authState.User.Identity.IsAuthenticated || _hubConnection != null)
         {
-            Console.WriteLine("!____________ not authenticaced");
+            Console.WriteLine("!____________ not authenticaced  or is hubConnection");
             return;
         }
         else
         {
-            Console.WriteLine("!____________ authenticaced");
+            Console.WriteLine("!____________ authenticaced && is not hubConneted ");
 
             await SetHubConnectionAsync();
         }
@@ -113,6 +114,11 @@
             return Task.CompletedTask;
         };
         _tryingSignalRStart = false;
+
+        _hubConnection.Closed += async (exception) =>
+        {
+          
+        };
     }
 
 
