@@ -99,15 +99,16 @@ namespace ShoppingListWebApi.Controllers
             if (user == null)
             {
 
-                var res = await Register(meResponse.email, "", LoginType.Facebook);
+                user = await _userEndpoint.Register(meResponse.email, string.Empty, LoginType.Facebook);
+                var token = await GenerateToken2(user.UserId);
 
-                return new TokenAndEmailData { Token = res.Message, Email = user.EmailAddress };
+                return new TokenAndEmailData { Token = token, Email = user.EmailAddress };
                        
 
             }
             else
             {
-                if (user.LoginType == 2)
+                if ((LoginType)user.LoginType == LoginType.Facebook)
                 {
                     var token = await GenerateToken2(user.UserId);
                     
@@ -145,10 +146,10 @@ namespace ShoppingListWebApi.Controllers
             if (user == null)
             {
 
-                var res = await Register(meResponse.email, string.Empty, LoginType.Facebook);
+                user = await _userEndpoint.Register(meResponse.email, string.Empty, LoginType.Facebook);
+                var token = await GenerateToken2(user.UserId);
 
-
-                return Redirect($"{returnUrl}?token={res.Message}");
+                return Redirect($"{returnUrl}?token={token}");
 
             }
             else
@@ -189,14 +190,14 @@ namespace ShoppingListWebApi.Controllers
 
 
         [HttpPost("Register")]
-        public async Task<MessageAndStatus> Register(string userName, string password, LoginType loginType = LoginType.Local)
+        public async Task<MessageAndStatus> Register(string userName, string password)
         {
 
             User user=null;
 
             try
             {
-                user = await _userEndpoint.Register(userName, password, loginType);
+                user = await _userEndpoint.Register(userName, password, LoginType.Local);
             }
             catch (Exception ex)
             {
