@@ -361,14 +361,37 @@ namespace FirebaseChachedDatabase
             await _userEndpointFD.DeleteUserListAggrAscync(userId, listAggregationId);
         }
 
-        public Task<List<ListAggregationForPermission>> GetListAggregationForPermissionAsync(string userName)
+
+        public async Task<List<ListAggregationForPermission>>  GetListAggregationForPermissionAsync_cached(string userName)
         {
-            return _userEndpointFD.GetListAggregationForPermissionAsync(userName);
+            List<ListAggregationForPermission> newList = new List<ListAggregationForPermission>();
+
+            var lists = await GetListAggregationForPermission_EmptyAsync(userName);
+
+            foreach (var list in lists)
+            {
+                newList.Add(await GetListAggregationForPermissionByListAggrIdAsync(list));
+            }
+
+            //lists.ForEach(async a => newList.Add(await GetListAggregationForPermissionByListAggrIdAsync(a)));
+
+            return newList;
+        }
+
+
+        public  Task<List<ListAggregationForPermission>> GetListAggregationForPermissionAsync(string userName)
+        {
+
+            return GetListAggregationForPermissionAsync_cached(userName);
+
+            //return _userEndpointFD.GetListAggregationForPermissionAsync(userName);
         }
 
         public Task<List<ListAggregationForPermission>> GetListAggregationForPermission2Async(string userName)
         {
-            return _userEndpointFD.GetListAggregationForPermission2Async(userName);
+            return  GetListAggregationForPermissionAsync_cached(userName);
+
+            //return _userEndpointFD.GetListAggregationForPermission2Async(userName);
         }
 
         public async Task<List<UserListAggregator>> GetUserListAggrByUserId(int userId)
@@ -425,25 +448,30 @@ namespace FirebaseChachedDatabase
             return _mapper.Map<User>(userFD);
         }
 
+        async Task<List<ListAggregationForPermission>> GetListAggregationForPermission_EmptyAsync(string userName)
+        {
+            var userTree = await GetTreeAsync(userName);
+
+
+            return userTree.ListAggregators.Where(a => a.PermissionLevel == 1).Select(a =>
+            {
+                a.Lists = null;
+                return new ListAggregationForPermission
+                {
+                    ListAggregatorEntity = a
+
+                };
+            }).ToList();
+
+            // return _userEndpointFD.GetListAggregationForPermission_EmptyAsync(userId);
+        
+        }
         public async Task<List<ListAggregationForPermission>> GetListAggregationForPermission_EmptyAsync(int userId)
         {
             var user = await GetUserById(userId);
 
-            var userTree = await GetTreeAsync(user.EmailAddress);
-
-
-            return userTree.ListAggregators.Where(a => a.PermissionLevel == 1).Select(a =>
-                {
-                    a.Lists = null;
-                    return new ListAggregationForPermission
-                    {
-                        ListAggregatorEntity = a
-
-                    };
-                }).ToList();
-
-            // return _userEndpointFD.GetListAggregationForPermission_EmptyAsync(userId);
-        }
+            return await GetListAggregationForPermission_EmptyAsync(user.EmailAddress);
+        }   
 
         public async Task<ListAggregationForPermission> GetListAggregationForPermissionByListAggrIdAsync(ListAggregationForPermission listAggregationForPermission)
         {
