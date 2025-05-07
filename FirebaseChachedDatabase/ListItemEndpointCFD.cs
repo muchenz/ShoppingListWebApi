@@ -24,8 +24,13 @@ namespace FirebaseChachedDatabase
 
         public async Task<ListItem> AddListItemAsync(int parentId, ListItem listItem, int listAggregationId)
         {
-            await _cache.RemoveAnyKeyAsync(listAggregationId);
-            return await _listItemEndpointFD.AddListItemAsync(parentId, listItem, listAggregationId);
+            //await _cache.RemoveAnyKeyAsync(listAggregationId);
+            //return await _listItemEndpointFD.AddListItemAsync(parentId, listItem, listAggregationId);
+
+            var listitemWithId = await _listItemEndpointFD.AddListItemAsync(parentId, listItem, listAggregationId);
+            await AddListItemToCache(parentId, listitemWithId, listAggregationId);
+            return listitemWithId;
+
         }
 
         public Task<int> ChangeOrderListItemAsync(IEnumerable<ListItem> items)
@@ -47,7 +52,7 @@ namespace FirebaseChachedDatabase
         {
             // await _cache.RemoveAnyKeyAsync(listAggregationId);
 
-            await DeleteLiteItem(listItemId, listAggregationId);
+            await DeleteListItemFromCache(listItemId, listAggregationId);
 
             return await _listItemEndpointFD.DeleteListItemAsync(listItemId, listAggregationId);
         }
@@ -55,7 +60,7 @@ namespace FirebaseChachedDatabase
 
         public async Task<ListItem> EditListItemAsync(ListItem listItem, int listAggregationId)
         {
-            await ChangePropertyNameOfListItem(listItem, nameof(ListItem.ListItemName), listAggregationId);
+            await ChangePropertyOfListItem(listItem, nameof(ListItem.ListItemName), listAggregationId);
 
             return await _listItemEndpointFD.EditListItemAsync(listItem, listAggregationId);
         }
@@ -69,12 +74,12 @@ namespace FirebaseChachedDatabase
         {
             //await _cache.RemoveAnyKeyAsync(listAggregationId);
 
-            await ChangePropertyNameOfListItem(listItem, propertyName, listAggregationId);
+            await ChangePropertyOfListItem(listItem, propertyName, listAggregationId);
 
             return await _listItemEndpointFD.SavePropertyAsync(listItem, propertyName, listAggregationId);
         }
 
-        private async Task ChangePropertyNameOfListItem(ListItem listItem, string propertyName, int listAggregationId)
+        private async Task ChangePropertyOfListItem(ListItem listItem, string propertyName, int listAggregationId)
         {
             var res = await _cache.GetAsync<ListAggregator>(listAggregationId);
 
@@ -103,7 +108,7 @@ namespace FirebaseChachedDatabase
         }
 
 
-        private async Task DeleteLiteItem(int listItemId, int listAggregationId)
+        private async Task DeleteListItemFromCache(int listItemId, int listAggregationId)
         {
             var res = await _cache.GetAsync<ListAggregator>(listAggregationId);
 
@@ -120,6 +125,25 @@ namespace FirebaseChachedDatabase
                     if (todelete != null && fromdelete != null)
                     {
                         fromdelete.ListItems.Remove(todelete);
+
+                        await _cache.SetAsync(listAggregationId, res);
+
+                    }
+                }
+            }
+        }
+
+        private async Task AddListItemToCache(int parentId, ListItem listItem, int listAggregationId)
+        {
+            var res = await _cache.GetAsync<ListAggregator>(listAggregationId);
+
+            if (res != null)
+            {
+                foreach (var list in res.Lists)
+                {
+                    if (list.ListId == parentId)
+                    {
+                        list.ListItems.Add(listItem);
 
                         await _cache.SetAsync(listAggregationId, res);
 
