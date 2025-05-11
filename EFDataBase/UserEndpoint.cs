@@ -299,6 +299,9 @@ namespace EFDataBase
 
         public async Task<User> Register(string userName, string password, LoginType loginType)
         {
+            if (await _context.Users.Where(a => a.EmailAddress == userName).AnyAsync())
+                return null;
+
             var user = new UserEntity { EmailAddress = userName, Password = password, LoginType = (byte)loginType };
 
             UserRolesEntity userRoles = new UserRolesEntity { User = user, RoleId = 1 };
