@@ -200,16 +200,17 @@ namespace ShoppingListWebApi.Controllers
                 user = await _userEndpoint.Register(request.UserName, request.Password, LoginType.Local);
                 if (user == null)
                 {
-                    return Conflict(new ProblemDetails { Title = "User Exist" });
+                    return Conflict(new ProblemDetails { Title = "User already exist." });
                 }
+
+                return Ok(await GenerateToken2(user.UserId));
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error during registration for user {UserName}", request.UserName);
 
-                return Problem(statusCode: 505, title:"Server error.");
+                return Problem(statusCode: 500, title:"Server error.");
             }
-
-            return Ok(await GenerateToken2(user.UserId)) ;
         }
 
         [HttpPost("GetUserDataTree")]
