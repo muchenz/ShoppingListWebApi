@@ -58,31 +58,40 @@ namespace BlazorClient.Services
         }
 
 
-        public async Task<string> RegisterAsync(RegistrationModel model)
+        public async Task<MessageAndStatusAndData<string>> RegisterAsync(RegistrationModel model)
         {
 
-            var querry = new QueryBuilder();
-            querry.Add("userName", model.UserName);
-            querry.Add("password", model.Password);
+            var loginRequest = new RegistrationRequest
+            {
+                UserName = model.UserName,
+                Password = model.Password
+            };
 
-            var requestMessage = new HttpRequestMessage(HttpMethod.Post, "User/Register" + querry.ToString());
+            var json = JsonConvert.SerializeObject(loginRequest);
 
-            // await SetRequestBearerAuthorizationHeader(requestMessage);
-
-            requestMessage.Content = new StringContent("");
-
-            requestMessage.Content.Headers.ContentType
-                = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
+            var requestMessage = new HttpRequestMessage(HttpMethod.Post, "User/Register")
+            {
+                Content = new StringContent(json, Encoding.UTF8, "application/json")
+            };
 
 
             var response = await _httpClient.SendAsync(requestMessage);
 
-            var token = await response.Content.ReadAsStringAsync();
 
-            var message = JsonConvert.DeserializeObject<MessageAndStatus>(token);
+            if (response.IsSuccessStatusCode)
+            {
+                var token = await response.Content.ReadAsStringAsync();
 
+                return MessageAndStatusAndData<string>.Ok(token);
+            }
 
-            return await Task.FromResult(message.Message);
+            return response switch
+            {
+                { StatusCode: System.Net.HttpStatusCode.Conflict } =>
+                     MessageAndStatusAndData<string>.Fail("User exists."),
+                _ =>
+                    MessageAndStatusAndData<string>.Fail("Server error."),
+            };
 
         }
 
@@ -190,11 +199,11 @@ namespace BlazorClient.Services
 
             return await Task.FromResult(dataObjects);
         }
-         
+
         public async Task<ListAggregationForPermission> GetListAggregationForPermissionByListAggrId
             (ListAggregationForPermission listAggregationForPermission)
         {
-            
+
             var requestMessage = new HttpRequestMessage(HttpMethod.Post, "Permissions/GetListAggregationForPermissionByListAggrId");
 
             requestMessage.Content = new StringContent(JsonConvert.SerializeObject(listAggregationForPermission));
@@ -216,7 +225,7 @@ namespace BlazorClient.Services
 
             return await Task.FromResult(dataObjects);
         }
-        
+
 
 
 

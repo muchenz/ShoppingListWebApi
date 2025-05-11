@@ -190,23 +190,26 @@ namespace ShoppingListWebApi.Controllers
 
 
         [HttpPost("Register")]
-        public async Task<MessageAndStatus> Register(string userName, string password)
+        public async Task<ActionResult<string>> Register(RegistrationRequest request)
         {
 
             User user=null;
 
             try
             {
-                user = await _userEndpoint.Register(userName, password, LoginType.Local);
+                user = await _userEndpoint.Register(request.UserName, request.Password, LoginType.Local);
+                if (user == null)
+                {
+                    return Conflict(new ProblemDetails { Title = "User Exist" });
+                }
             }
             catch (Exception ex)
             {
 
-                return new MessageAndStatus { Status = "ERROR", Message = "" };
+                return Problem(statusCode: 505, title:"Server error.");
             }
 
-            return new MessageAndStatus { Status = "OK", Message = await GenerateToken2(user.UserId) };
-            // Ok(await GenerateAccessTokenAsync(user.UserId));
+            return Ok(await GenerateToken2(user.UserId)) ;
         }
 
         [HttpPost("GetUserDataTree")]

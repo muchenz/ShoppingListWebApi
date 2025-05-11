@@ -515,17 +515,15 @@ namespace FirebaseDatabase
 
         public async Task<User> Register(string userName, string password, LoginType loginType)
         {
-            var newUserFD = new UserFD
-            {
-                EmailAddress = userName,
-                Password = password,
-                LoginType = (byte)loginType,
-                Roles = new string[] { "User" }
-            };
+            UserFD newUserFD = null;
 
             await Db.RunTransactionAsync(async transation =>
             {
-
+                var userFDSnap = await _usersCol.WhereEqualTo(nameof(UserFD.EmailAddress), userName).GetSnapshotAsync();
+                if (userFDSnap.Any())
+                {
+                    return;
+                }
 
                 var docRef = transation.Database.Collection("indexes").Document("indexes");
                 var snapDoc = await docRef.GetSnapshotAsync();
@@ -533,6 +531,15 @@ namespace FirebaseDatabase
                 var index = snapDoc.GetValue<long>("users");
 
                 var newDoc = transation.Database.Collection("users").Document((index + 1).ToString());
+
+                newUserFD = new UserFD
+                {
+                    EmailAddress = userName,
+                    Password = password,
+                    LoginType = (byte)loginType,
+                    Roles = new string[] { "User" }
+                };
+
                 newUserFD.UserId = (int)index + 1;
                 await newDoc.SetAsync(newUserFD);
 
