@@ -59,8 +59,8 @@ namespace ShoppingListWebApi.Controllers
         }
 
 
-        [HttpGet("{id}")]
-        [Authorize]
+        //[HttpGet("{id}")]             // not used
+        //[Authorize(Roles ="Admin")]
         public async Task<ActionResult<User>> GetUser(int id)
         {
             var user = await _userEndpoint.FindUserByIdAsync(id);
@@ -217,9 +217,10 @@ namespace ShoppingListWebApi.Controllers
         [Authorize]
         //[Authorize(Roles ="User")]
         public async Task<ActionResult<MessageAndStatus>> GetUserDataTree(string userName)
-        {
+        {   // TODO: remove userName from query
+            var name = User.FindFirstValue(ClaimTypes.Name);
 
-            var userTemp = await _userEndpoint.GetTreeAsync(userName);
+            var userTemp = await _userEndpoint.GetTreeAsync(name);
 
             // var token = await GenerateAccessTokenAsync(id);
 

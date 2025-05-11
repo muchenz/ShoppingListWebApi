@@ -621,6 +621,7 @@ namespace FirebaseDatabase
 
             listAggregators.Add(listAggregationForPermission.ListAggregatorEntity);
 
+            // TODO: foreach is not nessesery
             foreach (var listAggr in listAggregators)
             {
                 //var tempListAggregationForPermission = new ListAggregationForPermission();

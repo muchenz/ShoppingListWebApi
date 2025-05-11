@@ -78,20 +78,33 @@ namespace BlazorClient.Services
             var response = await _httpClient.SendAsync(requestMessage);
 
 
-            if (response.IsSuccessStatusCode)
+            switch (response)
             {
-                var token = await response.Content.ReadAsStringAsync();
+                case { StatusCode: System.Net.HttpStatusCode.OK }:
+                    var token = await response.Content.ReadAsStringAsync();
+                    return MessageAndStatusAndData<string>.Ok(token);
 
-                return MessageAndStatusAndData<string>.Ok(token);
+                case { StatusCode: System.Net.HttpStatusCode.Conflict }:
+                    return MessageAndStatusAndData<string>.Fail("User exists.");
+
+                default:
+                    return MessageAndStatusAndData<string>.Fail("Server error.");
             }
 
-            return response switch
-            {
-                { StatusCode: System.Net.HttpStatusCode.Conflict } =>
-                     MessageAndStatusAndData<string>.Fail("User exists."),
-                _ =>
-                    MessageAndStatusAndData<string>.Fail("Server error."),
-            };
+            //if (response.IsSuccessStatusCode)
+            //{
+            //    var token = await response.Content.ReadAsStringAsync();
+
+            //    return MessageAndStatusAndData<string>.Ok(token);
+            //}
+
+            //return response switch
+            //{
+            //    { StatusCode: System.Net.HttpStatusCode.Conflict } =>
+            //         MessageAndStatusAndData<string>.Fail("User exists."),
+            //    _ =>
+            //        MessageAndStatusAndData<string>.Fail("Server error."),
+            //};
 
         }
 

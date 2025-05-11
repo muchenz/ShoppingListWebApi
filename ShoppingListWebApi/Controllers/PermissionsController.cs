@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace ShoppingListWebApi.Controllers;
 [Route("api/[controller]")]
@@ -185,7 +186,8 @@ public class PermissionsController : ControllerBase
     [HttpPost("GetListAggregationForPermission")]
     public async Task<ActionResult<MessageAndStatus>> GetListAggregationForPermission(string userName)
     {
-
+        //TODO: userName form query is not nesserery
+        userName = User.FindFirstValue(ClaimTypes.Name);
         var dataTransfer = await _userEndpoint.GetListAggregationForPermission2Async(userName);
 
 
@@ -198,7 +200,7 @@ public class PermissionsController : ControllerBase
     public async Task<ActionResult<MessageAndStatusAndData<List<ListAggregationForPermission>>>> GetListAggregationForPermission_Empty()
     {
 
-        var sUnerId = User.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier).FirstOrDefault().Value;
+        var sUnerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
         var userId = int.Parse(sUnerId);
 
@@ -209,8 +211,9 @@ public class PermissionsController : ControllerBase
 
     }
 
+    // TODO: must be admin on ListAggrId:   [SecurityLevel(1)]
     [Authorize]
-    [HttpPost("GetListAggregationForPermissionByListAggrId")]
+    [HttpPost("GetListAggregationForPermissionByListAggrId")] // TODO: only ListAggrId is enough
     public async Task<ActionResult<MessageAndStatusAndData<ListAggregationForPermission>>>
         GetListAggregationForPermissionByListAggrId([FromBody] ListAggregationForPermission listAggregationForPermission)
     {
