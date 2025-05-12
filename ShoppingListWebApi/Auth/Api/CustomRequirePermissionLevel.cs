@@ -8,6 +8,7 @@ using Shared.DataEndpoints.Abstaractions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -82,12 +83,17 @@ namespace ShoppingListWebApi.Auth.Api
 
             var intLvlReq = int.Parse(lvlRequiredFromCode);
 
-            var user = await _userEndpoint.GetUserByNameAsync(context.User.Identity.Name);
+            //var user = await _userEndpoint.GetUserByNameAsync(context.User.Identity.Name);
+            //if (user == null) return;
+            // var userListAgg = await _userEndpoint.GetUserListAggrByUserId(user.UserId);
 
-            if (user == null) return;
-            
-            var userListAgg = await _userEndpoint.GetUserListAggrByUserId(user.UserId);
-                        
+            var userId = context.User.Claims.Where(a=>a.Type == ClaimTypes.NameIdentifier).FirstOrDefault();
+
+            if (userId == null) 
+                return;
+
+            var userListAgg = await _userEndpoint.GetUserListAggrByUserId( int.Parse(userId.Value));
+                                   
 
             if (userListAgg?.Where(a=>a.ListAggregatorId==intAgrId).FirstOrDefault()?.PermissionLevel <= intLvlReq)
             {

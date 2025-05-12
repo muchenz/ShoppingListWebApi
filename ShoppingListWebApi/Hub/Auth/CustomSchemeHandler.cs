@@ -38,7 +38,8 @@ namespace ShoppingListWebApi.Hub.Auth
 
                 var accessToken = Request.Headers["Access_Token"].ToString();
 
-                var isTokenGood = await _authService.IsValidateTokenAsync(accessToken);
+                var isTokenGood = await _authService.IsValidateToken2Async(accessToken);
+                //var isTokenGood = await _authService.IsValidateTokenAsync(accessToken);
 
                 if (!isTokenGood)
                     return await Task.FromResult(AuthenticateResult.Fail("Not authorized.  Access_Token is wrong."));

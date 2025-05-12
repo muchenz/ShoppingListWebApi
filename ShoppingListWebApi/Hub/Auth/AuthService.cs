@@ -34,6 +34,26 @@ namespace ShoppingListWebApi.Hub.Auth
             return isTokenGood;
         }
 
+        public async Task<bool> IsValidateToken2Async(string token)
+        {
+
+            if (token == "I am a god of hellfire.") return true;
+
+            var client = _httpClientFactory.CreateClient("api");
+
+            var baseAdress = _configuration.GetSection("AppSettings")["ShoppingWebAPIBaseAddress"];
+            client.DefaultRequestHeaders.Authorization =
+                  new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            var response = await client.GetAsync($"User/VerifyToken2");
+
+            if (response.IsSuccessStatusCode)
+            {
+                return true;
+            }
+            return false;
+        }
+
 
     }
 

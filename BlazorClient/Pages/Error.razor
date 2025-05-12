@@ -1,10 +1,12 @@
-﻿@using Microsoft.AspNetCore.Hosting
+﻿@using Blazored.LocalStorage
+@using Microsoft.AspNetCore.Hosting
 @using Microsoft.Extensions.Hosting
 
 @inject IToastService _toastService
 
 @inject IWebHostEnvironment _webHostEnvironment
 @inject NavigationManager navigationManager
+@inject ILocalStorageService localStorage
 
 <ErrorBoundary>
     <ChildContent>
@@ -33,7 +35,18 @@
         //    _toastService.ShowError("Somting went wrong");
         //else
         _toastService.ShowError("Somting went wrong - check log  " + ex.Message);
+                   
+    }
 
+    public async Task ProcessExceptionAsync(Exception ex)
+    {
+
+        if (ex is HttpRequestException e && e.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            await localStorage.RemoveItemAsync("accessToken");
+
+            _toastService.ShowError("Authentication problem.");
+        }
     }
 
 }

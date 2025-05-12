@@ -26,6 +26,9 @@
     [Parameter]
     public RenderFragment ChildContent { get; set; }
 
+    [CascadingParameter]
+    public Error Error { get; set; }
+
     HubConnection _hubConnection;
 
     string _gid = Guid.NewGuid().ToString();
@@ -59,7 +62,15 @@
         {
             Console.WriteLine("!____________ authenticaced && is not hubConneted ");
 
-            await SetHubConnectionAsync();
+            try
+            {
+                await SetHubConnectionAsync();
+            }
+            catch(Exception ex)
+            {
+                await Error.ProcessExceptionAsync(ex);
+                throw;
+            }
         }
 
         await base.OnParametersSetAsync();
@@ -117,7 +128,7 @@
 
         _hubConnection.Closed += async (exception) =>
         {
-          
+
         };
     }
 
@@ -126,5 +137,4 @@
     {
         _hubConnection?.DisposeAsync();
     }
-
-    }
+}

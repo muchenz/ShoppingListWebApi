@@ -67,7 +67,7 @@ namespace ShoppingListWebApi.Controllers
 
             if (user == null)
             {
-                return NotFound(new ProblemDetails { Title= "User not found." });
+                return NotFound(new ProblemDetails { Title = "User not found." });
             }
 
             return user;
@@ -90,9 +90,9 @@ namespace ShoppingListWebApi.Controllers
             {
                 return Problem(title: "Some errors occurred.", statusCode: StatusCodes.Status503ServiceUnavailable);
             }
-            
+
             meResponse = await WebApiHelper.GetFacebookUserFromTokenAsync(access_token, state, _configuration);
-                
+
 
             var user = await _userEndpoint.GetUserByNameAsync(meResponse.email);
 
@@ -103,7 +103,7 @@ namespace ShoppingListWebApi.Controllers
                 var token = await GenerateToken2(user.UserId);
 
                 return new TokenAndEmailData { Token = token, Email = user.EmailAddress };
-                       
+
 
             }
             else
@@ -111,17 +111,17 @@ namespace ShoppingListWebApi.Controllers
                 if ((LoginType)user.LoginType == LoginType.Facebook)
                 {
                     var token = await GenerateToken2(user.UserId);
-                    
+
                     return Ok(
-                        
-                        new TokenAndEmailData {Token=token, Email=user.EmailAddress }
+
+                        new TokenAndEmailData { Token = token, Email = user.EmailAddress }
                         );
 
                 }
 
             }
 
-            return Conflict(new ProblemDetails { Title= "User Exist" });
+            return Conflict(new ProblemDetails { Title = "User Exist" });
 
         }
 
@@ -149,7 +149,7 @@ namespace ShoppingListWebApi.Controllers
                 user = await _userEndpoint.Register(meResponse.email, string.Empty, LoginType.Facebook);
                 var token = await GenerateToken2(user.UserId);
 
-                return Redirect($"{returnUrl}?token={token}");
+                return Redirect($"{returnUrl}/#/?token={token}");
 
             }
             else
@@ -157,8 +157,7 @@ namespace ShoppingListWebApi.Controllers
                 if (user.LoginType == 2) // 2 ==>> LoginType.Facebook
                 {
                     var token = await GenerateToken2(user.UserId);
-                    return Redirect($"{returnUrl}?token={token}&sss=(rrr)");
-
+                    return Redirect($"{returnUrl}/#/?token={token}&sss=(rrr)");
                 }
 
             }
@@ -168,7 +167,7 @@ namespace ShoppingListWebApi.Controllers
         }
 
         [HttpPost("Login")]
-        public async Task<ActionResult<UserNameAndTokenResponse>> Login(LoginRequest login )
+        public async Task<ActionResult<UserNameAndTokenResponse>> Login(LoginRequest login)
         {
             _logger.LogInformation($"user controlel log in {login.UserName} ");
 
@@ -179,13 +178,15 @@ namespace ShoppingListWebApi.Controllers
             _logger.LogInformation($"user controlel log out ");
 
             if (user == null)
+            {
                 return Unauthorized(new ProblemDetails { Title = "Invalid username or password." });
-            else
-                return new UserNameAndTokenResponse
-                {
-                    UserName = login.UserName,
-                    Token = await GenerateToken2(user.UserId)
-                };
+            }
+
+            return new UserNameAndTokenResponse
+            {
+                UserName = login.UserName,
+                Token = await GenerateToken2(user.UserId)
+            };
         }
 
 
@@ -193,7 +194,7 @@ namespace ShoppingListWebApi.Controllers
         public async Task<ActionResult<string>> Register(RegistrationRequest request)
         {
 
-            User user=null;
+            User user = null;
 
             try
             {
@@ -209,7 +210,7 @@ namespace ShoppingListWebApi.Controllers
             {
                 _logger.LogError(ex, "Error during registration for user {UserName}", request.UserName);
 
-                return Problem(statusCode: 500, title:"Server error.");
+                return Problem(statusCode: 500, title: "Server error.");
             }
         }
 
@@ -232,7 +233,7 @@ namespace ShoppingListWebApi.Controllers
         }
 
 
-      
+
         private async Task<string> GenerateAccessTokenAsync(int userId)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -293,7 +294,7 @@ namespace ShoppingListWebApi.Controllers
                 new JwtHeader(
                     new SigningCredentials(
                         new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.GetSection("Secrets")["JWTSecurityKey"])),
-                       // new SymmetricSecurityKey(Encoding.UTF8.GetBytes("eashfisahfihgiuashrilghas9ifhiuhvi9uashblvh938hen48239")),
+                    // new SymmetricSecurityKey(Encoding.UTF8.GetBytes("eashfisahfihgiuashrilghas9ifhiuhvi9uashblvh938hen48239")),
                     SecurityAlgorithms.HmacSha256)),
                 new JwtPayload(claims)
                 );
@@ -317,13 +318,20 @@ namespace ShoppingListWebApi.Controllers
         Task<List<string>> GetUserRolesByUserIdAsync(int userId)
         {
 
-           
+
             return _userEndpoint.GetUserRolesByUserIdAsync(userId);
         }
 
         Task<User> GetUserWithRolesAsync(int userId)
         {
             return _userEndpoint.GetUserWithRolesAsync(userId);
+        }
+
+        [HttpGet("VerifyToken2")]
+        [Authorize]
+        public ActionResult VerifyToken2()
+        {
+            return Ok();
         }
 
         [HttpGet("VerifyToken")]
@@ -347,10 +355,10 @@ namespace ShoppingListWebApi.Controllers
                 var principle = tokenHandler.ValidateToken(accessToken, tokenValidationParameters, out securityToken);
 
                 JwtSecurityToken jwtSecurityToken = securityToken as JwtSecurityToken;
-               
+
                 if (jwtSecurityToken != null && jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    
+
                     return true;
                 }
             }
@@ -363,6 +371,6 @@ namespace ShoppingListWebApi.Controllers
         }
 
 
-      
+
     }
 }
