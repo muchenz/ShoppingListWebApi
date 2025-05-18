@@ -71,8 +71,9 @@ public class PermissionsController : ControllerBase
         return new MessageAndStatus { Status = "OK", Message = "Ivitation was added." };
     }
 
-    [HttpPost("AddUserPermission")]
-    [SecurityLevel(1)]
+    //[HttpPost("AddUserPermission")]  // not used, 
+    //[SecurityLevel(1)]
+    // ratcher for aministrator
     public async Task<ActionResult<MessageAndStatus>> AddUserPermission(int listAggregationId, [FromBody] UserPermissionToListAggregation item)
     {
 

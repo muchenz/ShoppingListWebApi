@@ -30,6 +30,7 @@ using Shared.DataEndpoints.Models;
 using ShoppingListWebApi.Data;
 using ShoppingListWebApi.Models.Requests;
 using ShoppingListWebApi.Models.Response;
+using ShoppingListWebApi.Token;
 using SignalRService;
 
 
@@ -46,9 +47,11 @@ namespace ShoppingListWebApi.Controllers
         private readonly SignarRService _signarRService;
         private readonly IUserEndpoint _userEndpoint;
         private readonly ILogger<UserController> _logger;
+        private readonly ITokenService _tokenService;
 
         public UserController(IMapper mapper, IConfiguration configuration, IMediator mediator
-            , SignarRService signarRService, IUserEndpoint userEndpoint, ILogger<UserController> logger)
+            , SignarRService signarRService, IUserEndpoint userEndpoint, ILogger<UserController> logger
+            , ITokenService tokenService )
         {
             _mapper = mapper;
             _configuration = configuration;
@@ -56,6 +59,7 @@ namespace ShoppingListWebApi.Controllers
             _signarRService = signarRService;
             _userEndpoint = userEndpoint;
             _logger = logger;
+            _tokenService = tokenService;
         }
 
 
@@ -189,6 +193,7 @@ namespace ShoppingListWebApi.Controllers
             };
         }
 
+       
 
         [HttpPost("Register")]
         public async Task<ActionResult<string>> Register(RegistrationRequest request)
@@ -214,118 +219,25 @@ namespace ShoppingListWebApi.Controllers
             }
         }
 
-        [HttpPost("GetUserDataTree")]
+        [HttpGet("UserDataTree")]
         [Authorize]
         //[Authorize(Roles ="User")]
-        public async Task<ActionResult<MessageAndStatus>> GetUserDataTree(string userName)
-        {   // TODO: remove userName from query
+        public async Task<ActionResult<User>> GetUserDataTree()
+        {   
             var name = User.FindFirstValue(ClaimTypes.Name);
 
             var userTemp = await _userEndpoint.GetTreeAsync(name);
 
-            // var token = await GenerateAccessTokenAsync(id);
-
-            // var userrr = GetUserFromAccessToken(token);
-
-            return new MessageAndStatus { Status = "OK", Message = JsonConvert.SerializeObject(userTemp) };
+            return Ok(userTemp);
 
 
         }
 
-
-
-        private async Task<string> GenerateAccessTokenAsync(int userId)
+        private  Task<string> GenerateToken2(int userId)
         {
-            var tokenHandler = new JwtSecurityTokenHandler();
-
-            var key = Encoding.UTF8.GetBytes(_configuration.GetSection("Secrets")["JWTSecurityKey"]);
-
-
-            var roles = await GetUserRolesByUserIdAsync(userId);
-            var claims = new List<Claim>();
-
-            claims.Add(new Claim(ClaimTypes.Name, Convert.ToString(userId)));
-
-            foreach (var role in roles)
-            {
-                claims.Add(new Claim(ClaimTypes.Role, role));
-
-            }
-
-
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.UtcNow.AddDays(10),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key),
-                SecurityAlgorithms.HmacSha256Signature)
-
-            };
-
-
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            return tokenHandler.WriteToken(token);
+            return _tokenService.GenerateToken(userId);
         }
 
-
-        async Task<string> GenerateToken2(int userId)
-        {
-            var user = await GetUserWithRolesAsync(userId);
-
-            var claims = new List<Claim> {
-            new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-            new Claim(ClaimTypes.Name,user.EmailAddress),
-            new Claim(JwtRegisteredClaimNames.Nbf, new DateTimeOffset(DateTime.Now).ToUnixTimeSeconds().ToString()),
-            new Claim(JwtRegisteredClaimNames.Exp, new DateTimeOffset(DateTime.Now.AddDays(1000)).ToUnixTimeSeconds().ToString()),
-
-            };
-
-            //var roles = await GetUserRoles(userId);
-
-
-
-            user.Roles.ToList().ForEach(role => claims.Add(new Claim(ClaimTypes.Role, role)));
-
-            var userListAggregators = await _userEndpoint.GetUserListAggrByUserId(userId);
-
-            userListAggregators.ForEach(item => claims.Add(new Claim("ListAggregator", $"{item.ListAggregatorId}.{item.PermissionLevel}")));
-
-            var token = new JwtSecurityToken(
-                new JwtHeader(
-                    new SigningCredentials(
-                        new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.GetSection("Secrets")["JWTSecurityKey"])),
-                    // new SymmetricSecurityKey(Encoding.UTF8.GetBytes("eashfisahfihgiuashrilghas9ifhiuhvi9uashblvh938hen48239")),
-                    SecurityAlgorithms.HmacSha256)),
-                new JwtPayload(claims)
-                );
-            string stringToken = "";
-            try
-            {
-                stringToken = new JwtSecurityTokenHandler().WriteToken(token);
-            }
-
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-
-            }
-
-
-            return stringToken;
-        }
-
-
-        Task<List<string>> GetUserRolesByUserIdAsync(int userId)
-        {
-
-
-            return _userEndpoint.GetUserRolesByUserIdAsync(userId);
-        }
-
-        Task<User> GetUserWithRolesAsync(int userId)
-        {
-            return _userEndpoint.GetUserWithRolesAsync(userId);
-        }
 
         [HttpGet("VerifyToken2")]
         [Authorize]
@@ -337,39 +249,8 @@ namespace ShoppingListWebApi.Controllers
         [HttpGet("VerifyToken")]
         public bool GetUserFromAccessTokenAsync(string accessToken)
         {
-            try
-            {
-                var tokenHandler = new JwtSecurityTokenHandler();
-                var key = Encoding.UTF8.GetBytes(_configuration.GetSection("Secrets")["JWTSecurityKey"]);
-                //var key = Encoding.UTF8.GetBytes("eashfisahfihgiuashrilghas9ifhiuhvi9uashblvh938hen48239");
-
-                var tokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(key),
-                    ValidateIssuer = false,
-                    ValidateAudience = false
-                };
-
-                SecurityToken securityToken;
-                var principle = tokenHandler.ValidateToken(accessToken, tokenValidationParameters, out securityToken);
-
-                JwtSecurityToken jwtSecurityToken = securityToken as JwtSecurityToken;
-
-                if (jwtSecurityToken != null && jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
-                {
-
-                    return true;
-                }
-            }
-            catch (Exception ex)
-            {
-                return false;
-            }
-
-            return true;
+           return _tokenService.VerifyToken(accessToken);
         }
-
 
 
     }

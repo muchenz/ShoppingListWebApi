@@ -621,14 +621,7 @@
 
             try
             {
-
-                var identity = await authenticationStateProvider.GetAuthenticationStateAsync();
-
-                var nameUser = identity.User.Identity.Name;
-
-                data = await userService.GetUserDataTreeObjectsgAsync(nameUser);
-
-
+                data = await userService.GetUserDataTreeAsync();
             }
 
             catch
@@ -668,11 +661,7 @@
     }
     protected override async Task OnInitializedAsync()
     {
-        var authProvider = await authenticationStateProvider.GetAuthenticationStateAsync();
-
-
-        var user = authProvider.User.Identity.Name;
-
+        
         BrowserService.OnResize += BrowserHasResized;
         await JSRuntime.InvokeAsync<object>("browserResize.registerResizeCallback");
 

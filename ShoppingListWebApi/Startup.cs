@@ -33,6 +33,7 @@ using ShoppingListWebApi.Data;
 using ShoppingListWebApi.Handlers;
 using ShoppingListWebApi.Hub;
 using ShoppingListWebApi.Hub.Auth;
+using ShoppingListWebApi.Token;
 using SignalRService;
 
 namespace ShoppingListWebApi
@@ -93,7 +94,8 @@ namespace ShoppingListWebApi
             services.AddFirebaseCaschedDatabas();
             services.AddSingleton<CacheConveinient>();
             services.AddSingleton<IMiniDistributedCache, FirabaseCache>();
-            
+            services.AddSingleton<ITokenService, TokenService>();
+
 
             services.AddAutoMapper(typeof(MappingProfile));
 

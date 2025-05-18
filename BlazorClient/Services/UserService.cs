@@ -141,28 +141,6 @@ namespace BlazorClient.Services
 
         }
 
-        public async Task<string> GetUserDataTreeStringAsync(string userName)
-        {
-
-            var querry = new QueryBuilder();
-            querry.Add("userName", userName);
-            // querry.Add("password", password);
-
-            var requestMessage = new HttpRequestMessage(HttpMethod.Post, "User/GetUserDataTree" + querry.ToString());
-
-
-            await SetRequestBearerAuthorizationHeader(requestMessage);
-
-
-            var response = await _httpClient.SendAsync(requestMessage);
-
-            var data = await response.Content.ReadAsStringAsync();
-
-            var message = JsonConvert.DeserializeObject<MessageAndStatus>(data);
-
-
-            return await Task.FromResult(message.Message);
-        }
 
         public async Task<List<ListAggregationForPermission>> GetListAggregationForPermissionAsync(string userName)
         {
@@ -242,17 +220,23 @@ namespace BlazorClient.Services
 
 
 
-
-        public async Task<User> GetUserDataTreeObjectsgAsync(string userName)
+        public async Task<User> GetUserDataTreeAsync()
         {
 
-            var dataString = await GetUserDataTreeStringAsync(userName);
+            var requestMessage = new HttpRequestMessage(HttpMethod.Get, "User/UserDataTree");
 
 
+            await SetRequestBearerAuthorizationHeader(requestMessage);
 
-            var dataObjects = JsonConvert.DeserializeObject<User>(dataString);
 
-            return dataObjects;
+            var response = await _httpClient.SendAsync(requestMessage);
+
+            var data = await response.Content.ReadAsStringAsync();
+
+            var user = JsonConvert.DeserializeObject<User>(data);
+
+
+            return await Task.FromResult(user);
         }
 
 

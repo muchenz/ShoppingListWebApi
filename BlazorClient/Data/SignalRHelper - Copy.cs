@@ -67,11 +67,7 @@ namespace BlazorClient.Data_COPY
             try
             {
 
-                var identity = await authenticationStateProvider.GetAuthenticationStateAsync();
-
-                var nameUser = identity.User.Identity.Name;
-
-                data = await userService.GetUserDataTreeObjectsgAsync(nameUser);
+                data = await userService.GetUserDataTreeAsync();
 
                 SetData(data);
 
