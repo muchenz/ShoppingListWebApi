@@ -272,11 +272,11 @@ namespace BlazorClient.Services
 
             querry.Add("listAggregationId", listAggregationId.ToString());
 
-            var httpMethod = actionName == "DeleteUserPermission"? HttpMethod.Delete : HttpMethod.Post;
+            //var httpMethod = actionName == "DeleteUserPermission"? HttpMethod.Delete : HttpMethod.Post;
 
             string serializedUser = JsonConvert.SerializeObject(userPermissionToList);
 
-            var requestMessage = new HttpRequestMessage(httpMethod, "Permissions/" + actionName + querry.ToString());
+            var requestMessage = new HttpRequestMessage(HttpMethod.Post, "Permissions/" + actionName + querry.ToString());
 
 
             requestMessage.Content = new StringContent(serializedUser);

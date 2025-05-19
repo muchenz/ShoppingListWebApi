@@ -39,7 +39,7 @@ public class PermissionsController : ControllerBase
     }
 
     [HttpPost("InviteUserPermission")]
-    [SecurityLevel(2)]
+    [SecurityLevel(1)]
     public async Task<ActionResult> InviteUserPermission(int listAggregationId,
             [FromBody] UserPermissionToListAggregation item, [FromHeader] string signalRId)
     {
@@ -141,7 +141,7 @@ public class PermissionsController : ControllerBase
         return Ok("Permission has changed." );
     }
 
-    [HttpDelete("DeleteUserPermission")]
+    [HttpPost("DeleteUserPermission")]
     [SecurityLevel(1)]
     public async Task<ActionResult<MessageAndStatus>> DeleteUserPermission(int listAggregationId
         , [FromBody] UserPermissionToListAggregation item, [FromHeader] string signalRId)

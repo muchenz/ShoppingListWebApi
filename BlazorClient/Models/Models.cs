@@ -31,15 +31,18 @@ namespace BlazorClient.Models
     public class MessageAndStatus
     {
         public bool IsError => Status != MessageSatus.OK;
-        public string Status { get; private set; }
-        public string Message { get; private set; }
+        public string Status { get; set; }
+        public string Message { get; set; }
 
         protected MessageAndStatus(string message, string status)
         {
             Status = status;
             Message = message;
         }
-
+        public MessageAndStatus()
+        {
+            
+        }
         public static MessageAndStatus Ok(string msg) => new MessageAndStatus(msg, MessageSatus.OK);
         public static MessageAndStatus Fail(string msg) => new MessageAndStatus(msg, MessageSatus.Error);
 
