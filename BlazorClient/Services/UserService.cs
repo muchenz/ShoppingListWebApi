@@ -3,7 +3,9 @@ using BlazorClient.Models.Requests;
 using BlazorClient.Models.Response;
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
@@ -269,11 +271,12 @@ namespace BlazorClient.Services
             var querry = new QueryBuilder();
 
             querry.Add("listAggregationId", listAggregationId.ToString());
-            // querry.Add("password", password);
+
+            var httpMethod = actionName == "DeleteUserPermission"? HttpMethod.Delete : HttpMethod.Post;
 
             string serializedUser = JsonConvert.SerializeObject(userPermissionToList);
 
-            var requestMessage = new HttpRequestMessage(HttpMethod.Post, "Permissions/" + actionName + querry.ToString());
+            var requestMessage = new HttpRequestMessage(httpMethod, "Permissions/" + actionName + querry.ToString());
 
 
             requestMessage.Content = new StringContent(serializedUser);
@@ -289,11 +292,26 @@ namespace BlazorClient.Services
 
             var responseStatusCode = response.StatusCode;
 
-            var responseBody = await response.Content.ReadAsStringAsync();
+            if (!response.IsSuccessStatusCode)
+            {
+                var responseBody = await response.Content.ReadAsStringAsync();
 
-            var message = JsonConvert.DeserializeObject<MessageAndStatus>(responseBody);
+                var message = JsonConvert.DeserializeObject<ProblemDetails>(responseBody);
 
-            return await Task.FromResult(message.Message);
+                return message.Title;
+            }
+
+            return actionName switch
+            {
+                "AddUserPermission" => "User was added.",
+                "ChangeUserPermission" => "Permission has changed.",
+                "InviteUserPermission" => "Ivitation was added.",
+                "DeleteUserPermission" => "User permission was deleted.",
+                _ => throw new ArgumentException("Bad action name.")
+            };
+
+
+
         }
 
 

@@ -40,26 +40,26 @@ public class PermissionsController : ControllerBase
 
     [HttpPost("InviteUserPermission")]
     [SecurityLevel(2)]
-    public async Task<ActionResult<MessageAndStatus>> InviteUserPermission(int listAggregationId,
+    public async Task<ActionResult> InviteUserPermission(int listAggregationId,
             [FromBody] UserPermissionToListAggregation item, [FromHeader] string signalRId)
     {
 
         var user = await _userEndpoint.GetUserByNameAsync(item.User.EmailAddress);
 
         if (user == null)
-            return new MessageAndStatus { Status = "ERROR", Message = "User not exist." };
+            return  NotFound (new ProblemDetails { Title="User not exist." });
 
         var IsUserInvitatedToListAggregation = await _userEndpoint.IsUserInvitatedToListAggregationAsync(item.User.EmailAddress, listAggregationId);
 
         if (IsUserInvitatedToListAggregation)
-            return new MessageAndStatus { Status = "ERROR", Message = "Ivitation is on list" };
+            return Conflict(new ProblemDetails { Title = "Ivitation is on list" });
 
         //bbbb = _context.UserListAggregators.AsQueryable().Where(a => a.UserId == user.UserId && a.ListAggregatorId == listAggregationId).Any();
 
         var isUserHasListAgregation = await _userEndpoint.IsUserHasListAggregatorAsync(user.UserId, listAggregationId);
 
         if (isUserHasListAgregation)
-            return new MessageAndStatus { Status = "ERROR", Message = "User already has permission." };
+            return Conflict(new ProblemDetails { Title = "User already has permission." });
 
         var senderName = HttpContext.User.Identity.Name;
 
@@ -68,48 +68,42 @@ public class PermissionsController : ControllerBase
 
         await _signarRService.SendRefreshMessageToUsersAsync(new List<int> { user.UserId }, "New_Invitation", signalRId: signalRId);
 
-        return new MessageAndStatus { Status = "OK", Message = "Ivitation was added." };
+        return Ok("Ivitation was added.");
     }
 
     //[HttpPost("AddUserPermission")]  // not used, 
     //[SecurityLevel(1)]
     // ratcher for aministrator
-    public async Task<ActionResult<MessageAndStatus>> AddUserPermission(int listAggregationId, [FromBody] UserPermissionToListAggregation item)
+    public async Task<ActionResult> AddUserPermission(int listAggregationId, [FromBody] UserPermissionToListAggregation item)
     {
 
         var user = await _userEndpoint.GetUserByNameAsync(item.User.EmailAddress);
 
         if (user == null)
-            return new MessageAndStatus { Status = "ERROR", Message = "User not exist." };
+            return NotFound(new ProblemDetails { Title = "User not exist." });
+
 
         var isUserHasListAgregation = await _userEndpoint.IsUserHasListAggregatorAsync(user.UserId, listAggregationId);
 
         if (isUserHasListAgregation)
-            return new MessageAndStatus { Status = "ERROR", Message = "User is on list" };
-
+            return Conflict(new ProblemDetails { Title = "User is on list" });
 
         await _userEndpoint.AddUserListAggregationAsync(user.UserId, listAggregationId, item.Permission);
 
-        return new MessageAndStatus { Status = "OK", Message = "User was added." };
+        return Ok("User was added." );
     }
-
-
-
-
-
-
 
 
     [HttpPost("ChangeUserPermission")]
     [SecurityLevel(1)]
-    public async Task<ActionResult<MessageAndStatus>> ChangeUserPermission(int listAggregationId
+    public async Task<ActionResult> ChangeUserPermission(int listAggregationId
         , [FromBody] UserPermissionToListAggregation item, [FromHeader] string signalRId)
     {
 
         var user = await _userEndpoint.GetUserByNameAsync(item.User.EmailAddress);
 
         if (user == null)
-            return new MessageAndStatus { Status = "ERROR", Message = "User not exist." };
+            return NotFound(new ProblemDetails { Title = "User not exist." });
 
 
         var count = await _userEndpoint.GetNumberOfAdministratorsOfListAggregationsAsync(listAggregationId);
@@ -119,7 +113,7 @@ public class PermissionsController : ControllerBase
             lastAdminId = await _userEndpoint.GetLastAdminIdAsync(listAggregationId);
 
         if (count == 1 && user.UserId == lastAdminId)
-            return new MessageAndStatus { Status = "ERROR", Message = "Only one Admin left - not changed." };
+            return Conflict(new ProblemDetails { Title = "Only one Admin left - not changed." });
 
 
         //var userListAggr = await _context.UserListAggregators.AsQueryable().Where(a => a.User.UserId == item.User.UserId && a.ListAggregatorId == listAggregationId)
@@ -138,16 +132,16 @@ public class PermissionsController : ControllerBase
 
 
         if (!isUserHasListAggregator)
-            return new MessageAndStatus { Status = "ERROR", Message = "User permission not found." };
+            return NotFound(new ProblemDetails { Title = "User permission not found." });
         else
             await _userEndpoint.SetUserPermissionToListAggrAsync(user.UserId, listAggregationId, item.Permission);
 
         await _mediator.Publish(new DataChangedEvent(new int[] { user.UserId }, signalRId));
 
-        return new MessageAndStatus { Status = "OK", Message = "Permission has changed." };
+        return Ok("Permission has changed." );
     }
 
-    [HttpPost("DeleteUserPermission")]
+    [HttpDelete("DeleteUserPermission")]
     [SecurityLevel(1)]
     public async Task<ActionResult<MessageAndStatus>> DeleteUserPermission(int listAggregationId
         , [FromBody] UserPermissionToListAggregation item, [FromHeader] string signalRId)
@@ -156,7 +150,7 @@ public class PermissionsController : ControllerBase
         var user = await _userEndpoint.GetUserByNameAsync(item.User.EmailAddress);
 
         if (user == null)
-            return new MessageAndStatus { Status = "ERROR", Message = "User not exist." };
+            return NotFound(new ProblemDetails { Title = "User not exist." });
 
 
         var count = await _userEndpoint.GetNumberOfAdministratorsOfListAggregationsAsync(listAggregationId);
@@ -166,20 +160,19 @@ public class PermissionsController : ControllerBase
             lastAdminId = await _userEndpoint.GetLastAdminIdAsync(listAggregationId);
 
         if (count == 1 && user.UserId == lastAdminId)
-            return new MessageAndStatus { Status = "ERROR", Message = "Only one Admin left - not delete." };
-
+            return Conflict(new ProblemDetails { Title = "Only one Admin left - not delete." });
 
         var isUserHasListAggregator = await _userEndpoint.IsUserHasListAggregatorAsync(item.User.UserId, listAggregationId);
 
         if (!isUserHasListAggregator)
-            return new MessageAndStatus { Status = "ERROR", Message = "User permission not found." };
+            return NotFound(new ProblemDetails { Title = "User permission not found." });
         else
             await _userEndpoint.DeleteUserListAggrAscync(item.User.UserId, listAggregationId);
 
 
         await _mediator.Publish(new DataChangedEvent(new int[] { user.UserId }, signalRId));
 
-        return new MessageAndStatus { Status = "OK", Message = "User permission was deleted." };
+        return Ok("User permission was deleted." );
     }
 
 

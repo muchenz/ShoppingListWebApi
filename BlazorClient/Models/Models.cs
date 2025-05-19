@@ -30,25 +30,27 @@ namespace BlazorClient.Models
     }
     public class MessageAndStatus
     {
-        public bool IsError => Status == MessageSatus.Error;
-        public string Status { get; set; }
-        public string Message { get; set; }
+        public bool IsError => Status != MessageSatus.OK;
+        public string Status { get; private set; }
+        public string Message { get; private set; }
+
+        protected MessageAndStatus(string message, string status)
+        {
+            Status = status;
+            Message = message;
+        }
+
+        public static MessageAndStatus Ok(string msg) => new MessageAndStatus(msg, MessageSatus.OK);
+        public static MessageAndStatus Fail(string msg) => new MessageAndStatus(msg, MessageSatus.Error);
 
     }
-
-    public class TokenAndEmailData
-    {
-        public string Token { get; set; }
-        public string Email { get; set; }
-    }
+      
 
     public class MessageAndStatusAndData<T> : MessageAndStatus
     {
-        public MessageAndStatusAndData(T data, string msg, string status)
+        public MessageAndStatusAndData(T data, string msg, string status):base(msg, status) 
         {
             Data = data;
-            Message = msg;
-            Status = status;
         }
 
         public T Data { get; set; }
@@ -58,6 +60,12 @@ namespace BlazorClient.Models
 
         public static MessageAndStatusAndData<T> Fail(string msg) =>
            new MessageAndStatusAndData<T>(default, msg, MessageSatus.Error);
+    }
+
+    public class TokenAndEmailData
+    {
+        public string Token { get; set; }
+        public string Email { get; set; }
     }
     public  static class ItemState
     {

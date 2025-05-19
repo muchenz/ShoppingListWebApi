@@ -18,17 +18,19 @@ namespace Shared.DataEndpoints.Models
         public Log Inner { get; set; }
 
     }
-    public class MessageSatus
+    public class MessageStaus
     {
         public const string OK = "OK";
         public const string Error = "ERROR";
+        public const string ValidationError = "VALIDATION_ERROR";
 
     }
     public class MessageAndStatus
     {
-        public bool IsError => Status == MessageSatus.Error;
+        public bool IsError => Status != MessageStaus.OK;
         public string Status { get; set; }
         public string Message { get; set; }
+        public List<(string,string)> ValidationErrorList { get; set; }
 
     }
 
@@ -50,10 +52,10 @@ namespace Shared.DataEndpoints.Models
         public T Data { get; set; }
 
         public static MessageAndStatusAndData<T> Ok(T data) =>
-            new MessageAndStatusAndData<T>(data, string.Empty, MessageSatus.OK);
+            new MessageAndStatusAndData<T>(data, string.Empty, MessageStaus.OK);
 
         public static MessageAndStatusAndData<T> Fail(string msg) =>
-           new MessageAndStatusAndData<T>(default, msg, MessageSatus.Error);
+           new MessageAndStatusAndData<T>(default, msg, MessageStaus.Error);
     }
 
     //public class MessageAndStatusAndData
