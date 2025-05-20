@@ -142,12 +142,12 @@ namespace FirebaseDatabase
             return querrySnapshot.FirstOrDefault().ConvertTo<UserListAggregatorFD>().UserId;
         }
 
-        public Task<List<ListAggregationWithUsersPermission>> GetListAggregationForPermissionAsync(string userName)
+        public Task<List<ListAggregationWithUsersPermission>> GetListAggrWithUsersPermAsync(string userName)
         {
-            return GetListAggregationForPermission2Async(userName);
+            return GetListAggrWithUsersPerm2Async(userName);
         }
 
-        public async Task<List<ListAggregationWithUsersPermission>> GetListAggregationForPermission2Async(string userName)
+        public async Task<List<ListAggregationWithUsersPermission>> GetListAggrWithUsersPerm2Async(string userName)
         {
 
             ///
@@ -571,7 +571,7 @@ namespace FirebaseDatabase
             return listUserId;
         }
 
-        public async Task<List<ListAggregationWithUsersPermission>> GetListAggregationForPermission_EmptyAsync(int userId)
+        public async Task<List<ListAggregationWithUsersPermission>> GetListAggrWithUsersPerm_EmptyAsync(int userId)
         {
             var userListAggr = (await GetUserListAggrByUserId(userId)).Where(a => a.PermissionLevel == 1);
 
@@ -611,7 +611,7 @@ namespace FirebaseDatabase
             return listPerm;
         }
 
-        public async Task<ListAggregationWithUsersPermission> GetListAggregationForPermissionByListAggrIdAsync(ListAggregationWithUsersPermission listAggregationForPermission)
+        public async Task<ListAggregationWithUsersPermission> GetListAggrWithUsersPermByListAggrIdAsync(ListAggregationWithUsersPermission listAggregationForPermission)
         {
             var dataTransfer = new List<ListAggregationWithUsersPermission>();
 

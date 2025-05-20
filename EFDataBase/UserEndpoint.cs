@@ -159,7 +159,7 @@ namespace EFDataBase
             await _context.SaveChangesAsync();
         }
 
-        public async Task<List<ListAggregationWithUsersPermission>> GetListAggregationForPermissionAsync(string userName)
+        public async Task<List<ListAggregationWithUsersPermission>> GetListAggrWithUsersPermAsync(string userName)
         {
             var userListAggregatorsEntities = await _context.UserListAggregators
 
@@ -208,7 +208,7 @@ namespace EFDataBase
 
             return dataTransfer;
         }
-        public async Task<List<ListAggregationWithUsersPermission>> GetListAggregationForPermission2Async(string userName)
+        public async Task<List<ListAggregationWithUsersPermission>> GetListAggrWithUsersPerm2Async(string userName)
         {
             var listAggregatorsEntities = await _context.UserListAggregators
 
@@ -319,7 +319,7 @@ namespace EFDataBase
                 .Where(a => a.ListAggregatorId == listAggregationId).Select(a => a.UserId).ToListAsync();
         }
 
-        public async Task<List<ListAggregationWithUsersPermission>> GetListAggregationForPermission_EmptyAsync(int userId)
+        public async Task<List<ListAggregationWithUsersPermission>> GetListAggrWithUsersPerm_EmptyAsync(int userId)
         {
             var listAggregatorsEntities = await _context.UserListAggregators
                .Include(a => a.ListAggregator).Where(a => a.UserId == userId && a.PermissionLevel == 1)
@@ -330,7 +330,7 @@ namespace EFDataBase
             return listAggregators.Select(a => new ListAggregationWithUsersPermission { ListAggregator = a }).ToList();
         }
 
-        public async Task<ListAggregationWithUsersPermission> GetListAggregationForPermissionByListAggrIdAsync(ListAggregationWithUsersPermission listAggregationForPermission)
+        public async Task<ListAggregationWithUsersPermission> GetListAggrWithUsersPermByListAggrIdAsync(ListAggregationWithUsersPermission listAggregationForPermission)
         { 
             listAggregationForPermission.UsersPermToListAggr = new List<UserPermissionToListAggregation>();
 

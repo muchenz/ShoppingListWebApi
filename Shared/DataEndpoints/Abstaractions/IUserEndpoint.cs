@@ -26,10 +26,10 @@ namespace Shared.DataEndpoints.Abstaractions
         Task SetUserPermissionToListAggrAsync(int userId, int listAggregationId, int permission);
         Task DeleteUserListAggrAscync(int userId, int listAggregationId);
 
-        Task<List<ListAggregationWithUsersPermission>> GetListAggregationForPermissionAsync(string userName);
-        Task<List<ListAggregationWithUsersPermission>> GetListAggregationForPermission2Async(string userName);
-        Task<List<ListAggregationWithUsersPermission>> GetListAggregationForPermission_EmptyAsync(int userId);
-        Task<ListAggregationWithUsersPermission> GetListAggregationForPermissionByListAggrIdAsync(ListAggregationWithUsersPermission listAggregationForPermission);
+        Task<List<ListAggregationWithUsersPermission>> GetListAggrWithUsersPermAsync(string userName);
+        Task<List<ListAggregationWithUsersPermission>> GetListAggrWithUsersPerm2Async(string userName);
+        Task<List<ListAggregationWithUsersPermission>> GetListAggrWithUsersPerm_EmptyAsync(int userId);
+        Task<ListAggregationWithUsersPermission> GetListAggrWithUsersPermByListAggrIdAsync(ListAggregationWithUsersPermission listAggregationForPermission);
 
         Task<List<UserListAggregator>> GetUserListAggrByUserId(int userId);
 

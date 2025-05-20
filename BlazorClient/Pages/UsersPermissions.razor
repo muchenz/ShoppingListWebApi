@@ -43,7 +43,7 @@
                                     ListItemDragStartEvent="(() => ListDragStart(null))"
                                     ListItemDropEvent="(() => ListDrop(null))"
                                     SaveItemEvent="(() => SaveListAggregator(item))"></ListItemComponent>*@
-                                <ListItemComponent item="@item.ListAggregatorEntity"
+                                <ListItemComponent item="@item.ListAggregator"
                                                    ListItemClickedEvent="(() => ListAggregationClicked(item))"
                                                    ChoosedItemId="@chosedListAggrId"></ListItemComponent>
 
@@ -340,7 +340,7 @@
                 var authProvider = await authenticationStateProvider.GetAuthenticationStateAsync();
                 var userName = authProvider.User.Identity.Name;
                 //data = await userService.GetListAggregationForPermissionAsync(userName);
-                data = await userService.GetListAggregationForPermission_EmptyAsync();
+                data = await userService.GetListAggrWithUsersPerm_EmptyAsync();
             }
             catch
             {
@@ -377,14 +377,14 @@
         //chosedListAggrId = item.ListAggregatorEntity.ListAggregatorId;
 
         ListAggregationForPermission dataNew = null;
-        if (item.Users == null)
+        if (item.UsersPermToListAggr == null)
         {
 
-            dataNew = await userService.GetListAggregationForPermissionByListAggrId(item);
-            item.Users = dataNew.Users;
+            dataNew = await userService.GetListAggrWithUsersPermByListAggrId(item);
+            item.UsersPermToListAggr = dataNew.UsersPermToListAggr;
         }
-        chosedListPermission = item.Users;
-        chosedListAggrId = item.ListAggregatorEntity.ListAggregatorId;
+        chosedListPermission = item.UsersPermToListAggr;
+        chosedListAggrId = item.ListAggregator.ListAggregatorId;
     }
 
 
