@@ -133,8 +133,8 @@ public class PermissionsController : ControllerBase
 
         if (!isUserHasListAggregator)
             return NotFound(new ProblemDetails { Title = "User permission not found." });
-        else
-            await _userEndpoint.SetUserPermissionToListAggrAsync(user.UserId, listAggregationId, item.Permission);
+        
+        await _userEndpoint.SetUserPermissionToListAggrAsync(user.UserId, listAggregationId, item.Permission);
 
         await _mediator.Publish(new DataChangedEvent(new int[] { user.UserId }, signalRId));
 
@@ -143,7 +143,7 @@ public class PermissionsController : ControllerBase
 
     [HttpPost("DeleteUserPermission")]
     [SecurityLevel(1)]
-    public async Task<ActionResult<MessageAndStatus>> DeleteUserPermission(int listAggregationId
+    public async Task<ActionResult> DeleteUserPermission(int listAggregationId
         , [FromBody] UserPermissionToListAggregation item, [FromHeader] string signalRId)
     {
 
@@ -166,8 +166,8 @@ public class PermissionsController : ControllerBase
 
         if (!isUserHasListAggregator)
             return NotFound(new ProblemDetails { Title = "User permission not found." });
-        else
-            await _userEndpoint.DeleteUserListAggrAscync(item.User.UserId, listAggregationId);
+        
+        await _userEndpoint.DeleteUserListAggrAscync(item.User.UserId, listAggregationId);
 
 
         await _mediator.Publish(new DataChangedEvent(new int[] { user.UserId }, signalRId));
