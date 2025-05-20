@@ -38,11 +38,11 @@ namespace FirebaseChachedDatabase
                 await _cache.SetAsync("userId_" + userId, listUsAggr);
             }
 
-            var listPermCached = await _cache.GetAsync<ListAggregationForPermission>("ListAggregationForPermission_" + invitation.ListAggregatorId);
+            var listPermCached = await _cache.GetAsync<ListAggregationWithUsersPermission>("ListAggregationForPermission_" + invitation.ListAggregatorId);
 
             if (listPermCached != null)
             {
-                listPermCached.Users.Add(new UserPermissionToListAggregation
+                listPermCached.UsersPermToListAggr.Add(new UserPermissionToListAggregation
                 {
                     Permission = invitation.PermissionLevel
                     , User=new User { UserId=userId, EmailAddress=invitation.EmailAddress }

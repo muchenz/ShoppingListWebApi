@@ -177,21 +177,20 @@ public class PermissionsController : ControllerBase
 
 
     [Authorize]
-    [HttpPost("GetListAggregationForPermission")]
-    public async Task<ActionResult<MessageAndStatus>> GetListAggregationForPermission(string userName)
+    [HttpGet("GetListAggregationForPermission")]
+    public async Task<List<ListAggregationWithUsersPermission>> GetListAggregationForPermission()
     {
-        //TODO: userName form query is not nesserery
-        userName = User.FindFirstValue(ClaimTypes.Name);
+        var  userName = User.FindFirstValue(ClaimTypes.Name);
         var dataTransfer = await _userEndpoint.GetListAggregationForPermission2Async(userName);
 
 
-        return new MessageAndStatus { Status = "OK", Message = JsonConvert.SerializeObject(dataTransfer) };
+        return dataTransfer;
 
     }
 
     [Authorize]
     [HttpPost("GetListAggregationForPermission_Empty")]
-    public async Task<ActionResult<MessageAndStatusAndData<List<ListAggregationForPermission>>>> GetListAggregationForPermission_Empty()
+    public async Task<ActionResult<MessageAndStatusAndData<List<ListAggregationWithUsersPermission>>>> GetListAggregationForPermission_Empty()
     {
 
         var sUnerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -201,20 +200,20 @@ public class PermissionsController : ControllerBase
         var dataTransfer = await _userEndpoint.GetListAggregationForPermission_EmptyAsync(userId);
 
 
-        return MessageAndStatusAndData<List<ListAggregationForPermission>>.Ok(dataTransfer);
+        return MessageAndStatusAndData<List<ListAggregationWithUsersPermission>>.Ok(dataTransfer);
 
     }
 
     // TODO: must be admin on ListAggrId:   [SecurityLevel(1)]
     [Authorize]
     [HttpPost("GetListAggregationForPermissionByListAggrId")] // TODO: only ListAggrId is enough
-    public async Task<ActionResult<MessageAndStatusAndData<ListAggregationForPermission>>>
-        GetListAggregationForPermissionByListAggrId([FromBody] ListAggregationForPermission listAggregationForPermission)
+    public async Task<ActionResult<MessageAndStatusAndData<ListAggregationWithUsersPermission>>>
+        GetListAggregationForPermissionByListAggrId([FromBody] ListAggregationWithUsersPermission listAggregationForPermission)
     {
 
         var data = await _userEndpoint.GetListAggregationForPermissionByListAggrIdAsync(listAggregationForPermission);
 
-        return MessageAndStatusAndData<ListAggregationForPermission>.Ok(data);
+        return MessageAndStatusAndData<ListAggregationWithUsersPermission>.Ok(data);
 
     }
 }

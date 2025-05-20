@@ -26,10 +26,10 @@ namespace Shared.DataEndpoints.Abstaractions
         Task SetUserPermissionToListAggrAsync(int userId, int listAggregationId, int permission);
         Task DeleteUserListAggrAscync(int userId, int listAggregationId);
 
-        Task<List<ListAggregationForPermission>> GetListAggregationForPermissionAsync(string userName);
-        Task<List<ListAggregationForPermission>> GetListAggregationForPermission2Async(string userName);
-        Task<List<ListAggregationForPermission>> GetListAggregationForPermission_EmptyAsync(int userId);
-        Task<ListAggregationForPermission> GetListAggregationForPermissionByListAggrIdAsync(ListAggregationForPermission listAggregationForPermission);
+        Task<List<ListAggregationWithUsersPermission>> GetListAggregationForPermissionAsync(string userName);
+        Task<List<ListAggregationWithUsersPermission>> GetListAggregationForPermission2Async(string userName);
+        Task<List<ListAggregationWithUsersPermission>> GetListAggregationForPermission_EmptyAsync(int userId);
+        Task<ListAggregationWithUsersPermission> GetListAggregationForPermissionByListAggrIdAsync(ListAggregationWithUsersPermission listAggregationForPermission);
 
         Task<List<UserListAggregator>> GetUserListAggrByUserId(int userId);
 
@@ -63,8 +63,8 @@ namespace Shared.DataEndpoints.Abstaractions
         Task SetUserPermissionToListAggrAsync(int userId, int listAggregationId, int permission);
         Task DeleteUserListAggrAscync(int userId, int listAggregationId);
 
-        Task<List<ListAggregationForPermission>> GetListAggregationForPermission(string userName);
-        Task<List<ListAggregationForPermission>> GetListAggregationForPermission2(string userName);
+        Task<List<ListAggregationWithUsersPermission>> GetListAggregationForPermission(string userName);
+        Task<List<ListAggregationWithUsersPermission>> GetListAggregationForPermission2(string userName);
 
         Task<List<UserListAggregator>> GetUserListAggrByUserId(int userId);
 

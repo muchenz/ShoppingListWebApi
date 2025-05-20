@@ -159,7 +159,7 @@ namespace EFDataBase
             await _context.SaveChangesAsync();
         }
 
-        public async Task<List<ListAggregationForPermission>> GetListAggregationForPermissionAsync(string userName)
+        public async Task<List<ListAggregationWithUsersPermission>> GetListAggregationForPermissionAsync(string userName)
         {
             var userListAggregatorsEntities = await _context.UserListAggregators
 
@@ -181,18 +181,18 @@ namespace EFDataBase
                 listAggregatinPermissionAndUser.Add(item, userList);
             }
 
-            List<ListAggregationForPermission> dataTransfer = ConvertFromEntitiesToDTOtListObject(listAggregatinPermissionAndUser);
+            List<ListAggregationWithUsersPermission> dataTransfer = ConvertFromEntitiesToDTOtListObject(listAggregatinPermissionAndUser);
 
             return dataTransfer;
 
         }
-        private List<ListAggregationForPermission> ConvertFromEntitiesToDTOtListObject(Dictionary<ListAggregatorEntity, List<KeyValuePair<UserEntity, int>>> listAggregatinPermissionAndUser)
+        private List<ListAggregationWithUsersPermission> ConvertFromEntitiesToDTOtListObject(Dictionary<ListAggregatorEntity, List<KeyValuePair<UserEntity, int>>> listAggregatinPermissionAndUser)
         {
             var listTemp = _mapper.Map(listAggregatinPermissionAndUser, typeof(Dictionary<ListAggregatorEntity, List<KeyValuePair<UserEntity, int>>>),
                 typeof(Dictionary<ListAggregator, List<KeyValuePair<User, int>>>)) as Dictionary<ListAggregator, List<KeyValuePair<User, int>>>;
 
 
-            var dataTransfer = new List<ListAggregationForPermission>();
+            var dataTransfer = new List<ListAggregationWithUsersPermission>();
             // var sss = listTemp.ToList();
 
             foreach (var item in listTemp)
@@ -202,13 +202,13 @@ namespace EFDataBase
 
                 item.Value.ForEach(a => tempListUsers.Add(new UserPermissionToListAggregation { User = a.Key, Permission = a.Value }));
 
-                dataTransfer.Add(new ListAggregationForPermission { ListAggregatorEntity = item.Key, Users = tempListUsers });
+                dataTransfer.Add(new ListAggregationWithUsersPermission { ListAggregator = item.Key, UsersPermToListAggr = tempListUsers });
 
             }
 
             return dataTransfer;
         }
-        public async Task<List<ListAggregationForPermission>> GetListAggregationForPermission2Async(string userName)
+        public async Task<List<ListAggregationWithUsersPermission>> GetListAggregationForPermission2Async(string userName)
         {
             var listAggregatorsEntities = await _context.UserListAggregators
 
@@ -217,19 +217,19 @@ namespace EFDataBase
 
             var listAggregators = _mapper.Map<List<ListAggregator>>(listAggregatorsEntities);
 
-            var dataTransfer = new List<ListAggregationForPermission>();
+            var dataTransfer = new List<ListAggregationWithUsersPermission>();
 
 
             foreach (var listAggr in listAggregators)
             {
-                var tempListAggregationForPermission = new ListAggregationForPermission();
+                var tempListAggregationForPermission = new ListAggregationWithUsersPermission();
 
                 dataTransfer.Add(tempListAggregationForPermission);
 
-                tempListAggregationForPermission.ListAggregatorEntity = listAggr;
+                tempListAggregationForPermission.ListAggregator = listAggr;
 
 
-                tempListAggregationForPermission.Users = new List<UserPermissionToListAggregation>();
+                tempListAggregationForPermission.UsersPermToListAggr = new List<UserPermissionToListAggregation>();
 
 
                 var tempList = await _context.UserListAggregators.AsQueryable().Where(a => a.ListAggregatorId == listAggr.ListAggregatorId)
@@ -246,7 +246,7 @@ namespace EFDataBase
                     var tempUserPermissionToListAggregation = new UserPermissionToListAggregation();
 
 
-                    tempListAggregationForPermission.Users.Add(tempUserPermissionToListAggregation);
+                    tempListAggregationForPermission.UsersPermToListAggr.Add(tempUserPermissionToListAggregation);
 
                     tempUserPermissionToListAggregation.Permission = item.Permission;
                     tempUserPermissionToListAggregation.User = tempUser;
@@ -319,7 +319,7 @@ namespace EFDataBase
                 .Where(a => a.ListAggregatorId == listAggregationId).Select(a => a.UserId).ToListAsync();
         }
 
-        public async Task<List<ListAggregationForPermission>> GetListAggregationForPermission_EmptyAsync(int userId)
+        public async Task<List<ListAggregationWithUsersPermission>> GetListAggregationForPermission_EmptyAsync(int userId)
         {
             var listAggregatorsEntities = await _context.UserListAggregators
                .Include(a => a.ListAggregator).Where(a => a.UserId == userId && a.PermissionLevel == 1)
@@ -327,16 +327,16 @@ namespace EFDataBase
 
             var listAggregators = _mapper.Map<List<ListAggregator>>(listAggregatorsEntities);
 
-            return listAggregators.Select(a => new ListAggregationForPermission { ListAggregatorEntity = a }).ToList();
+            return listAggregators.Select(a => new ListAggregationWithUsersPermission { ListAggregator = a }).ToList();
         }
 
-        public async Task<ListAggregationForPermission> GetListAggregationForPermissionByListAggrIdAsync(ListAggregationForPermission listAggregationForPermission)
+        public async Task<ListAggregationWithUsersPermission> GetListAggregationForPermissionByListAggrIdAsync(ListAggregationWithUsersPermission listAggregationForPermission)
         { 
-            listAggregationForPermission.Users = new List<UserPermissionToListAggregation>();
+            listAggregationForPermission.UsersPermToListAggr = new List<UserPermissionToListAggregation>();
 
 
             var tempList = await _context.UserListAggregators.AsQueryable()
-            .Where(a => a.ListAggregatorId == listAggregationForPermission.ListAggregatorEntity.ListAggregatorId)
+            .Where(a => a.ListAggregatorId == listAggregationForPermission.ListAggregator.ListAggregatorId)
                 .Select(a => new { UserId = a.UserId, Permission = a.PermissionLevel }).ToListAsync();
 
 
@@ -350,7 +350,7 @@ namespace EFDataBase
                 var tempUserPermissionToListAggregation = new UserPermissionToListAggregation();
 
 
-                listAggregationForPermission.Users.Add(tempUserPermissionToListAggregation);
+                listAggregationForPermission.UsersPermToListAggr.Add(tempUserPermissionToListAggregation);
 
                 tempUserPermissionToListAggregation.Permission = item.Permission;
                 tempUserPermissionToListAggregation.User = tempUser;

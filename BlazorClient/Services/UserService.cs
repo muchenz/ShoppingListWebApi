@@ -242,12 +242,12 @@ namespace BlazorClient.Services
         }
 
 
-        public async Task<string> AddUserPermission(UserPermissionToListAggregation userPermissionToList, int listAggregationId)
+        public async Task<MessageAndStatus> AddUserPermission(UserPermissionToListAggregation userPermissionToList, int listAggregationId)
         {
             return await UniversalUserPermission(userPermissionToList, listAggregationId, "AddUserPermission");
         }
 
-        public async Task<string> ChangeUserPermission(UserPermissionToListAggregation userPermissionToList, int listAggregationId)
+        public async Task<MessageAndStatus> ChangeUserPermission(UserPermissionToListAggregation userPermissionToList, int listAggregationId)
         {
 
             return await UniversalUserPermission(userPermissionToList, listAggregationId, "ChangeUserPermission");
@@ -255,17 +255,17 @@ namespace BlazorClient.Services
         }
 
 
-        public async Task<string> DeleteUserPermission(UserPermissionToListAggregation userPermissionToList, int listAggregationId)
+        public async Task<MessageAndStatus> DeleteUserPermission(UserPermissionToListAggregation userPermissionToList, int listAggregationId)
         {
             return await UniversalUserPermission(userPermissionToList, listAggregationId, "DeleteUserPermission");
         }
 
-        public async Task<string> InviteUserPermission(UserPermissionToListAggregation userPermissionToList, int listAggregationId)
+        public async Task<MessageAndStatus> InviteUserPermission(UserPermissionToListAggregation userPermissionToList, int listAggregationId)
         {
             return await UniversalUserPermission(userPermissionToList, listAggregationId, "InviteUserPermission");
         }
 
-        private async Task<string> UniversalUserPermission(UserPermissionToListAggregation userPermissionToList, int listAggregationId,
+        private async Task<MessageAndStatus> UniversalUserPermission(UserPermissionToListAggregation userPermissionToList, int listAggregationId,
             string actionName)
         {
             var querry = new QueryBuilder();
@@ -296,12 +296,12 @@ namespace BlazorClient.Services
             {
                 var responseBody = await response.Content.ReadAsStringAsync();
 
-                var message = JsonConvert.DeserializeObject<ProblemDetails>(responseBody);
+                var problem = JsonConvert.DeserializeObject<ProblemDetails>(responseBody);
 
-                return message.Title;
+                return MessageAndStatus.Fail(problem.Title);
             }
 
-            return actionName switch
+            var message =  actionName switch
             {
                 "AddUserPermission" => "User was added.",
                 "ChangeUserPermission" => "Permission has changed.",
@@ -310,7 +310,7 @@ namespace BlazorClient.Services
                 _ => throw new ArgumentException("Bad action name.")
             };
 
-
+            return MessageAndStatus.Ok(message);
 
         }
 

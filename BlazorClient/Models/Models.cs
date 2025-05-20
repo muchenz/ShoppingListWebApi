@@ -30,7 +30,8 @@ namespace BlazorClient.Models
     }
     public class MessageAndStatus
     {
-        public bool IsError => Status != MessageSatus.OK;
+        public bool IsError => !IsSuccess;
+        public bool IsSuccess => Status == MessageSatus.OK;
         public string Status { get; set; }
         public string Message { get; set; }
 

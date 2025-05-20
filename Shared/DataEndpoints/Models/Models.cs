@@ -168,12 +168,12 @@ namespace Shared.DataEndpoints.Models
     }
 
 
-    public class ListAggregationForPermission
+    public class ListAggregationWithUsersPermission
     {
 
-        public ListAggregator ListAggregatorEntity { get; set; }
+        public ListAggregator ListAggregator { get; set; }
 
-        public List<UserPermissionToListAggregation> Users { get; set; }
+        public List<UserPermissionToListAggregation> UsersPermToListAggr { get; set; }
     }
 
     public class UserPermissionToListAggregation
