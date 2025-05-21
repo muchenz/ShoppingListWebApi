@@ -35,7 +35,8 @@
 
     int amount = 0;
     //TODO: mayby better OnInitializedAsync()
-    protected async override Task OnParametersSetAsync()
+    protected async override Task OnInitializedAsync()
+    //protected async override Task OnParametersSetAsync()
     {
 
         var isGid = await localStorage.ContainKeyAsync("gid");
@@ -125,7 +126,8 @@
             _userInfoService.SetStateInfo(_gid, (a) => a.ClientSignalRID = connectionId);
             return Task.CompletedTask;
         };
-        _tryingSignalRStart = false;
+        //TODO:form signalR - becareful, maybe Componet  lost reference to _hubConnection
+        //_tryingSignalRStart = false;
 
         _hubConnection.Closed += async (exception) =>
         {

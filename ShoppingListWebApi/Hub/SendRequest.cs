@@ -72,7 +72,7 @@ namespace ShoppingListWebApi.Hub
 
                 //tasks[i++] = Clients.Clients(sinalRIdList).SendAsync("ListItemAreChanged_" + item, command, id1, listAggregationId, parentId);
                 //tasks[i++] = Clients.AllExcept(signalRId).SendAsync("ListItemAreChanged_" + item, command, id1, listAggregationId, parentId);
-                tasks[i++] = Clients.All.SendAsync("ListItemAreChanged_" + item, command, id1, listAggregationId, parentId);
+                tasks[i++] = Clients.Users(list.Select(a=>a.ToString())).SendAsync("ListItemAreChanged_" + item, command, id1, listAggregationId, parentId);
                 //tasks[i++] = Clients.User(item.ToString()).SendAsync("ListItemAreChanged_" + item, command, id1, listAggregationId, parentId);
 
             }

