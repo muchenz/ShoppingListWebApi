@@ -120,7 +120,6 @@ namespace ShoppingListWebApi.Controllers
 
                         new TokenAndEmailData { Token = token, Email = user.EmailAddress }
                         );
-
                 }
 
             }

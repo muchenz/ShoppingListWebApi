@@ -49,6 +49,9 @@ namespace ShoppingListWebApi.Hub.Auth
                 // ustawić claim  nameidentifier na UserID
                 // to to żeby SignaR wukoszytsał to w Clients.User(item.ToString()).SendAsync("DataAreChanged_"+item)
 
+
+
+
                 god: var claims = new Claim[]
                      {
                          // new("user_id", cookie),

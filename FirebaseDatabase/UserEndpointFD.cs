@@ -25,7 +25,7 @@ namespace FirebaseDatabase
         CollectionReference _usersCol;
         CollectionReference _indexesCol;
 
-        public UserEndpointFD(IMapper mapper,ILogger<UserEndpointFD> logger)
+        public UserEndpointFD(IMapper mapper, ILogger<UserEndpointFD> logger)
         {
             logger.LogInformation($"constructor UserEndpointFD ");
 
@@ -611,68 +611,45 @@ namespace FirebaseDatabase
             return listPerm;
         }
 
-        public async Task<ListAggregationWithUsersPermission> GetListAggrWithUsersPermByListAggrIdAsync(ListAggregationWithUsersPermission listAggregationForPermission)
+        public async Task<List<UserPermissionToListAggregation>> GetListUsersPermissionByListAggrIdAsync(int listAggregatorId)
         {
-            var dataTransfer = new List<ListAggregationWithUsersPermission>();
+
+            var listUsersPermToListAggr = new List<UserPermissionToListAggregation>();
 
 
-
-            List<ListAggregator> listAggregators = new List<ListAggregator>();
-
-            listAggregators.Add(listAggregationForPermission.ListAggregator);
-
-            // TODO: foreach is not nessesery
-            foreach (var listAggr in listAggregators)
-            {
-                //var tempListAggregationForPermission = new ListAggregationForPermission();
-
-                // dataTransfer.Add(tempListAggregationForPermission);
-
-                // tempListAggregationForPermission.ListAggregatorEntity = listAggr;
-
-
-                listAggregationForPermission.UsersPermToListAggr = new List<UserPermissionToListAggregation>();
-
-
-                var tempListUserIdAndPermission = (await _userListAggrCol.WhereEqualTo(nameof(UserListAggregatorFD.ListAggregatorId), listAggr.ListAggregatorId)
-                                       .GetSnapshotAsync()).Select(a => a.ConvertTo<UserListAggregatorFD>()).Select(a =>
+            var tempListUserIdAndPermission = (await _userListAggrCol.WhereEqualTo(nameof(UserListAggregatorFD.ListAggregatorId), listAggregatorId)
+                                   .GetSnapshotAsync()).Select(a => a.ConvertTo<UserListAggregatorFD>()).Select(a =>
+                                   {
+                                       return new
                                        {
+                                           UserId = a.UserId,
+                                           Permission = a.PermissionLevel
+                                       };
 
-                                           return new
-                                           {
-                                               UserId = a.UserId,
-                                               Permission = a.PermissionLevel
-                                           };
-
-                                       }).ToList();
+                                   }).ToList();
 
 
-
-                var listUser = await FindUsersByListOfIdAsync(tempListUserIdAndPermission.Select(a => a.UserId));
-
-
-                foreach (var userR in listUser)
-                {
-                    // var tempUserFD = await FindUserByIdAsync(item.UserId);
-
-                    //var tempUser = _mapper.Map<User>(userResTask.Result);
-
-                    var tempUser = userR;
-
-                    var tempUserPermissionToListAggregation = new UserPermissionToListAggregation();
+            var listUser = await FindUsersByListOfIdAsync(tempListUserIdAndPermission.Select(a => a.UserId));
 
 
-                    listAggregationForPermission.UsersPermToListAggr.Add(tempUserPermissionToListAggregation);
+            foreach (var userR in listUser)
+            {
 
-                    tempUserPermissionToListAggregation.Permission = tempListUserIdAndPermission
-                                                                        .Single(a => a.UserId == userR.UserId).Permission;
-                    tempUserPermissionToListAggregation.User = tempUser;
+                var tempUser = userR;
 
-                }
+                var tempUserPermissionToListAggregation = new UserPermissionToListAggregation();
+
+
+                listUsersPermToListAggr.Add(tempUserPermissionToListAggregation);
+
+                tempUserPermissionToListAggregation.Permission = tempListUserIdAndPermission
+                                                                    .Single(a => a.UserId == userR.UserId).Permission;
+                tempUserPermissionToListAggregation.User = tempUser;
 
             }
 
-            return listAggregationForPermission;
+
+            return listUsersPermToListAggr;
 
         }
 

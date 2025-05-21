@@ -34,7 +34,7 @@
     string _gid = Guid.NewGuid().ToString();
 
     int amount = 0;
-
+    //TODO: mayby better OnInitializedAsync()
     protected async override Task OnParametersSetAsync()
     {
 
@@ -101,6 +101,7 @@
         _hubConnection = new HubConnectionBuilder().WithUrl(configuration.GetSection("AppSettings")["SignlRAddress"], (opts) =>
         {
             opts.Headers.Add("Access_Token", accessToken);
+            //opts.Headers.Add("Authorization", $"Bearer {accessToken}"); //for normal authorization in HUB
 
             opts.HttpMessageHandlerFactory = (message) =>
             {

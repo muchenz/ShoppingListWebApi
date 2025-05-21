@@ -29,7 +29,7 @@ namespace Shared.DataEndpoints.Abstaractions
         Task<List<ListAggregationWithUsersPermission>> GetListAggrWithUsersPermAsync(string userName);
         Task<List<ListAggregationWithUsersPermission>> GetListAggrWithUsersPerm2Async(string userName);
         Task<List<ListAggregationWithUsersPermission>> GetListAggrWithUsersPerm_EmptyAsync(int userId);
-        Task<ListAggregationWithUsersPermission> GetListAggrWithUsersPermByListAggrIdAsync(ListAggregationWithUsersPermission listAggregationForPermission);
+        Task<List<UserPermissionToListAggregation>> GetListUsersPermissionByListAggrIdAsync(int listAggregatorId);
 
         Task<List<UserListAggregator>> GetUserListAggrByUserId(int userId);
 

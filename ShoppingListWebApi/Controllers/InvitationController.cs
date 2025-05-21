@@ -38,6 +38,7 @@ namespace ShoppingListWebApi.Controllers
         [HttpPost("GetInvitationsList")]
         public async Task<ActionResult<MessageAndStatus>> GetInvitationsList(string userName)
         {
+            //TODO: 'userName' should be get from context
 
             var invitationsList = await _invitationEndpoint.GetInvitationsListAsync(userName);
 
@@ -53,7 +54,7 @@ namespace ShoppingListWebApi.Controllers
             await _invitationEndpoint.RejectInvitaionAsync(invitation);   
 
             var userId = User.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier).FirstOrDefault()?.Value;
-
+            //TODO: for what sending 'new_invitation'?? for refresh list with invitation??
             if (userId != null)
                 await _signarRService.SendRefreshMessageToUsersAsync(new List<int> { int.Parse(userId) }, 
                     "New_Invitation", signalRId: signalRId);
@@ -69,6 +70,7 @@ namespace ShoppingListWebApi.Controllers
             await _invitationEndpoint.AcceptInvitationAsync(invitation, userId);
 
            await _signarRService.SendRefreshMessageToUsersAsync(new List<int> { userId }, "New_Invitation", signalRId: signalRId);
+            //TODO: for what sending 'new_invitation'?? for refresh list with invitation??
 
             return await Task.FromResult(new MessageAndStatus { Status = "OK" });
         }

@@ -65,8 +65,7 @@ namespace ShoppingListWebApi
                   options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
                 ).AddApplicationPart(typeof(Startup).Assembly); ;
 
-            //services.AddDbContext<ShopingListDBContext>(options =>
-            //        options.UseSqlServer(Configuration.GetConnectionString("ShopingListDB2")));
+           
 
             ConfigureDB(services);
 
@@ -84,16 +83,25 @@ namespace ShoppingListWebApi
             // }
             //);
 
-           // services.AddDistributedMemoryCache();
-                       
+
+            //services.AddDistributedMemoryCache();
+
+            //-----------------------------------------------
+            //services.AddDbContext<ShopingListDBContext>(options =>
+            //       //options.UseSqlServer(Configuration.GetConnectionString("ShopingListDB2")));
+            //       options.UseSqlite(Configuration.GetConnectionString("ShopingListDB3")));
 
             //services.AddEFDatabase();
 
+            //---------------------------------------------
             //services.AddFirebasedDatabase();
 
+            //------------------------------------------------
             services.AddFirebaseCaschedDatabas();
             services.AddSingleton<CacheConveinient>();
             services.AddSingleton<IMiniDistributedCache, FirabaseCache>();
+            //-----------------------------------------------
+
             services.AddSingleton<ITokenService, TokenService>();
 
 

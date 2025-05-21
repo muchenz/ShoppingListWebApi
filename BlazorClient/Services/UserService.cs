@@ -144,7 +144,7 @@ namespace BlazorClient.Services
         }
 
 
-        public async Task<List<ListAggregationForPermission>> GetListAggrWithUsersPermAsync()
+        public async Task<List<ListAggregationWithUsersPermission>> GetListAggrWithUsersPermAsync()
         {
 
 
@@ -158,14 +158,14 @@ namespace BlazorClient.Services
 
             var data = await response.Content.ReadAsStringAsync();
 
-            var lists = JsonConvert.DeserializeObject<List<ListAggregationForPermission>>(data);
+            var lists = JsonConvert.DeserializeObject<List<ListAggregationWithUsersPermission>>(data);
 
             return lists;
         }
-        public async Task<List<ListAggregationForPermission>> GetListAggrWithUsersPerm_EmptyAsync()
+        public async Task<List<ListAggregationWithUsersPermission>> GetListAggrWithUsersPerm_EmptyAsync()
         {
 
-            var requestMessage = new HttpRequestMessage(HttpMethod.Post, "Permissions/ListAggregationWithUsersPermission_Empty");
+            var requestMessage = new HttpRequestMessage(HttpMethod.Get, "Permissions/ListAggregationWithUsersPermission_Empty");
 
 
             await SetRequestBearerAuthorizationHeader(requestMessage);
@@ -175,40 +175,34 @@ namespace BlazorClient.Services
 
             var data = await response.Content.ReadAsStringAsync();
 
-            var message = JsonConvert.DeserializeObject<MessageAndStatusAndData<List<ListAggregationForPermission>>>(data);
+            var list = JsonConvert.DeserializeObject<List<ListAggregationWithUsersPermission>>(data);
 
 
-            //  var dataObjects = JsonConvert.DeserializeObject<List<ListAggregationForPermissionTransferClass>>(data);
-            var dataObjects = message.Data;
-
-
-            return await Task.FromResult(dataObjects);
+            return list;
         }
 
-        public async Task<ListAggregationForPermission> GetListAggrWithUsersPermByListAggrId
-            (ListAggregationForPermission listAggregationForPermission)
+        public async Task<List<UserPermissionToListAggregation>> GetUsersPermissionByListAggrId
+            (int listAggregationId)
         {
 
-            var requestMessage = new HttpRequestMessage(HttpMethod.Post, "Permissions/ListAggregationWithUsersPermissionByListAggrId");
+            var querry = new QueryBuilder();
 
-            requestMessage.Content = new StringContent(JsonConvert.SerializeObject(listAggregationForPermission));
+            querry.Add("listAggregationId", listAggregationId.ToString());
+
+            var requestMessage = new HttpRequestMessage(HttpMethod.Get,
+                "Permissions/ListUsersPermissionByListAggrId" + querry.ToString());
+
 
             await SetRequestBearerAuthorizationHeader(requestMessage);
-            requestMessage.Content.Headers.ContentType
-              = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
+            SetRequestAuthorizationLevelHeader(requestMessage, listAggregationId);
 
             var response = await _httpClient.SendAsync(requestMessage);
 
             var data = await response.Content.ReadAsStringAsync();
 
-            var message = JsonConvert.DeserializeObject<MessageAndStatusAndData<ListAggregationForPermission>>(data);
+            var list = JsonConvert.DeserializeObject<List<UserPermissionToListAggregation>>(data);
 
-
-            //  var dataObjects = JsonConvert.DeserializeObject<List<ListAggregationForPermissionTransferClass>>(data);
-            var dataObjects = message.Data;
-
-
-            return await Task.FromResult(dataObjects);
+            return list;
         }
 
 

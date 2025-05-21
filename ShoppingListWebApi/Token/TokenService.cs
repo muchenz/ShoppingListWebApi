@@ -1,5 +1,7 @@
 ﻿using EFDataBase;
+using FirebaseDatabase;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Shared.DataEndpoints.Abstaractions;
 using System;
@@ -15,19 +17,24 @@ namespace ShoppingListWebApi.Token;
 public class TokenService : ITokenService
 {
     private readonly IConfiguration _configuration;
-    private readonly IUserEndpoint _userEndpoint;
+    private readonly IServiceProvider _serviceProvider;
 
-    public TokenService(IConfiguration configuration, IUserEndpoint userEndpoint)
+    public TokenService(IConfiguration configuration, IServiceProvider serviceProvider)
     {
         _configuration = configuration;
-        _userEndpoint = userEndpoint;
+        _serviceProvider = serviceProvider;
     }
 
 
 
     public async Task<string> GenerateToken(int userId)
     {
-        var user = await _userEndpoint.GetUserWithRolesAsync(userId);
+        using var scope =  _serviceProvider.CreateScope();
+
+        var userEndpoint = scope.ServiceProvider.GetRequiredService<IUserEndpoint>();   
+
+
+        var user = await userEndpoint.GetUserWithRolesAsync(userId);
 
         var claims = new List<Claim> {
             new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
@@ -43,7 +50,7 @@ public class TokenService : ITokenService
 
         user.Roles.ToList().ForEach(role => claims.Add(new Claim(ClaimTypes.Role, role)));
 
-        var userListAggregators = await _userEndpoint.GetUserListAggrByUserId(userId);
+        var userListAggregators = await userEndpoint.GetUserListAggrByUserId(userId);
 
         userListAggregators.ForEach(item => claims.Add(new Claim("ListAggregator", $"{item.ListAggregatorId}.{item.PermissionLevel}")));
 
@@ -73,12 +80,17 @@ public class TokenService : ITokenService
 
     public async Task<string> GenerateAccessTokenAsync(int userId)
     {
+        using var scope = _serviceProvider.CreateScope();
+
+        var userEndpoint = scope.ServiceProvider.GetRequiredService<IUserEndpoint>();
+
+
         var tokenHandler = new JwtSecurityTokenHandler();
 
         var key = Encoding.UTF8.GetBytes(_configuration.GetSection("Secrets")["JWTSecurityKey"]);
 
 
-        var roles = await _userEndpoint.GetUserRolesByUserIdAsync(userId);
+        var roles = await userEndpoint.GetUserRolesByUserIdAsync(userId);
         var claims = new List<Claim>();
 
         claims.Add(new Claim(ClaimTypes.Name, Convert.ToString(userId)));

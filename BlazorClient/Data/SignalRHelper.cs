@@ -190,8 +190,11 @@ namespace BlazorClient.Data
 
 
                         var tempList = data.ListAggregators.Where(a => a.ListAggregatorId == listAggregationId).FirstOrDefault().
-                       Lists.Where(a => a.ListId == parentId).FirstOrDefault();
-                       tempList.ListItems.Insert(0,item);
+                            Lists.Where(a => a.ListId == parentId).FirstOrDefault();
+                        if (!tempList.ListItems.Any(a => a.ListItemId == item.ListItemId))
+                        {
+                            tempList.ListItems.Insert(0, item);
+                        }
                         //tempList.ListItems=new List<ListItem>() { };
 
                         await StateHasChangedAysnc();

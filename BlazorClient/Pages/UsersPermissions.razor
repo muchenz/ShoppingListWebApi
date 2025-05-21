@@ -204,7 +204,7 @@
 
 @code
 {
-    List<ListAggregationForPermission> data;
+    List<ListAggregationWithUsersPermission> data;
 
     UserPermissionToListAggregation addEditUser = new UserPermissionToListAggregation { Permission = 2, User = new User() };
 
@@ -370,18 +370,18 @@
 
     int chosedListAggrId;
 
-    async Task ListAggregationClicked(ListAggregationForPermission item)
+    async Task ListAggregationClicked(ListAggregationWithUsersPermission item)
     {
 
         //chosedListPermission = item.Users;
         //chosedListAggrId = item.ListAggregatorEntity.ListAggregatorId;
 
-        ListAggregationForPermission dataNew = null;
+        List<UserPermissionToListAggregation> dataNew = null;
         if (item.UsersPermToListAggr == null)
         {
 
-            dataNew = await userService.GetListAggrWithUsersPermByListAggrId(item);
-            item.UsersPermToListAggr = dataNew.UsersPermToListAggr;
+            dataNew = await userService.GetUsersPermissionByListAggrId(item.ListAggregator.Id);
+            item.UsersPermToListAggr = dataNew;
         }
         chosedListPermission = item.UsersPermToListAggr;
         chosedListAggrId = item.ListAggregator.ListAggregatorId;

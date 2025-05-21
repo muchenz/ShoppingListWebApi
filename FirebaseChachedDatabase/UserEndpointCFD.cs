@@ -269,9 +269,9 @@ namespace FirebaseChachedDatabase
         {
             var result = await _cache.GetOrAddAsync(
                "userId_" + userId
-               , ()=>_userEndpointFD.GetUserListAggrByUserId(userId));
+               , () => _userEndpointFD.GetUserListAggrByUserId(userId));
 
-            var data = result.Value.Any(a=>a.UserId==userId && a.ListAggregatorId==listAggregatorId);
+            var data = result.Value.Any(a => a.UserId == userId && a.ListAggregatorId == listAggregatorId);
 
             //return _userEndpointFD.IsUserHasListAggregatorAsync(userId, listAggregatorId);
             return data;
@@ -286,15 +286,15 @@ namespace FirebaseChachedDatabase
                   {
                       userListAggr.Add(new UserListAggregator
                       {
-                          ListAggregatorId= listAggregationId,
-                          PermissionLevel=permission,
-                          UserId=userId
-                          
-                      }); 
+                          ListAggregatorId = listAggregationId,
+                          PermissionLevel = permission,
+                          UserId = userId
+
+                      });
                       return Task.FromResult(userListAggr);
                   });
 
-             await _userEndpointFD.AddUserListAggregationAsync(userId, listAggregationId, permission);
+            await _userEndpointFD.AddUserListAggregationAsync(userId, listAggregationId, permission);
         }
 
         public Task<bool> IsUserInvitatedToListAggregationAsync(string userName, int listAggregationId)
@@ -362,24 +362,23 @@ namespace FirebaseChachedDatabase
         }
 
 
-        public async Task<List<ListAggregationWithUsersPermission>>  GetListAggregationForPermissionAsync_cached(string userName)
+        public async Task<List<ListAggregationWithUsersPermission>> GetListAggregationForPermissionAsync_cached(string userName)
         {
-            List<ListAggregationWithUsersPermission> newList = new List<ListAggregationWithUsersPermission>();
 
-            var lists = await GetListAggregationForPermission_EmptyAsync(userName);
+            var lists = await GetListAggrWithUsersPerm_EmptyAsync(userName);
 
             foreach (var list in lists)
             {
-                newList.Add(await GetListAggrWithUsersPermByListAggrIdAsync(list));
+
+                list.UsersPermToListAggr = await GetListUsersPermissionByListAggrIdAsync(list.ListAggregator.ListAggregatorId);
             }
 
-            //lists.ForEach(async a => newList.Add(await GetListAggregationForPermissionByListAggrIdAsync(a)));
 
-            return newList;
+            return lists;
         }
 
 
-        public  Task<List<ListAggregationWithUsersPermission>> GetListAggrWithUsersPermAsync(string userName)
+        public Task<List<ListAggregationWithUsersPermission>> GetListAggrWithUsersPermAsync(string userName)
         {
 
             return GetListAggregationForPermissionAsync_cached(userName);
@@ -389,7 +388,7 @@ namespace FirebaseChachedDatabase
 
         public Task<List<ListAggregationWithUsersPermission>> GetListAggrWithUsersPerm2Async(string userName)
         {
-            return  GetListAggregationForPermissionAsync_cached(userName);
+            return GetListAggregationForPermissionAsync_cached(userName);
 
             //return _userEndpointFD.GetListAggregationForPermission2Async(userName);
         }
@@ -448,7 +447,7 @@ namespace FirebaseChachedDatabase
             return _mapper.Map<User>(userFD);
         }
 
-        async Task<List<ListAggregationWithUsersPermission>> GetListAggregationForPermission_EmptyAsync(string userName)
+        async Task<List<ListAggregationWithUsersPermission>> GetListAggrWithUsersPerm_EmptyAsync(string userName)
         {
             var userTree = await GetTreeAsync(userName);
 
@@ -464,16 +463,16 @@ namespace FirebaseChachedDatabase
             }).ToList();
 
             // return _userEndpointFD.GetListAggregationForPermission_EmptyAsync(userId);
-        
+
         }
         public async Task<List<ListAggregationWithUsersPermission>> GetListAggrWithUsersPerm_EmptyAsync(int userId)
         {
             var user = await GetUserById(userId);
 
-            return await GetListAggregationForPermission_EmptyAsync(user.EmailAddress);
-        }   
+            return await GetListAggrWithUsersPerm_EmptyAsync(user.EmailAddress);
+        }
 
-        public async Task<ListAggregationWithUsersPermission> GetListAggrWithUsersPermByListAggrIdAsync(ListAggregationWithUsersPermission listAggregationForPermission)
+        public async Task<List<UserPermissionToListAggregation>> GetListUsersPermissionByListAggrIdAsync(int listAggregatorId)
         {
             //var cashed = await _cache
             //    .GetAsync<ListAggregationForPermission>("ListAggregationForPermission_" + listAggregationForPermission.ListAggregatorEntity.ListAggregatorId);
@@ -488,8 +487,8 @@ namespace FirebaseChachedDatabase
             //await _cache.SetAsync("ListAggregationForPermission_" + listAggregationForPermission.ListAggregatorEntity.ListAggregatorId, data);
 
             var result = await _cache.GetOrAddAsync(
-                "ListAggregationForPermission_" + listAggregationForPermission.ListAggregator.ListAggregatorId
-                , () => _userEndpointFD.GetListAggrWithUsersPermByListAggrIdAsync(listAggregationForPermission));
+                "ListUsersPermissionByListAggrId" + listAggregatorId
+                , () => _userEndpointFD.GetListUsersPermissionByListAggrIdAsync(listAggregatorId));
 
             var data = result.Value;
             return data;

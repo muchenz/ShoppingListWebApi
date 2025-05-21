@@ -189,8 +189,8 @@ public class PermissionsController : ControllerBase
     }
 
     [Authorize]
-    [HttpPost("ListAggregationWithUsersPermission_Empty")]
-    public async Task<ActionResult<MessageAndStatusAndData<List<ListAggregationWithUsersPermission>>>> GetListAggregationForPermission_Empty()
+    [HttpGet("ListAggregationWithUsersPermission_Empty")]
+    public async Task<List<ListAggregationWithUsersPermission>> GetListAggregationForPermission_Empty()
     {
 
         var sUnerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -200,20 +200,19 @@ public class PermissionsController : ControllerBase
         var dataTransfer = await _userEndpoint.GetListAggrWithUsersPerm_EmptyAsync(userId);
 
 
-        return MessageAndStatusAndData<List<ListAggregationWithUsersPermission>>.Ok(dataTransfer);
+        return dataTransfer;
 
     }
 
-    // TODO: must be admin on ListAggrId:   [SecurityLevel(1)]
     [Authorize]
-    [HttpPost("ListAggregationWithUsersPermissionByListAggrId")] // TODO: only ListAggrId is enough
-    public async Task<ActionResult<MessageAndStatusAndData<ListAggregationWithUsersPermission>>>
-        GetListAggregationForPermissionByListAggrId([FromBody] ListAggregationWithUsersPermission listAggregationForPermission)
+    [SecurityLevel(1)]
+    [HttpGet("ListUsersPermissionByListAggrId")] 
+    public async Task<List<UserPermissionToListAggregation>>ListUsersPermissionByListAggrId(int listAggregationId)
     {
 
-        var data = await _userEndpoint.GetListAggrWithUsersPermByListAggrIdAsync(listAggregationForPermission);
+        var data = await _userEndpoint.GetListUsersPermissionByListAggrIdAsync(listAggregationId);
 
-        return MessageAndStatusAndData<ListAggregationWithUsersPermission>.Ok(data);
+        return data;
 
     }
 }

@@ -118,7 +118,7 @@ namespace BlazorClient.Models
         }
 
     }
-    public class ListAggregationForPermission
+    public class ListAggregationWithUsersPermission
     {
 
         public ListAggregator ListAggregator { get; set; }
