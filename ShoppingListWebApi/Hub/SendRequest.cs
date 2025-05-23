@@ -33,7 +33,7 @@ namespace ShoppingListWebApi.Hub
             await Task.WhenAll(tasks);
         }
 
-        public async Task SendAsyncNewIvitation(IEnumerable<int> list, string signalRId)
+        public async Task SendAsyncIvitationChanged(IEnumerable<int> list, string signalRId)
         {
 
             Task[] tasks = new Task[list.Count()];
@@ -43,7 +43,7 @@ namespace ShoppingListWebApi.Hub
             {
 
                 //tasks[i++] = Clients.AllExcept(signalRId).SendAsync("NewInvitation_" + item);
-                tasks[i++] = Clients.All.SendAsync("NewInvitation_" + item);
+                tasks[i++] = Clients.All.SendAsync("InvitationAreChanged_" + item);
                 //tasks[i++] = Clients.User(item.ToString()).SendAsync("NewInvitation_" + item);
 
             }
@@ -52,8 +52,36 @@ namespace ShoppingListWebApi.Hub
         }
 
         //[Authorize(policy:"HUB")]
-        public async Task SendAsyncListItem(IEnumerable<int> list, string command, int? id1, int? listAggregationId
-            , int? parentId, string signalRId)
+        //public async Task SendAsyncListItem(IEnumerable<int> list, string command, int? id1, int? listAggregationId
+        //    , int? parentId, string signalRId)
+        //{
+        //    var userID = this.Context.UserIdentifier;
+
+        //    //var sinalRIdList = ConnectedUser.GetIdentifiers(list.ToList(), signalRId);
+
+
+        //    Task[] tasks = new Task[list.Count()];
+        //    int i = 0;
+
+        //    //var listId = ConnectedUser.Ids.Where(a => a != signalRId && a != Context.ConnectionId).ToList();
+
+        //    foreach (var item in list)
+        //    {
+        //        var a = Clients.Others;
+        //        var b = Clients.All;
+
+        //        //tasks[i++] = Clients.Clients(sinalRIdList).SendAsync("ListItemAreChanged_" + item, command, id1, listAggregationId, parentId);
+        //        //tasks[i++] = Clients.AllExcept(signalRId).SendAsync("ListItemAreChanged_" + item, command, id1, listAggregationId, parentId);
+        //        tasks[i++] = Clients.Users(list.Select(a=>a.ToString())).SendAsync("ListItemAreChanged_" + item, command, id1, listAggregationId, parentId);
+        //        //tasks[i++] = Clients.User(item.ToString()).SendAsync("ListItemAreChanged_" + item, command, id1, listAggregationId, parentId);
+
+        //    }
+
+        //    await Task.WhenAll(tasks);
+        //}
+
+
+        public async Task SendAsyncListItem(IEnumerable<int> list, string eventName, object signalREvent)
         {
             var userID = this.Context.UserIdentifier;
 
@@ -72,13 +100,14 @@ namespace ShoppingListWebApi.Hub
 
                 //tasks[i++] = Clients.Clients(sinalRIdList).SendAsync("ListItemAreChanged_" + item, command, id1, listAggregationId, parentId);
                 //tasks[i++] = Clients.AllExcept(signalRId).SendAsync("ListItemAreChanged_" + item, command, id1, listAggregationId, parentId);
-                tasks[i++] = Clients.Users(list.Select(a=>a.ToString())).SendAsync("ListItemAreChanged_" + item, command, id1, listAggregationId, parentId);
+                tasks[i++] = Clients.Users(list.Select(a => a.ToString())).SendAsync("ListItemAreChanged_"+item, signalREvent);
                 //tasks[i++] = Clients.User(item.ToString()).SendAsync("ListItemAreChanged_" + item, command, id1, listAggregationId, parentId);
 
             }
 
             await Task.WhenAll(tasks);
         }
+
         //----------------------------------
         public override Task OnConnectedAsync()
         {

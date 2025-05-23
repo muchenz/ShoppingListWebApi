@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Shared.DataEndpoints.Models;
 using SignalRService;
 using System;
 using System.Collections.Generic;
@@ -30,7 +31,8 @@ namespace ServiceMediatR.SignalREvents
         }
         public async Task Handle(DataChangedEvent notification, CancellationToken cancellationToken)
         {
-            await _signarRService.SendRefreshMessageToUsersAsync(notification.UserList, signalRId:notification.SignalRId);
+            await _signarRService.SendRefreshMessageToUsersAsync(notification.UserList, 
+                            SiganalREventName.DataAreChanged, notification.SignalRId);
         }
     }
 }

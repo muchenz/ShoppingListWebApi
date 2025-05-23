@@ -66,7 +66,8 @@ public class PermissionsController : ControllerBase
         await _userEndpoint.AddInvitationAsync(item.User.EmailAddress, listAggregationId, item.Permission, senderName);
 
 
-        await _signarRService.SendRefreshMessageToUsersAsync(new List<int> { user.UserId }, "New_Invitation", signalRId: signalRId);
+        await _signarRService.SendRefreshMessageToUsersAsync(new List<int> { user.UserId },
+            SiganalREventName.InvitationAreChanged, signalRId: signalRId);
 
         return Ok("Ivitation was added.");
     }

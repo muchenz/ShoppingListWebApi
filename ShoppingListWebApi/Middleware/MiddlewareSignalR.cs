@@ -38,8 +38,7 @@ namespace ShoppingListWebApi.Handlers
                 int id1 = int.Parse(respons.Headers["id1"]);
                 int id2 = int.Parse(respons.Headers["id2"]);
 
-                var userList = await userEndpoint.GetUserIdsFromListAggrIdAsync(id2);
-                await _mediator.Publish(new AddEditSaveDeleteListItemEvent(userList, "Edit/Save_ListItem", id1, id2));
+                await _mediator.Publish(new ListItemEditedSignalREvent( id1, id2, null));
 
             }
         }

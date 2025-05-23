@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Shared.DataEndpoints.Models;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -14,7 +15,7 @@ namespace SignalRService
         private readonly IConfiguration _configuration;
         private readonly IServiceProvider _serviceProvider;
         HubConnection _hubConnection;
-       
+
         public SignarRService(IConfiguration configuration, IServiceProvider serviceProvider)
         {
             _configuration = configuration;
@@ -37,8 +38,7 @@ namespace SignalRService
 
         }
 
-        public async Task SendRefreshMessageToUsersAsync(IEnumerable<int> usersIds, string command = null, int? id1 = null
-            , int? listAggregationId = null, int? parentId = null, string signalRId = null)
+        public async Task SendRefreshMessageToUsersAsync(IEnumerable<int> usersIds, string eventName=null, string signalRId = null)
         {
             using (var scope = _serviceProvider.CreateScope())
             {
@@ -46,26 +46,38 @@ namespace SignalRService
 
                 try
                 {
-                    if (_hubConnection.State == HubConnectionState.Disconnected)
+                    await RestartHub();
+                  
+                    if (eventName == SiganalREventName.InvitationAreChanged)
                     {
-                        System.Diagnostics.Debug.Write("-------------------------------------------------HUB START ___________________________________");
-                        await _hubConnection.StartAsync();
-                    }
-
-                    //  var aaa = await _context.UserListAggregators.Where(a => a.ListAggregatorId == listAggrId).Select(a => a.UserId).ToListAsync();
-                    if (command == "Edit/Save_ListItem" || command == "Add_ListItem" || command == "Delete_ListItem")
-                    {
-                        await _hubConnection.SendAsync("SendAsyncListItem", usersIds, command, id1, listAggregationId
-                            , parentId, signalRId);
-                    }
-                    else if (command == "New_Invitation")
-                    {
-                        await _hubConnection.SendAsync("SendAsyncNewIvitation", usersIds, signalRId);
+                        await _hubConnection.SendAsync("SendAsyncIvitationChanged", usersIds, signalRId);
                     }
                     else
                     {
                         await _hubConnection.SendAsync("SendAsyncAllTree", usersIds, signalRId);
                     }
+
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "exxxxxxxxxxxxxx");
+                }
+            }
+        }
+        
+
+        public async Task SendListItemRefreshMessageToUsersAsync(IEnumerable<int> usersIds, string eventName, string signalREvent)
+        {
+            using (var scope = _serviceProvider.CreateScope())
+            {
+                var logger = scope.ServiceProvider.GetRequiredService<ILogger<object>>();
+
+                try
+                {
+                    await RestartHub();
+
+                    await _hubConnection.SendAsync("SendAsyncListItem", usersIds, eventName, signalREvent);
+
 
                 }
                 catch (Exception ex)
@@ -77,6 +89,15 @@ namespace SignalRService
 
         }
 
+
+        async Task RestartHub()
+        {
+            if (_hubConnection.State == HubConnectionState.Disconnected)
+            {
+                System.Diagnostics.Debug.Write("-------------------------------------------------HUB START ___________________________________");
+                await _hubConnection.StartAsync();
+            }
+        }
 
     }
 

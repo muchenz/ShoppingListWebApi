@@ -303,4 +303,19 @@ namespace BlazorClient.Models
 
     }
 
+    public static class SiganalREventName
+    {
+        public const string ListItemEdited = nameof(ListItemEdited);
+        public const string ListItemAdded = nameof(ListItemAdded);
+        public const string ListItemDeleted = nameof(ListItemDeleted);
+        public const string InvitationAreChanged = nameof(InvitationAreChanged);
+        public const string DataAreChanged = nameof(DataAreChanged);
+    }
+
+    public record SignaREnvelope(string SignalRId, string SiglREventName, string SerializedEvent);
+    public record ListItemAddedSignalREvent(int ListItemId, int ListAggregationId, int ListId);
+    public record ListItemDeletedSignalREvent(int ListItemId, int ListAggregationId);
+    public record ListItemEditedSignalREvent(int ListItemId, int ListAggregationId);
+
 }
+

@@ -24,7 +24,7 @@ namespace FirebaseChachedDatabase
 
             await _invitation.AcceptInvitationAsync(invitation, userId);
 
-            var listUsAggr = await _cache.GetAsync<List<UserListAggregatorFD>>("userId_" + userId);
+            var listUsAggr = await _cache.GetAsync<List<UserListAggregatorFD>>(Dictionary.UserId + userId);
 
             if (listUsAggr != null)
             {
@@ -35,21 +35,22 @@ namespace FirebaseChachedDatabase
                     UserId = userId
                 });
 
-                await _cache.SetAsync("userId_" + userId, listUsAggr);
+                await _cache.SetAsync(Dictionary.UserId + userId, listUsAggr);
             }
 
-            var listPermCached = await _cache.GetAsync<ListAggregationWithUsersPermission>("ListAggregationForPermission_" + invitation.ListAggregatorId);
+            var listPermCached = await _cache.GetAsync<List<UserPermissionToListAggregation>>(Dictionary.UserPermisionListByListAggrID
+                + invitation.ListAggregatorId);
 
             if (listPermCached != null)
             {
-                listPermCached.UsersPermToListAggr.Add(new UserPermissionToListAggregation
+                listPermCached.Add(new UserPermissionToListAggregation
                 {
                     Permission = invitation.PermissionLevel
                     , User=new User { UserId=userId, EmailAddress=invitation.EmailAddress }
 
                 }) ;
 
-                await _cache.SetAsync("ListAggregationForPermission_" + invitation.ListAggregatorId, listPermCached);
+                await _cache.SetAsync(Dictionary.UserPermisionListByListAggrID + invitation.ListAggregatorId, listPermCached);
             }
 
         }

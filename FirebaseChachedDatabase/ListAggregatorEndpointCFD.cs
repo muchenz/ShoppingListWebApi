@@ -26,7 +26,7 @@ namespace FirebaseChachedDatabase
         {
             var addedListAggr = await _listAggregatorEndpoint.AddListAggregatorAsync(listAggregator, parentId);
 
-            var cashedListAggr = await _cache.GetAsync<List<UserListAggregator>>("userId_" + parentId);
+            var cashedListAggr = await _cache.GetAsync<List<UserListAggregator>>(Dictionary.UserId + parentId);
 
             if (cashedListAggr != null)
             {
@@ -36,7 +36,7 @@ namespace FirebaseChachedDatabase
                     UserId = parentId,
                     PermissionLevel = 1
                 });
-                await _cache.SetAsync("userId_" + parentId, cashedListAggr);
+                await _cache.SetAsync(Dictionary.UserId+ parentId, cashedListAggr);
             }
 
             await _cache.SetAsync(addedListAggr.ListAggregatorId, addedListAggr);
@@ -69,7 +69,7 @@ namespace FirebaseChachedDatabase
 
             foreach (var item in listUseListAggr)
             {
-                var listUsAggr = await _cache.GetAsync<List<UserListAggregatorFD>>("userId_" + item.UserId);
+                var listUsAggr = await _cache.GetAsync<List<UserListAggregatorFD>>(Dictionary.UserId + item.UserId);
 
                 var tempToDelete = listUsAggr?.Where(a => a.ListAggregatorId == listAggregationId)
                     .FirstOrDefault();
@@ -78,7 +78,7 @@ namespace FirebaseChachedDatabase
                 {
                     listUsAggr.Remove(tempToDelete);
 
-                    await _cache.SetAsync("userId_" + item.UserId, listUsAggr);
+                    await _cache.SetAsync(Dictionary.UserId + item.UserId, listUsAggr);
 
                 }
 

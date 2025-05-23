@@ -57,7 +57,7 @@ namespace ShoppingListWebApi.Controllers
             //TODO: for what sending 'new_invitation'?? for refresh list with invitation??
             if (userId != null)
                 await _signarRService.SendRefreshMessageToUsersAsync(new List<int> { int.Parse(userId) }, 
-                    "New_Invitation", signalRId: signalRId);
+                    SiganalREventName.InvitationAreChanged, signalRId: signalRId);
 
             return await Task.FromResult(new MessageAndStatus { Status = "OK" });
         }
@@ -69,7 +69,9 @@ namespace ShoppingListWebApi.Controllers
 
             await _invitationEndpoint.AcceptInvitationAsync(invitation, userId);
 
-           await _signarRService.SendRefreshMessageToUsersAsync(new List<int> { userId }, "New_Invitation", signalRId: signalRId);
+           await _signarRService.SendRefreshMessageToUsersAsync(new List<int> { userId }, 
+               SiganalREventName.InvitationAreChanged, signalRId: signalRId);
+
             //TODO: for what sending 'new_invitation'?? for refresh list with invitation??
 
             return await Task.FromResult(new MessageAndStatus { Status = "OK" });

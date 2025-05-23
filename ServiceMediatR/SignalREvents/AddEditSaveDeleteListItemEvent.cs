@@ -1,54 +1,110 @@
 ﻿using MediatR;
+using ServiceMediatR.UserCommandAndQuerry;
+using Shared.DataEndpoints.Abstaractions;
+using Shared.DataEndpoints.Models;
 using SignalRService;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace ServiceMediatR.SignalREvents
 {
-    public class AddEditSaveDeleteListItemEvent: INotification
-    {
-      
 
-        public AddEditSaveDeleteListItemEvent(IEnumerable<int> usersIds, string command = null, int? id1 = null, int? listAggregationId = null
-            , int? parentId = null, string signalRId = null)
-        {
-            UsersIds = usersIds;
-            Command = command;
-            Id1 = id1;
-            ListAggregationId = listAggregationId;
-            ParentId = parentId;
-            SignalRId = signalRId;
-        }
 
-        public IEnumerable<int> UsersIds { get; }
-        public string Command { get; }
-        public int? Id1 { get; }
-        public int? ListAggregationId { get; }
-        public int? ParentId { get; }
-        public string SignalRId { get; }
-    }
 
-    public class AddEditSaveDeleteListItemHandler : INotificationHandler<AddEditSaveDeleteListItemEvent>
+    public record ListItemAddedSignalRNotification(int ListItemId, int ListAggregationId, int ListId, string SignalRId):INotification;
+    public record ListItemDeletedSignalRNotification(int ListItemId, int ListAggregationId, string SignalRId) : INotification;
+    public record ListItemEditedSignalRNotification(int ListItemId, int ListAggregationId, string SignalRId) :INotification;
+
+
+
+    public record SignaREnvelope(string SignalRId, string SiglREventName,  string SerializedEvent );
+    public record ListItemAddedSignalREvent(int ListItemId, int ListAggregationId, int ListId);
+    public record ListItemDeletedSignalREvent(int ListItemId, int ListAggregationId);
+    public record ListItemEditedSignalREvent(int ListItemId, int ListAggregationId);
+
+    public class AddListItemSignalREventHandler : INotificationHandler<ListItemAddedSignalRNotification>
     {
         private readonly SignarRService _signarRService;
+        private readonly IUserEndpoint _userEndpoint;
 
-        public AddEditSaveDeleteListItemHandler(SignarRService signarRService)
+        public AddListItemSignalREventHandler(SignarRService signarRService, IUserEndpoint userEndpoint)
         {
             _signarRService = signarRService;
+            _userEndpoint = userEndpoint;
         }
 
-        public async Task Handle(AddEditSaveDeleteListItemEvent item, CancellationToken cancellationToken)
+        public async Task Handle(ListItemAddedSignalRNotification item, CancellationToken cancellationToken)
         {
 
-            await _signarRService.SendRefreshMessageToUsersAsync(item.UsersIds,
-                item.Command,
-                item.Id1,
-                item.ListAggregationId,item.ParentId, item.SignalRId);
+            var userList = await _userEndpoint.GetUserIdsFromListAggrIdAsync(item.ListAggregationId);
+
+            var envelope = new SignaREnvelope(item.SignalRId, SiganalREventName.ListItemAdded,
+                         JsonSerializer.Serialize(new ListItemAddedSignalREvent(item.ListItemId, item.ListAggregationId, item.ListId)));
+
+            await _signarRService.SendListItemRefreshMessageToUsersAsync(userList,
+              envelope.SiglREventName,
+              JsonSerializer.Serialize(item));
         }
 
+
+    }
+
+    public class DeleteListItemSignalREventHandler : INotificationHandler<ListItemDeletedSignalRNotification>
+    {
+        private readonly SignarRService _signarRService;
+        private readonly IUserEndpoint _userEndpoint;
+
+        public DeleteListItemSignalREventHandler(SignarRService signarRService, IUserEndpoint userEndpoint)
+        {
+            _signarRService = signarRService;
+            _userEndpoint = userEndpoint;
+        }
+
+        public async Task Handle(ListItemDeletedSignalRNotification item, CancellationToken cancellationToken)
+        {
+
+            var userList = await _userEndpoint.GetUserIdsFromListAggrIdAsync(item.ListAggregationId);
+
+            var envelope = new SignaREnvelope(item.SignalRId, SiganalREventName.ListItemDeleted,
+                                JsonSerializer.Serialize(new ListItemDeletedSignalREvent(item.ListItemId, item.ListAggregationId)));
+
+            await _signarRService.SendListItemRefreshMessageToUsersAsync(userList,
+                envelope.SiglREventName,
+               JsonSerializer.Serialize(envelope));
+        }
+
+        public class EditListItemSignalREventHandler : INotificationHandler<ListItemEditedSignalRNotification>
+        {
+            private readonly SignarRService _signarRService;
+            private readonly IUserEndpoint _userEndpoint;
+
+            public EditListItemSignalREventHandler(SignarRService signarRService, IUserEndpoint userEndpoint)
+            {
+                _signarRService = signarRService;
+                _userEndpoint = userEndpoint;
+            }
+
+            public async Task Handle(ListItemEditedSignalRNotification item, CancellationToken cancellationToken)
+            {
+
+                var userList = await _userEndpoint.GetUserIdsFromListAggrIdAsync(item.ListAggregationId);
+
+                var envelope = new SignaREnvelope(item.SignalRId, SiganalREventName.ListItemEdited,
+                         JsonSerializer.Serialize(new ListItemEditedSignalREvent(item.ListItemId, item.ListAggregationId)));
+
+
+                await _signarRService.SendListItemRefreshMessageToUsersAsync(userList,
+               envelope.SiglREventName,
+               JsonSerializer.Serialize(envelope));
+            }
+
+
+        }
 
     }
 }

@@ -55,7 +55,6 @@ namespace ShoppingListWebApi.Controllers
         public async Task<ActionResult<ListItem>> AddListItemToListt(int parentId, [FromBody] ListItem item
             , int listAggregationId, [FromHeader] string signalRId)
         {
-            //Task task = WebApiHelper.SendMessageToUserAsync(listAggregationId, _context, _hubConnection);
 
             if (!await CheckIntegrityListAsync(parentId, listAggregationId)) return Forbid();
 
@@ -65,13 +64,9 @@ namespace ShoppingListWebApi.Controllers
             item.ListItemId = listItem.ListItemId;
 
 
-            //var userList = await WebApiHelper.GetuUserIdFromListAggrIdAsync(listAggregationId, _userEndpoint, User);
-            var userList = await _mediator.Send(new GetUserIdFromListAggrIdCommand(listAggregationId, User));
 
-
-            //await _signarRService.SendRefreshMessageToUsersAsync(userList, "Add_ListItem", listItemEntity.ListItemId, listAggregationId, parentId);
             await _mediator.Publish(
-                new AddEditSaveDeleteListItemEvent(userList.Data, "Add_ListItem", listItem.ListItemId, listAggregationId
+                new ListItemAddedSignalREvent(listItem.ListItemId, listAggregationId
                 , parentId, signalRId));
 
 
@@ -87,10 +82,8 @@ namespace ShoppingListWebApi.Controllers
 
             var amount = await _listItemEndpoint.DeleteListItemAsync(ItemId, listAggregationId);
 
-            var userList = await _userEndpoint.GetUserIdsFromListAggrIdAsync(listAggregationId);
 
-            await _mediator.Publish(new AddEditSaveDeleteListItemEvent(userList, "Delete_ListItem", ItemId
-                , listAggregationId, signalRId: signalRId));
+            await _mediator.Publish(new ListItemDeletedSignalREvent(ItemId, listAggregationId, signalRId));
 
 
             return await Task.FromResult(amount);
@@ -126,7 +119,7 @@ namespace ShoppingListWebApi.Controllers
         //[Authorize]
         [SecurityLevel(2)]
         public async Task<ActionResult<ListItem>> EditListItem([FromBody] ListItem item, int listAggregationId
-            , [FromHeader]string signalRId)
+            , [FromHeader] string signalRId)
         {
 
             if (!await CheckIntegrityListItemAsync(item.ListItemId, listAggregationId)) return Forbid();
@@ -134,10 +127,8 @@ namespace ShoppingListWebApi.Controllers
 
             var listItem = await _listItemEndpoint.EditListItemAsync(item, listAggregationId);
 
-
-            var userList = await _userEndpoint.GetUserIdsFromListAggrIdAsync(listAggregationId);
-            await _mediator.Publish(new AddEditSaveDeleteListItemEvent(userList, "Edit/Save_ListItem", listItem.ListItemId
-                , listAggregationId, signalRId: signalRId));
+            await _mediator.Publish(new ListItemEditedSignalREvent(listItem.ListItemId
+                , listAggregationId, signalRId));
 
             return await Task.FromResult(listItem);
         }
@@ -156,7 +147,7 @@ namespace ShoppingListWebApi.Controllers
         //[Authorize]
         [SecurityLevel(3)]
         public async Task<ActionResult<ListItem>> SaveProperty([FromBody] ListItem item, string propertyName
-            , int listAggregationId, [FromHeader]string signalRId)
+            , int listAggregationId, [FromHeader] string signalRId)
         {
             /*
 
@@ -197,13 +188,11 @@ namespace ShoppingListWebApi.Controllers
             var t1 = sw.ElapsedMilliseconds;
             var res = await _mediator.Send(new SavePropertyCommand(item, propertyName, listAggregationId));
 
-            var users = await _mediator.Send(new GetUserIdFromListAggrIdCommand(listAggregationId, User));
             Debug.WriteLine(sw.ElapsedMilliseconds - t1);
 
-           // await _signarRService.SendRefreshMessageToUsersAsync(users.Data, "Edit/Save_ListItem", item.ListItemId, listAggregationId);
+            // await _signarRService.SendRefreshMessageToUsersAsync(users.Data, "Edit/Save_ListItem", item.ListItemId, listAggregationId);
 
-            await _mediator.Publish(new AddEditSaveDeleteListItemEvent(users.Data, "Edit/Save_ListItem", item.ListItemId
-                , listAggregationId, signalRId: signalRId));
+            await _mediator.Publish(new ListItemEditedSignalREvent(item.ListItemId, listAggregationId,signalRId));
 
 
             return await Task.FromResult(res.Data);

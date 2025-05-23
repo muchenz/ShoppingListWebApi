@@ -3,12 +3,13 @@ using BlazorClient.Services;
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.AspNetCore.SignalR.Client;  
+using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace BlazorClient.Data
@@ -47,7 +48,7 @@ namespace BlazorClient.Data
 
 
         */
-        public static async  Task<List<IDisposable>> SignalRInvitationInitAsync(
+        public static async Task<List<IDisposable>> SignalRInvitationInitAsync(
             HubConnection _hubConnection,
             int userId,
             AuthenticationStateProvider authenticationStateProvider,
@@ -58,13 +59,13 @@ namespace BlazorClient.Data
             )
         {
 
-            IDisposable dataAreChanged=null;
+            IDisposable dataAreChanged = null;
 
             try
             {
                 var authProvider = await authenticationStateProvider.GetAuthenticationStateAsync();
 
-                dataAreChanged = _hubConnection.On("NewInvitation_" + userId, async () =>
+                dataAreChanged = _hubConnection.On("InvitationAreChaned_" + userId, async () =>
                 {
 
 
@@ -159,68 +160,75 @@ namespace BlazorClient.Data
 
            });
 
-            var listAreChaned = _hubConnection.On("ListItemAreChanged_" + data.UserId, async (string command, int? id1, int? listAggregationId, int? parentId) =>
+            var listAreChaned = _hubConnection.On("ListItemAreChanged_" + data.UserId, async (string signaREnvelope) =>
             {
+                var envelope = JsonSerializer.Deserialize<SignaREnvelope>();
+                var evenName = envelope.SiglREventName;
+                var signaREventSerialized = envelope.SerializedEvent
 
 
-                if (command.EndsWith("ListItem"))
+
+                switch (eventName)
                 {
-                    var item = await shoppingListService.GetItem<ListItem>((int)id1, (int)listAggregationId);
-
-                    if (command == "Edit/Save_ListItem")
-                    {
-                        var lists = data.ListAggregators.Where(a => a.ListAggregatorId == listAggregationId).FirstOrDefault();
-
-                        ListItem foundListItem = null;
-                        foreach (var listItem in lists.Lists)
+                    case SiganalREventName.ListItemEdited:
                         {
-                            foundListItem = listItem.ListItems.FirstOrDefault(a => a.Id == id1);
-                            if (foundListItem != null) break;
+                            var signaREvent = JsonSerializer.Deserialize<ListItemEditedSignalREvent>(signaREventSerialized);
+                            var item = await shoppingListService.GetItem<ListItem>(signaREvent.ListItemId, signaREvent.ListAggregationId);
+
+                            var lists = data.ListAggregators.Where(a => a.ListAggregatorId == signaREvent.ListAggregationId).FirstOrDefault();
+
+                            ListItem foundListItem = null;
+                            foreach (var listItem in lists.Lists)
+                            {
+                                foundListItem = listItem.ListItems.FirstOrDefault(a => a.Id == signaREvent.ListItemId);
+                                if (foundListItem != null) break;
+                            }
+                            if (foundListItem == null) return;
+                            foundListItem.ListItemName = item.ListItemName;
+                            foundListItem.State = item.State;
+                            await StateHasChangedAysnc();
+                            break;
                         }
-                        if (foundListItem == null) return;
-                        foundListItem.ListItemName = item.ListItemName;
-                        foundListItem.State = item.State;
-                        await StateHasChangedAysnc();
-
-
-                    }
-                    else
-                         if (command == "Add_ListItem")
-                    {
-
-
-                        var tempList = data.ListAggregators.Where(a => a.ListAggregatorId == listAggregationId).FirstOrDefault().
-                            Lists.Where(a => a.ListId == parentId).FirstOrDefault();
-                        if (!tempList.ListItems.Any(a => a.ListItemId == item.ListItemId))
+                    case SiganalREventName.ListItemAdded:
                         {
-                            tempList.ListItems.Insert(0, item);
+                            var signaREvent = JsonSerializer.Deserialize<ListItemAddedSignalREvent>(signaREventSerialized);
+                            var item = await shoppingListService.GetItem<ListItem>(signaREvent.ListItemId, signaREvent.ListAggregationId);
+
+                            var tempList = data.ListAggregators.Where(a => a.ListAggregatorId == signaREvent.ListAggregationId).FirstOrDefault().
+                                Lists.Where(a => a.ListId == signaREvent.ListId).FirstOrDefault();
+                            if (!tempList.ListItems.Any(a => a.ListItemId == item.ListItemId))
+                            {
+                                tempList.ListItems.Insert(0, item);
+                            }
+                            //tempList.ListItems=new List<ListItem>() { };
+
+                            await StateHasChangedAysnc();
+                            break;
                         }
-                        //tempList.ListItems=new List<ListItem>() { };
-
-                        await StateHasChangedAysnc();
-                    }
-                    else
-                             if (command == "Delete_ListItem")
-                    {
-
-                        var lists = data.ListAggregators.Where(a => a.ListAggregatorId == listAggregationId).FirstOrDefault();
-
-                        ListItem foundListItem = null;
-                        List founfList = null;
-
-                        foreach (var listItem in lists.Lists)
+                    case SiganalREventName.ListItemDeleted:
                         {
-                            founfList = listItem;
-                            foundListItem = listItem.ListItems.FirstOrDefault(a => a.Id == id1);
-                            if (foundListItem != null) break;
+                            var signaREvent = JsonSerializer.Deserialize<ListItemDeletedSignalREvent>(signaREventSerialized);
+
+                            var lists = data.ListAggregators.Where(a => a.ListAggregatorId == signaREvent.ListAggregationId).FirstOrDefault();
+
+                            ListItem foundListItem = null;
+                            List founfList = null;
+
+                            foreach (var listItem in lists.Lists)
+                            {
+                                founfList = listItem;
+                                foundListItem = listItem.ListItems.FirstOrDefault(a => a.Id == signaREvent.ListItemId);
+                                if (foundListItem != null) break;
+                            }
+                            if (foundListItem == null) return;
+
+                            founfList.ListItems.Remove(foundListItem);
+
+                            await StateHasChangedAysnc();
+                            break;
                         }
-                        if (foundListItem == null) return;
-
-                        founfList.ListItems.Remove(foundListItem);
-
-                        await StateHasChangedAysnc();
-
-                    }
+                    default:
+                        break;
                 }
             });
 
