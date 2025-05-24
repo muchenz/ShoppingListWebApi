@@ -162,9 +162,9 @@ namespace BlazorClient.Data
 
             var listAreChaned = _hubConnection.On("ListItemAreChanged_" + data.UserId, async (string signaREnvelope) =>
             {
-                var envelope = JsonSerializer.Deserialize<SignaREnvelope>();
-                var evenName = envelope.SiglREventName;
-                var signaREventSerialized = envelope.SerializedEvent
+                var envelope = JsonSerializer.Deserialize<SignaREnvelope>(signaREnvelope);
+                var eventName = envelope.SiglREventName;
+                var signaREventSerialized = envelope.SerializedEvent;
 
 
 

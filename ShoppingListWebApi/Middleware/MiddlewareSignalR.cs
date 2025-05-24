@@ -38,7 +38,7 @@ namespace ShoppingListWebApi.Handlers
                 int id1 = int.Parse(respons.Headers["id1"]);
                 int id2 = int.Parse(respons.Headers["id2"]);
 
-                await _mediator.Publish(new ListItemEditedSignalREvent( id1, id2, null));
+                await _mediator.Publish(new ListItemEditedSignalRNotification( id1, id2, null));
 
             }
         }

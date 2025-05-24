@@ -66,7 +66,7 @@ namespace ShoppingListWebApi.Controllers
 
 
             await _mediator.Publish(
-                new ListItemAddedSignalREvent(listItem.ListItemId, listAggregationId
+                new ListItemAddedSignalRNotification(listItem.ListItemId, listAggregationId
                 , parentId, signalRId));
 
 
@@ -83,7 +83,7 @@ namespace ShoppingListWebApi.Controllers
             var amount = await _listItemEndpoint.DeleteListItemAsync(ItemId, listAggregationId);
 
 
-            await _mediator.Publish(new ListItemDeletedSignalREvent(ItemId, listAggregationId, signalRId));
+            await _mediator.Publish(new ListItemDeletedSignalRNotification(ItemId, listAggregationId, signalRId));
 
 
             return await Task.FromResult(amount);
@@ -127,7 +127,7 @@ namespace ShoppingListWebApi.Controllers
 
             var listItem = await _listItemEndpoint.EditListItemAsync(item, listAggregationId);
 
-            await _mediator.Publish(new ListItemEditedSignalREvent(listItem.ListItemId
+            await _mediator.Publish(new ListItemEditedSignalRNotification(listItem.ListItemId
                 , listAggregationId, signalRId));
 
             return await Task.FromResult(listItem);
@@ -192,7 +192,7 @@ namespace ShoppingListWebApi.Controllers
 
             // await _signarRService.SendRefreshMessageToUsersAsync(users.Data, "Edit/Save_ListItem", item.ListItemId, listAggregationId);
 
-            await _mediator.Publish(new ListItemEditedSignalREvent(item.ListItemId, listAggregationId,signalRId));
+            await _mediator.Publish(new ListItemEditedSignalRNotification(item.ListItemId, listAggregationId,signalRId));
 
 
             return await Task.FromResult(res.Data);
