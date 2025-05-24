@@ -34,7 +34,7 @@
     string _gid = Guid.NewGuid().ToString();
 
     int amount = 0;
-    //TODO: mayby better OnInitializedAsync()
+    //TODO: mayby better OnInitializedAsync() ??? test
     protected async override Task OnInitializedAsync()
     //protected async override Task OnParametersSetAsync()
     {
@@ -74,7 +74,7 @@
             }
         }
 
-        await base.OnParametersSetAsync();
+        //await base.OnParametersSetAsync();
     }
 
 
