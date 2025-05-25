@@ -93,11 +93,6 @@
 
             invitationsList = await userService.GetInvitationsListAsync(userName);
 
-            var userId = authProvider.User.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier).FirstOrDefault()?.Value;
-
-
-            if (userId != null)
-                SignalRInit(int.Parse(userId));
         }
         catch
         {
@@ -117,6 +112,7 @@
         {
 
             await LoadInvitationList();
+            await SignalRInit();
             StateHasChanged();
 
 
@@ -129,14 +125,22 @@
     [CascadingParameter]
     public string _gid { get; set; }
 
-    void SignalRInit(int userId)
+    async  Task SignalRInit()
     {
+        var authProvider = await authenticationStateProvider.GetAuthenticationStateAsync();
+
+        var userId = authProvider.User.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier).FirstOrDefault()?.Value;
+
+
+        if (userId == null)
+            return;
+
         async Task RunHub(HubConnection _con)
         {
 
             SignalRToDispose = await SignalRHelper.SignalRInvitationInitAsync(
              _hubConnection,
-            userId,
+            int.Parse(userId),
             authenticationStateProvider,
              userService,
               (a) => invitationsList = a,
