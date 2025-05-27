@@ -378,3 +378,5 @@ ShoppingListWebApi/_publish
 /BlazorClient/Data/example httpclent/AuthStateWatcher.cs
 /BlazorClient/Data/example httpclent/SignalRService.cs
 /BlazorClient/Data/example httpclent/SignalRService2.cs
+/BlazorClient/Data/example httpclent/TokenService.cs
+/BlazorClient/Data/example httpclent/AuthRedirectHandler.cs
