@@ -20,6 +20,7 @@
 @inject IJSRuntime JSRuntime
 @inject NavigationManager navigationManager
 @inject IConfiguration configuration
+@inject SignalRService signalRService
 
 <div class="row d-lg-none" style="margin-bottom:15px">
     <div class="col">
@@ -716,12 +717,9 @@
         setter(value);
     }
 
-    List<IDisposable> SignalRToDispose;
-
-    [CascadingParameter]
-    public HubConnection _hubConnection { get; set; }
-    [CascadingParameter]
-    public string _gid { get; set; }
+    IDisposable SignalRListItemToDispose;
+    IDisposable SignalRDataToDispose;
+      
 
     async Task SignalRInit()
     {
@@ -746,16 +744,11 @@
         //});
 
 
-        var stateInfo = stateService.GetStateInfo(_gid);
+        //TODO: test signalRService JoinToHub
 
-        stateInfo.HubState.JoinToHub(RunHub);
-    }
-
-
-    void RunHub(HubConnection _con)
-    {
-        SignalRToDispose = SignalRHelper.SignalRShoppingListInit(
-            _con,
+        signalRService.JoinToHub(()=>
+        SignalRListItemToDispose = signalRService.RegisterListItemAreChangedHandlers(async (signaREnvelope)=>await SignalRHelper.SignalRGistItemAreChangedAsync(
+            signaREnvelope,
            data,
            (a) => data = a,
            (a) => listAggregatorChoosed = a,
@@ -763,14 +756,29 @@
           authenticationStateProvider, userService,
           navigationManager, () => InvokeAsync(StateHasChanged),
           shoppingListService,
-          localStorage);
+          localStorage) 
+        )
+        );
+        SignalRDataToDispose = signalRService.RegisterDataAreChangedHandlers (async () => await SignalRHelper.SignalRGetUserDataTreeAsyn(
+           data,
+           (a) => data = a,
+           (a) => listAggregatorChoosed = a,
+           (a) => listChoosed = a,
+          authenticationStateProvider, userService,
+          navigationManager, () => InvokeAsync(StateHasChanged),
+          shoppingListService,
+          localStorage)
+        );
     }
+
+        
 
 
     public void Dispose()
     {
         BrowserService.OnResize -= BrowserHasResized;
-        SignalRToDispose?.ForEach(a => a?.Dispose());
+        SignalRDataToDispose?.Dispose();
+        SignalRListItemToDispose?.Dispose();
     }
 
 

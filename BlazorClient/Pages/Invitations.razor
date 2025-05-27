@@ -15,6 +15,8 @@
 @inject ShoppingListService shoppingListService
 @inject ILocalStorageService localStorage
 @inject StateService stateService;
+@inject SignalRService signalRService
+
 
 @inject IModalService Modal
 @inject AuthenticationStateProvider authenticationStateProvider
@@ -56,10 +58,10 @@
 
                                         <td>
                                             <a style="text-underline-position:below; cursor:pointer; color:blue; display:inline;
-                                " @onclick="(() => AcceptInvitation(item))">Accept</a>
+                                        " @onclick="(() => AcceptInvitation(item))">Accept</a>
 
                                             <a class="" style="text-underline-position:below; cursor:pointer; color:blue; display:inline;
-                                                " @onclick="(() => RejectInvitaion(item))">Reject</a>
+                                                        " @onclick="(() => RejectInvitaion(item))">Reject</a>
 
                                         </td>
                                     </tr>
@@ -87,11 +89,7 @@
 
         try
         {
-            var authProvider = await authenticationStateProvider.GetAuthenticationStateAsync();
-            var userName = authProvider.User.Identity.Name;
-
-
-            invitationsList = await userService.GetInvitationsListAsync(userName);
+            invitationsList = await userService.GetInvitationsListAsync();
 
         }
         catch
@@ -120,12 +118,8 @@
 
         await base.OnAfterRenderAsync(firstRender);
     }
-    [CascadingParameter]
-    public HubConnection _hubConnection { get; set; }
-    [CascadingParameter]
-    public string _gid { get; set; }
 
-    async  Task SignalRInit()
+    async Task SignalRInit()
     {
         var authProvider = await authenticationStateProvider.GetAuthenticationStateAsync();
 
@@ -135,22 +129,12 @@
         if (userId == null)
             return;
 
-        async Task RunHub(HubConnection _con)
-        {
 
-            SignalRToDispose = await SignalRHelper.SignalRInvitationInitAsync(
-             _hubConnection,
-            int.Parse(userId),
-            authenticationStateProvider,
-             userService,
-              (a) => invitationsList = a,
-              (_) => { },
-              () => InvokeAsync(StateHasChanged));
-        }
-
-        var stateInfo = stateService.GetStateInfo(_gid);
-
-        stateInfo.HubState.JoinToHub(RunHub);
+        SignalRToDispose = signalRService.RegisterInvitationAreChanedHandlers(async () => await SignalRHelper.SignalRInvitationInitAsync(
+         userService,
+          (a) => invitationsList = a,
+          (_) => { },
+          () => InvokeAsync(StateHasChanged)));
 
     }
 
@@ -170,10 +154,10 @@
 
     }
 
-    List<IDisposable> SignalRToDispose;
+    IDisposable SignalRToDispose;
 
     public void Dispose()
     {
-        SignalRToDispose?.ForEach(a => a?.Dispose());
+        SignalRToDispose?.Dispose();
     }
 }

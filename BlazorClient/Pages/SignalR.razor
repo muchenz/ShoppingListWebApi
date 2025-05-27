@@ -9,135 +9,59 @@
 @inject StateService _userInfoService
 @inject ILocalStorageService localStorage
 @inject AuthenticationStateProvider authenticationStateProvider
-
+@inject SignalRService signalRService
 @implements IAsyncDisposable
 
-
-<CascadingValue Value=_hubConnection>
-    <CascadingValue Value=_gid>
         @ChildContent
-    </CascadingValue>
-</CascadingValue>
 
 
 @code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
 
-
-    [Parameter]
-    public RenderFragment ChildContent { get; set; }
+    private bool _signalRStarted = false;
 
     [CascadingParameter]
     public Error Error { get; set; }
 
-    HubConnection _hubConnection;
+    [CascadingParameter]
+    public Task<AuthenticationState> authenticationState { get; set; }
 
-    string _gid = Guid.NewGuid().ToString();
-
-    int amount = 0;
     //TODO: mayby better OnInitializedAsync() ??? test
     protected async override Task OnInitializedAsync()
     //protected async override Task OnParametersSetAsync()
     {
 
-        var isGid = await localStorage.ContainKeyAsync("gid");
 
-        if (isGid)
-        {
-            _gid = await localStorage.GetItemAsync<string>("gid");
-        }
-        else
-        {
-            await localStorage.SetItemAsync("gid", _gid);
-        }
+        authenticationStateProvider.AuthenticationStateChanged += async task =>
+         {
+             var authState = await task;
+             var user = authState.User;
 
+             if (user.Identity?.IsAuthenticated == true && !_signalRStarted)
+             {
+                 _signalRStarted = true;
+                 await signalRService.StartConnectionAsync();
+             }
+             else if (!user.Identity?.IsAuthenticated == true && _signalRStarted)
+             {
+                 _signalRStarted = false;
+                 await signalRService.StopConnectionAsync();
+             }
+         };
 
+        var authState = await authenticationState;
 
-        var authState = await authenticationStateProvider.GetAuthenticationStateAsync();
+        var isSuth = authState.User.Identity?.IsAuthenticated ?? false;
 
-        if (!authState.User.Identity.IsAuthenticated || _hubConnection != null)
-        {
-            Console.WriteLine("!____________ not authenticaced  or is hubConnection");
-            return;
-        }
-        else
-        {
-            Console.WriteLine("!____________ authenticaced && is not hubConneted ");
-
-            try
-            {
-                await SetHubConnectionAsync();
-            }
-            catch(Exception ex)
-            {
-                await Error.ProcessExceptionAsync(ex);
-                throw;
-            }
-        }
-
-        //await base.OnParametersSetAsync();
+        if (!signalRService.IsConnected && isSuth)
+            await signalRService.StartConnectionAsync();
     }
 
 
-    bool _tryingSignalRStart;
 
-    async Task SetHubConnectionAsync()
-    {
-
-        if (_tryingSignalRStart) return;
-
-        _tryingSignalRStart = true;
-
-
-        var isAccessToken = await localStorage.ContainKeyAsync("accessToken");
-
-        if (!isAccessToken) return;
-
-        var accessToken = await localStorage.GetItemAsync<string>("accessToken");
-
-
-        Console.WriteLine("singnalR amount" + amount++);
-        Console.WriteLine("singnalR ststus" + _hubConnection?.State);
-
-
-        _hubConnection = new HubConnectionBuilder().WithUrl(configuration.GetSection("AppSettings")["SignlRAddress"], (opts) =>
-        {
-            opts.Headers.Add("Access_Token", accessToken);
-            //opts.Headers.Add("Authorization", $"Bearer {accessToken}"); //for normal authorization in HUB
-
-            opts.HttpMessageHandlerFactory = (message) =>
-            {
-                if (message is HttpClientHandler clientHandler)
-                    // bypass SSL certificate
-                    clientHandler.ServerCertificateCustomValidationCallback +=
-                                                              (sender, certificate, chain, sslPolicyErrors) => { return true; };
-                return message;
-            };
-        }).WithAutomaticReconnect().Build();
-
-
-
-        await _hubConnection.StartAsync();
-        //    var gid = await localStorage.GetItemAsync<string>("gid");
-        _userInfoService.SetStateInfo(_gid, (a) => a.ClientSignalRID = _hubConnection.ConnectionId);
-        await _userInfoService.GetStateInfo(_gid).HubState.CallHuBReadyAsync(_hubConnection);
-
-        _hubConnection.Reconnected += (connectionId) =>
-        {
-            _userInfoService.SetStateInfo(_gid, (a) => a.ClientSignalRID = connectionId);
-            return Task.CompletedTask;
-        };
-        //TODO:form signalR - becareful, maybe Componet  lost reference to _hubConnection
-        //_tryingSignalRStart = false;
-
-        _hubConnection.Closed += async (exception) =>
-        {
-
-        };
-    }
 
 
     public async ValueTask DisposeAsync()
     {
-        _hubConnection?.DisposeAsync();
     }
 }

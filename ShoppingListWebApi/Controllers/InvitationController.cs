@@ -6,6 +6,7 @@ using System.Security.Principal;
 using System.Threading.Tasks;
 using AutoMapper;
 using EFDataBase;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -35,22 +36,26 @@ namespace ShoppingListWebApi.Controllers
             _invitationEndpoint = invitationEndpoint;
         }
 
-        [HttpPost("GetInvitationsList")]
-        public async Task<ActionResult<MessageAndStatus>> GetInvitationsList(string userName)
+        [HttpGet("InvitationsList")]
+        [Authorize]
+        public async Task<List<Invitation>> GetInvitationsList()
         {
+            var userName = User.Claims.Where(a => a.Type == ClaimTypes.Name).FirstOrDefault().Value;
+
             //TODO: 'userName' should be get from context
 
             var invitationsList = await _invitationEndpoint.GetInvitationsListAsync(userName);
 
-            return new MessageAndStatus { Status = "OK", Message = JsonConvert.SerializeObject(invitationsList) };
+            return invitationsList;
         }
 
 
 
         [HttpPost("RejectInvitaion")]
-        public async Task<ActionResult<MessageAndStatus>> RejectInvitaion([FromBody] Invitation invitation, [FromHeader] string signalRId)
+        [Authorize]
+        public async Task<ActionResult> RejectInvitaion([FromBody] Invitation invitation, [FromHeader] string signalRId)
         {
-
+            //TODO: better permssion check (eg. user name in invitation)
             await _invitationEndpoint.RejectInvitaionAsync(invitation);   
 
             var userId = User.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier).FirstOrDefault()?.Value;
@@ -59,12 +64,15 @@ namespace ShoppingListWebApi.Controllers
                 await _signarRService.SendRefreshMessageToUsersAsync(new List<int> { int.Parse(userId) }, 
                     SiganalREventName.InvitationAreChanged, signalRId: signalRId);
 
-            return await Task.FromResult(new MessageAndStatus { Status = "OK" });
+            return Ok();
         }
 
         [HttpPost("AcceptInvitation")]
-        public async Task<ActionResult<MessageAndStatus>> AcceptInvitation([FromBody] Invitation invitation, [FromHeader] string signalRId)
+        [Authorize]
+        public async Task<ActionResult> AcceptInvitation([FromBody] Invitation invitation, [FromHeader] string signalRId)
         {
+            //TODO: better permssion check (eg. user name in invitation)
+
             var userId = int.Parse(User.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier).FirstOrDefault().Value);
 
             await _invitationEndpoint.AcceptInvitationAsync(invitation, userId);
@@ -74,7 +82,7 @@ namespace ShoppingListWebApi.Controllers
 
             //TODO: for what sending 'new_invitation'?? for refresh list with invitation??
 
-            return await Task.FromResult(new MessageAndStatus { Status = "OK" });
+            return Ok();
         }
     }
 }

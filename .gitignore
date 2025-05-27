@@ -373,3 +373,8 @@ ShoppingListWebApi\Controllers\TestController.cs
 #
 testnosqldb1-firebase-adminsdk-c123k-89b708d87e.json
 ShoppingListWebApi/_publish
+/BlazorClient/Data/example httpclent/AuthenticatedHttpClient.cs
+/BlazorClient/Data/example httpclent/AuthenticatedHttpClientFactory.cs
+/BlazorClient/Data/example httpclent/AuthStateWatcher.cs
+/BlazorClient/Data/example httpclent/SignalRService.cs
+/BlazorClient/Data/example httpclent/SignalRService2.cs

@@ -42,17 +42,17 @@ namespace BlazorClient.Models
         }
         public MessageAndStatus()
         {
-            
+
         }
-        public static MessageAndStatus Ok(string msg) => new MessageAndStatus(msg, MessageSatus.OK);
-        public static MessageAndStatus Fail(string msg) => new MessageAndStatus(msg, MessageSatus.Error);
+        public static MessageAndStatus Ok(string msg = MessageSatus.OK) => new MessageAndStatus(msg, MessageSatus.OK);
+        public static MessageAndStatus Fail(string msg = MessageSatus.Error) => new MessageAndStatus(msg, MessageSatus.Error);
 
     }
-      
+
 
     public class MessageAndStatusAndData<T> : MessageAndStatus
     {
-        public MessageAndStatusAndData(T data, string msg, string status):base(msg, status) 
+        public MessageAndStatusAndData(T data, string msg, string status) : base(msg, status)
         {
             Data = data;
         }
@@ -71,7 +71,7 @@ namespace BlazorClient.Models
         public string Token { get; set; }
         public string Email { get; set; }
     }
-    public  static class ItemState
+    public static class ItemState
     {
         public static int Normal => 0;
         public static int Buyed => 1;
@@ -92,7 +92,7 @@ namespace BlazorClient.Models
         [Display(Name = "Password")]
         public string Password { get; set; }
 
-        [Compare(nameof(RegistrationModel.Password), ErrorMessage ="Passwords are not equall.")]
+        [Compare(nameof(RegistrationModel.Password), ErrorMessage = "Passwords are not equall.")]
         [DataType(DataType.Password)]
         [Required]
         public string PasswordConfirm { get; set; }
@@ -113,7 +113,7 @@ namespace BlazorClient.Models
 
         public string Name
         {
-            get { return EmailAddress;  }
+            get { return EmailAddress; }
             set { EmailAddress = value; }
         }
 
@@ -126,13 +126,13 @@ namespace BlazorClient.Models
         public List<UserPermissionToListAggregation> UsersPermToListAggr { get; set; }
     }
 
-    public class UserPermissionToListAggregation: IModelItemView
-    {     
+    public class UserPermissionToListAggregation : IModelItemView
+    {
         public User User { get; set; }
         public int Permission { get; set; }
-      
 
-        public int Order { get; set; }        
+
+        public int Order { get; set; }
 
         public int Id => User.UserId;
         public string Name
@@ -145,7 +145,7 @@ namespace BlazorClient.Models
 
     public class User
     {
-      
+
 
         public User()
         {
@@ -167,7 +167,7 @@ namespace BlazorClient.Models
 
 
 
-    public class ListAggregator: IModelItem
+    public class ListAggregator : IModelItem
     {
 
         public ListAggregator()
@@ -193,7 +193,7 @@ namespace BlazorClient.Models
 
 
 
-    public class OrderListItem :IModelItemOrder
+    public class OrderListItem : IModelItemOrder
     {
 
         public OrderListItem()
@@ -201,13 +201,13 @@ namespace BlazorClient.Models
             List = new List<OrderItem>();
         }
 
-        public List<OrderItem> List  {get; set;}
+        public List<OrderItem> List { get; set; }
         public int Id { get; set; }
 
         public int Order { get; set; }
     }
 
-    public class OrderListAggrItem:IModelItemOrder
+    public class OrderListAggrItem : IModelItemOrder
     {
 
         public OrderListAggrItem()
@@ -221,7 +221,7 @@ namespace BlazorClient.Models
         public int Order { get; set; }
     }
 
-    public class OrderItem:IModelItemOrder
+    public class OrderItem : IModelItemOrder
     {
         public int Id { get; set; }
 
@@ -230,7 +230,7 @@ namespace BlazorClient.Models
     }
 
 
-    public class List: IModelItem
+    public class List : IModelItem
     {
         public List()
         {
@@ -250,16 +250,16 @@ namespace BlazorClient.Models
 
     }
 
-    
-    public interface IModelItem:  IModelItemView, IModelItemOrder
+
+    public interface IModelItem : IModelItemView, IModelItemOrder
     {
-       
+
 
     }
 
-    public interface IModelItemView: IModelItemBase
-    {      
-       
+    public interface IModelItemView : IModelItemBase
+    {
+
         public string Name { get; set; }
 
         //public int Id { get; set; }
@@ -269,7 +269,7 @@ namespace BlazorClient.Models
     public interface IModelItemOrder : IModelItemBase
     {
 
-        public int  Order { get; set; }
+        public int Order { get; set; }
 
         //public int Id { get; set; }
 

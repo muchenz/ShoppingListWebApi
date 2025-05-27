@@ -43,10 +43,10 @@ namespace BlazorClient
             services.AddRazorPages().AddRazorRuntimeCompilation();
             services.AddServerSideBlazor().AddCircuitOptions(options => { options.DetailedErrors = true; });
             services.AddSingleton<WeatherForecastService>();
-            services.AddSingleton<StateService>();
+            services.AddScoped<StateService>();
             services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
             services.AddScoped<CustomAuthorizationHeaderHandler>();
-
+            services.AddScoped<SignalRService>();
             services.AddScoped<AuthRedirectHandler>();
 
             // services.AddHttpClient<UserService>();

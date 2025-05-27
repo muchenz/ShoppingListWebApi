@@ -49,7 +49,7 @@ namespace BlazorClient.Services
             }
 
 
-            var signalRId = _userInfoService.GetStateInfo(gid).ClientSignalRID;
+            var signalRId = _userInfoService.StateInfo.ClientSignalRID;
 
             httpRequestMessage.Headers.Add("SignalRId", signalRId);
         }

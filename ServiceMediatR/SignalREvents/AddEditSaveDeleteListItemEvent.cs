@@ -49,7 +49,7 @@ namespace ServiceMediatR.SignalREvents
 
             await _signarRService.SendListItemRefreshMessageToUsersAsync(userList,
               envelope.SiglREventName,
-              JsonSerializer.Serialize(item));
+              JsonSerializer.Serialize(envelope));
         }
 
 

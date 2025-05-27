@@ -8,6 +8,7 @@
 
 @inject ILocalStorageService localStorage
 @inject StateService stateService;
+@inject SignalRService signalRService
 
 
 @inject UserService userService
@@ -81,16 +82,14 @@
         try
         {
             var authProvider = await authenticationStateProvider.GetAuthenticationStateAsync();
-            var userName = authProvider.User.Identity.Name;
 
-
-            NuberOfInvitations = (await userService.GetInvitationsListAsync(userName)).Count;
+            NuberOfInvitations = (await userService.GetInvitationsListAsync()).Count;
 
             var sUserId = authProvider.User.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier).FirstOrDefault()?.Value;
             if (sUserId != null)
             {
                 userId = int.Parse(sUserId);
-                SignalRInit();
+                await SignalRInit();
             }
 
 
@@ -110,33 +109,27 @@
 
     int NuberOfInvitations;
 
-    void SignalRInit()
+    async Task SignalRInit()
     {
 
-        var stateInfo = stateService.GetStateInfo(_gid);
-
-        stateInfo.HubState.JoinToHub(RunHub);
-
-    }
-
-
-    async Task RunHub(HubConnection _con)
-    {
-
-        SignalRToDispose = await SignalRHelper.SignalRInvitationInitAsync(
-       _con,
-       userId,
-        authenticationStateProvider,
+        SignalRToDispose = signalRService.RegisterInvitationAreChanedHandlers
+        ( async () =>
+           await SignalRHelper.SignalRInvitationInitAsync(
         userService,
         (_) => { },
         (a) => NuberOfInvitations = a,
-        () => InvokeAsync(StateHasChanged));
+        () => InvokeAsync(StateHasChanged)
+        ));
+
     }
 
-    List<IDisposable> SignalRToDispose;
+
+   
+
+    IDisposable SignalRToDispose;
 
     public void Dispose()
     {
-        SignalRToDispose?.ForEach(a => a?.Dispose());
+        SignalRToDispose?.Dispose();
     }
 }

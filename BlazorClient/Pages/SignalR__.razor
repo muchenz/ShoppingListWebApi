@@ -1,0 +1,144 @@
+﻿@* @using Microsoft.Extensions.Configuration;
+@using Microsoft.AspNetCore.SignalR.Client;
+@using BlazorClient.Services;
+@using Blazored.LocalStorage;
+
+@inject NavigationManager Navigation
+
+@inject IConfiguration configuration
+@inject StateService _userInfoService
+@inject ILocalStorageService localStorage
+@inject AuthenticationStateProvider authenticationStateProvider
+
+@implements IAsyncDisposable
+
+
+<CascadingValue Value=_hubConnection>
+    <CascadingValue Value=_gid>
+        @ChildContent
+    </CascadingValue>
+</CascadingValue>
+
+
+@code {
+
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    [CascadingParameter]
+    public Error Error { get; set; }
+
+    HubConnection _hubConnection;
+
+    string _gid = Guid.NewGuid().ToString();
+
+    int amount = 0;
+    //TODO: mayby better OnInitializedAsync() ??? test
+    //protected async override Task OnInitializedAsync()
+    protected async override Task OnParametersSetAsync()
+    {
+
+        var isGid = await localStorage.ContainKeyAsync("gid");
+
+        if (isGid)
+        {
+            _gid = await localStorage.GetItemAsync<string>("gid");
+        }
+        else
+        {
+            await localStorage.SetItemAsync("gid", _gid);
+        }
+
+
+
+        var authState = await authenticationStateProvider.GetAuthenticationStateAsync();
+
+        if (!authState.User.Identity.IsAuthenticated || _hubConnection != null)
+        {
+            Console.WriteLine("!____________ not authenticaced  or is hubConnection");
+            return;
+        }
+        else
+        {
+            Console.WriteLine("!____________ authenticaced && is not hubConneted ");
+
+            try
+            {
+                await SetHubConnectionAsync();
+            }
+            catch(Exception ex)
+            {
+                await Error.ProcessExceptionAsync(ex);
+                throw;
+            }
+        }
+
+        //await base.OnParametersSetAsync();
+    }
+
+
+    bool _tryingSignalRStart;
+
+    async Task SetHubConnectionAsync()
+    {
+
+        if (_tryingSignalRStart) return;
+
+        _tryingSignalRStart = true;
+
+
+        var isAccessToken = await localStorage.ContainKeyAsync("accessToken");
+
+        if (!isAccessToken) return;
+
+        var accessToken = await localStorage.GetItemAsync<string>("accessToken");
+
+
+        Console.WriteLine("singnalR amount" + amount++);
+        Console.WriteLine("singnalR ststus" + _hubConnection?.State);
+
+
+        _hubConnection = new HubConnectionBuilder().WithUrl(configuration.GetSection("AppSettings")["SignlRAddress"], (opts) =>
+        {
+            opts.Headers.Add("Access_Token", accessToken);
+            //opts.Headers.Add("Authorization", $"Bearer {accessToken}"); //for normal authorization in HUB
+
+            opts.HttpMessageHandlerFactory = (message) =>
+            {
+                if (message is HttpClientHandler clientHandler)
+                    // bypass SSL certificate
+                    clientHandler.ServerCertificateCustomValidationCallback +=
+                                                              (sender, certificate, chain, sslPolicyErrors) => { return true; };
+                return message;
+            };
+        }).WithAutomaticReconnect().Build();
+
+
+
+        await _hubConnection.StartAsync();
+        //    var gid = await localStorage.GetItemAsync<string>("gid");
+        _userInfoService.SetStateInfo(_gid, (a) => a.ClientSignalRID = _hubConnection.ConnectionId);
+        await _userInfoService.GetStateInfo(_gid).HubState.CallHuBReadyAsync(_hubConnection);
+
+        _hubConnection.Reconnected += (connectionId) =>
+        {
+            _userInfoService.SetStateInfo(_gid, (a) => a.ClientSignalRID = connectionId);
+            return Task.CompletedTask;
+        };
+        //TODO:form signalR - becareful, maybe Componet  lost reference to _hubConnection
+        _tryingSignalRStart = false;
+
+        _hubConnection.Closed += async (exception) =>
+        {
+
+        };
+    }
+
+
+    public async ValueTask DisposeAsync()
+    {
+        _hubConnection?.DisposeAsync();
+    }
+}
+ *@

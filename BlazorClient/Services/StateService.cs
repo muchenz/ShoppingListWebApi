@@ -8,15 +8,33 @@ namespace BlazorClient.Services
 {
     public class StateService
     {
-        Dictionary<string, StateInfo> _userInfoDictionary = new Dictionary<string, StateInfo>();
+        public StateInfo StateInfo { get; set; } = new StateInfo();
 
-        public StateInfo GetStateInfo(string id)
+    }
+
+
+    public class StateInfo
+    {
+        public string Token { get; set; }
+        public string ClientSignalRID { get; set; }
+
+    }
+
+
+
+
+    //---------------------------------------------------------------------------
+    public class StateService_old
+    {
+        Dictionary<string, StateInfo_old> _userInfoDictionary = new Dictionary<string, StateInfo_old>();
+
+        public StateInfo_old GetStateInfo(string id)
         {
 
             var value = _userInfoDictionary.GetValueOrDefault(id);
             if (value == null)
             {
-                var newState = new StateInfo();
+                var newState = new StateInfo_old();
 
                 _userInfoDictionary[id] = newState;
 
@@ -27,10 +45,10 @@ namespace BlazorClient.Services
 
         }
 
-        public StateInfo SetStateInfo(string id, StateInfo info) => _userInfoDictionary[id] = info;
+        public StateInfo_old SetStateInfo(string id, StateInfo_old info) => _userInfoDictionary[id] = info;
 
 
-        public void SetStateInfo(string id, Action<StateInfo> func)
+        public void SetStateInfo(string id, Action<StateInfo_old> func)
         {
 
             var userInfo = GetStateInfo(id);
@@ -44,16 +62,16 @@ namespace BlazorClient.Services
     }
 
 
-    public class StateInfo
+    public class StateInfo_old
     {
         public string Token { get; set; }
         public string ClientSignalRID { get; set; }
 
-        public HubState HubState { get; set; } = new HubState();
-       
+        public HubState_old HubState { get; set; } = new HubState_old();
+
     }
 
-    public class HubState
+    public class HubState_old
     {
 
         event Action<HubConnection> HuBReady;
