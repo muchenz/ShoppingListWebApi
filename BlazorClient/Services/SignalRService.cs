@@ -20,7 +20,6 @@ public class SignalRService
 {
     private readonly ILocalStorageService _localStorage;
     private readonly IConfiguration _configuration;
-    private readonly StateService _stateService;
     private readonly AuthenticationStateProvider _authenticationStateProvider;
     private readonly IServiceProvider _serviceProvider;
     private HubConnection? _hubConnection;
@@ -87,12 +86,12 @@ public class SignalRService
             Console.WriteLine($"SignalR connection failed: {ex.Message}");
         }
 
-        _stateService.StateInfo.ClientSignalRID= _hubConnection.ConnectionId;
+        stateService.StateInfo.ClientSignalRID= _hubConnection.ConnectionId;
         await CallHuBReadyAsync();
 
         _hubConnection.Reconnected += (connectionId) =>
         {
-            _stateService.StateInfo.ClientSignalRID = connectionId;
+            stateService.StateInfo.ClientSignalRID = connectionId;
             return Task.CompletedTask;
         };
 
