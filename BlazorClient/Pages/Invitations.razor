@@ -110,7 +110,7 @@
         {
 
             await LoadInvitationList();
-            await SignalRInit();
+            SignalRInit();
             StateHasChanged();
 
 
@@ -119,22 +119,15 @@
         await base.OnAfterRenderAsync(firstRender);
     }
 
-    async Task SignalRInit()
+    void SignalRInit()
     {
-        var authProvider = await authenticationStateProvider.GetAuthenticationStateAsync();
-
-        var userId = authProvider.User.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier).FirstOrDefault()?.Value;
-
-
-        if (userId == null)
-            return;
-
-
-        SignalRToDispose = signalRService.RegisterInvitationAreChanedHandlers(async () => await SignalRHelper.SignalRInvitationInitAsync(
+       
+        signalRService.JoinToHub(()=>
+        SignalRToDispose = signalRService.RegisterInvitationAreChanedHandlers(async () => await SignalRHandlers.SignalRInvitationInitAsync(
          userService,
           (a) => invitationsList = a,
           (_) => { },
-          () => InvokeAsync(StateHasChanged)));
+          () => InvokeAsync(StateHasChanged))));
 
     }
 

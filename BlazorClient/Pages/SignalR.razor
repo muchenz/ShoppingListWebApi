@@ -5,9 +5,7 @@
 
 @inject NavigationManager Navigation
 
-@inject IConfiguration configuration
 @inject StateService _userInfoService
-@inject ILocalStorageService localStorage
 @inject AuthenticationStateProvider authenticationStateProvider
 @inject SignalRService signalRService
 @implements IAsyncDisposable
@@ -51,9 +49,9 @@
 
         var authState = await authenticationState;
 
-        var isSuth = authState.User.Identity?.IsAuthenticated ?? false;
+        var isAuth = authState.User.Identity?.IsAuthenticated ?? false;
 
-        if (!signalRService.IsConnected && isSuth)
+        if (!signalRService.IsConnected && isAuth)
             await signalRService.StartConnectionAsync();
     }
 

@@ -747,7 +747,7 @@
         //TODO: test signalRService JoinToHub
 
         signalRService.JoinToHub(()=>
-        SignalRListItemToDispose = signalRService.RegisterListItemAreChangedHandlers(async (signaREnvelope)=>await SignalRHelper.SignalRGistItemAreChangedAsync(
+        SignalRListItemToDispose = signalRService.RegisterListItemAreChangedHandlers(async (signaREnvelope)=>await SignalRHandlers.SignalRListItemAreChangedAsync(
             signaREnvelope,
            data,
            (a) => data = a,
@@ -759,7 +759,8 @@
           localStorage) 
         )
         );
-        SignalRDataToDispose = signalRService.RegisterDataAreChangedHandlers (async () => await SignalRHelper.SignalRGetUserDataTreeAsyn(
+        signalRService.JoinToHub(()=>
+        SignalRDataToDispose = signalRService.RegisterDataAreChangedHandlers (async () => await SignalRHandlers.SignalRGetUserDataTreeAsync(
            data,
            (a) => data = a,
            (a) => listAggregatorChoosed = a,
@@ -768,7 +769,7 @@
           navigationManager, () => InvokeAsync(StateHasChanged),
           shoppingListService,
           localStorage)
-        );
+        ));
     }
 
         

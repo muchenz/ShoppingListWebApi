@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace BlazorClient.Data
 {
-    public class SignalRHelper
+    public class SignalRHandlers
     {
 
         public static async Task SignalRInvitationInitAsync(
@@ -42,7 +42,7 @@ namespace BlazorClient.Data
 
         }
 
-        public static async Task SignalRGetUserDataTreeAsyn(
+        public static async Task SignalRGetUserDataTreeAsync(
             User data,
             Action<User> SetData,
             Action<ListAggregator> SetListAggregatorChoosed,
@@ -58,11 +58,9 @@ namespace BlazorClient.Data
         {
             try
             {
-
                 data = await userService.GetUserDataTreeAsync();
 
                 SetData(data);
-
             }
 
             catch (Exception ex)
@@ -84,12 +82,9 @@ namespace BlazorClient.Data
 
             await StateHasChangedAysnc();
 
-            return;
-
-
         }
 
-        public static async Task SignalRGistItemAreChangedAsync(
+        public static async Task SignalRListItemAreChangedAsync(
        SignaREnvelope envelope,
        User data,
        Action<User> SetData,

@@ -89,7 +89,7 @@
             if (sUserId != null)
             {
                 userId = int.Parse(sUserId);
-                await SignalRInit();
+                SignalRInit();
             }
 
 
@@ -109,17 +109,17 @@
 
     int NuberOfInvitations;
 
-    async Task SignalRInit()
+    void SignalRInit()
     {
-
+        signalRService.JoinToHub(()=>
         SignalRToDispose = signalRService.RegisterInvitationAreChanedHandlers
         ( async () =>
-           await SignalRHelper.SignalRInvitationInitAsync(
+           await SignalRHandlers.SignalRInvitationInitAsync(
         userService,
         (_) => { },
         (a) => NuberOfInvitations = a,
         () => InvokeAsync(StateHasChanged)
-        ));
+        )));
 
     }
 
