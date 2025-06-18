@@ -14,15 +14,17 @@ namespace BlazorClient.Data
     public class CustomAuthenticationStateProvider : AuthenticationStateProvider
     {
         private readonly UserService _userService;
+        private readonly StateService _stateService;
 
         public ILocalStorageService _localStorageService { get; }
 
         public CustomAuthenticationStateProvider(ILocalStorageService localStorageService,
-            UserService userService)
+            UserService userService, StateService stateService)
         {
             //throw new Exception("CustomAuthenticationStateProviderException");
             _localStorageService = localStorageService;
             _userService = userService;
+            _stateService = stateService;
         }
 
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
@@ -43,6 +45,7 @@ namespace BlazorClient.Data
                 try
                 {
                     identity = GetClaimsIdentity(accessToken);
+                    _stateService.StateInfo.Token=accessToken;
                 }
                 catch
                 {
@@ -61,7 +64,7 @@ namespace BlazorClient.Data
         {
             await _localStorageService.SetItemAsync("accessToken", token);
             //await _localStorageService.SetItemAsync("refreshToken", user.RefreshToken);
-
+            _stateService.StateInfo.Token = token;
             var identity = GetClaimsIdentity(token);
 
             var claimsPrincipal = new ClaimsPrincipal(identity);
@@ -73,7 +76,7 @@ namespace BlazorClient.Data
         {
             // _localStorageService.RemoveItemAsync("refreshToken");
             _localStorageService.RemoveItemAsync("accessToken");
-
+            _stateService.StateInfo.Token = null;
             var identity = new ClaimsIdentity();
 
             var user = new ClaimsPrincipal(identity);
