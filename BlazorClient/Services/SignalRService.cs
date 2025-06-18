@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Data.Common;
 using System.Linq;
@@ -21,30 +22,44 @@ public class SignalRService
     private readonly IConfiguration _configuration;
     private readonly StateService _stateService;
     private readonly AuthenticationStateProvider _authenticationStateProvider;
+    private readonly IServiceProvider _serviceProvider;
     private HubConnection? _hubConnection;
     private int _userId;
 
     public bool IsConnected => _hubConnection?.State == HubConnectionState.Connected;
 
-    public SignalRService(ILocalStorageService localStorage, IConfiguration configuration, StateService stateService, AuthenticationStateProvider authenticationStateProvider)
+    public SignalRService(ILocalStorageService localStorage,
+        IConfiguration configuration, 
+        AuthenticationStateProvider authenticationStateProvider,
+        IServiceProvider serviceProvider)
     {
         _localStorage = localStorage;
         _configuration = configuration;
-        _stateService = stateService;
         _authenticationStateProvider = authenticationStateProvider;
+        _serviceProvider = serviceProvider;
     }
 
     public async Task StartConnectionAsync()
     {
         var auth = await _authenticationStateProvider.GetAuthenticationStateAsync();
 
+        if (auth.User.Identity.IsAuthenticated is not true)
+        {
+            return;
+        }
+
+        var scope = _serviceProvider.CreateScope();
+
+        var stateService = scope.ServiceProvider.GetRequiredService<StateService>();
+        var accessToken = stateService.StateInfo.Token;
+
         _userId = int.Parse(auth.User.Claims.First(a => a.Type == ClaimTypes.NameIdentifier).Value);
 
-        var isAccessToken = await _localStorage.ContainKeyAsync("accessToken");
+        //var isAccessToken = await _localStorage.ContainKeyAsync("accessToken");
 
-        if (!isAccessToken) return;
+        //if (!isAccessToken) return;
 
-        var accessToken = await _localStorage.GetItemAsync<string>("accessToken");
+        //var accessToken = await _localStorage.GetItemAsync<string>("accessToken");
 
 
         _hubConnection = new HubConnectionBuilder().WithUrl(_configuration.GetSection("AppSettings")["SignlRAddress"], (opts) =>
