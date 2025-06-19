@@ -22,6 +22,7 @@ public class SignalRService
     private readonly IConfiguration _configuration;
     private readonly AuthenticationStateProvider _authenticationStateProvider;
     private readonly IServiceProvider _serviceProvider;
+    private readonly StateService _stateService;
     private HubConnection? _hubConnection;
     private int _userId;
 
@@ -30,12 +31,14 @@ public class SignalRService
     public SignalRService(ILocalStorageService localStorage,
         IConfiguration configuration, 
         AuthenticationStateProvider authenticationStateProvider,
-        IServiceProvider serviceProvider)
+        IServiceProvider serviceProvider,
+        StateService stateService)
     {
         _localStorage = localStorage;
         _configuration = configuration;
         _authenticationStateProvider = authenticationStateProvider;
         _serviceProvider = serviceProvider;
+        _stateService = stateService;
     }
 
     public async Task StartConnectionAsync()
@@ -47,10 +50,8 @@ public class SignalRService
             return;
         }
 
-        var scope = _serviceProvider.CreateScope();
-
-        var stateService = scope.ServiceProvider.GetRequiredService<StateService>();
-        var accessToken = stateService.StateInfo.Token;
+       
+        var accessToken = _stateService.StateInfo.Token;
 
         _userId = int.Parse(auth.User.Claims.First(a => a.Type == ClaimTypes.NameIdentifier).Value);
 
@@ -86,12 +87,12 @@ public class SignalRService
             Console.WriteLine($"SignalR connection failed: {ex.Message}");
         }
 
-        stateService.StateInfo.ClientSignalRID= _hubConnection.ConnectionId;
+        _stateService.StateInfo.ClientSignalRID= _hubConnection.ConnectionId;
         await CallHuBReadyAsync();
 
         _hubConnection.Reconnected += (connectionId) =>
         {
-            stateService.StateInfo.ClientSignalRID = connectionId;
+            _stateService.StateInfo.ClientSignalRID = connectionId;
             return Task.CompletedTask;
         };
 

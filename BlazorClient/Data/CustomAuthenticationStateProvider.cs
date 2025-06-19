@@ -38,6 +38,8 @@ namespace BlazorClient.Data
             {
 
                 identity = new ClaimsIdentity();
+                _stateService.StateInfo.Token = null;
+
             }
             else
             {
@@ -50,6 +52,8 @@ namespace BlazorClient.Data
                 catch
                 {
                     identity = new ClaimsIdentity();
+                    _stateService.StateInfo.Token = null;
+
                 }
             }
 
