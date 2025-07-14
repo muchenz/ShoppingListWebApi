@@ -33,7 +33,6 @@ public class SignalRService
         IServiceProvider serviceProvider,
         StateService stateService)
     {
-        _localStorage = localStorage;
         _configuration = configuration;
         _authenticationStateProvider = authenticationStateProvider;
         _serviceProvider = serviceProvider;
