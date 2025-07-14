@@ -18,7 +18,6 @@ using System.Threading.Tasks;
 
 public class SignalRService
 {
-    private readonly ILocalStorageService _localStorage;
     private readonly IConfiguration _configuration;
     private readonly AuthenticationStateProvider _authenticationStateProvider;
     private readonly IServiceProvider _serviceProvider;
