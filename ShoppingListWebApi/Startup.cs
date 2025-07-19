@@ -146,8 +146,17 @@ namespace ShoppingListWebApi
                       return Task.CompletedTask;
                   }
               };
+          }).AddJwtBearer("NoLifetimeBearer", options =>
+          {
+              options.TokenValidationParameters = new TokenValidationParameters
+              {
+                  ValidateIssuer = false,
+                  ValidateAudience = false,
+                  ValidateLifetime = false,
+                  ValidateIssuerSigningKey = true,
+                  IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration.GetSection("Secrets")["JWTSecurityKey"])),
+              }; 
           });
-
             services.AddHttpContextAccessor();
             services.AddScoped<IAuthorizationHandler, CustomRequirePermissionLevelHandler>();
             services.AddSingleton<IAuthorizationPolicyProvider, CustomAuthorizationPolicyProvider>();

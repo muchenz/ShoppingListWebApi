@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Net;
@@ -233,7 +234,7 @@ namespace ShoppingListWebApi.Controllers
         }
 
         [HttpGet("GetNewToken")]
-        //[Authorize(Roles ="User")]
+        [Authorize(AuthenticationSchemes = "NoLifetimeBearer")]
         public async Task<ActionResult<User>> GetNewToken()
         {
             var name = User.FindFirstValue(ClaimTypes.Name);
