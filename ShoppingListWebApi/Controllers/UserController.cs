@@ -232,6 +232,18 @@ namespace ShoppingListWebApi.Controllers
 
         }
 
+        [HttpGet("GetNewToken")]
+        //[Authorize(Roles ="User")]
+        public async Task<ActionResult<User>> GetNewToken()
+        {
+            var name = User.FindFirstValue(ClaimTypes.Name);
+
+
+            return Ok(name);
+
+
+        }
+
         private  Task<string> GenerateToken2(int userId)
         {
             return _tokenService.GenerateToken(userId);

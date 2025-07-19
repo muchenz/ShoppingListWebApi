@@ -1,10 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
 using AutoMapper;
 using EFDataBase;
 using FirebaseChachedDatabase;
@@ -24,6 +17,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using ServiceMediatR.ListCommandAndQueries;
@@ -35,6 +29,13 @@ using ShoppingListWebApi.Hub;
 using ShoppingListWebApi.Hub.Auth;
 using ShoppingListWebApi.Token;
 using SignalRService;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net.Http;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace ShoppingListWebApi
 {
@@ -130,7 +131,20 @@ namespace ShoppingListWebApi
                   ValidateIssuer = false,
                   ValidateAudience = false,
                   ValidateLifetime = true,
-                  ClockSkew = TimeSpan.FromDays(1)
+                  //ClockSkew = TimeSpan.FromDays(1)
+                  ClockSkew = TimeSpan.FromMilliseconds(100)
+
+              };
+              x.Events = new JwtBearerEvents
+              {
+                  OnAuthenticationFailed = context =>
+                  {
+                      if (context.Exception is SecurityTokenExpiredException)
+                      {
+                          context.Response.Headers.Add("Token-Expired", "true");
+                      }
+                      return Task.CompletedTask;
+                  }
               };
           });
 
