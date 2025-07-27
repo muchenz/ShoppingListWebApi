@@ -508,22 +508,19 @@ namespace FirebaseChachedDatabase
             
             if (!tokensSnap.Exists) 
             {
-                var serialized = JsonSerializer.Serialize(new RefreshToken[] {refreshToken});
-                await _refreshToken.Document(userId.ToString()).SetAsync(new RefreshTokensData { TokensSerializedString = serialized });
+                await _refreshToken.Document(userId.ToString()).SetAsync(new RefreshTokensData { RefreshTokens = new RefreshToken[] { refreshToken }.ToList() });
                 return;
 
             }
 
-            var tokensJsonData =  tokensSnap.ConvertTo<RefreshTokensData>();
-            var tokens = JsonSerializer.Deserialize<List<RefreshToken>>(tokensJsonData.TokensSerializedString);
+            var tokens =  tokensSnap.ConvertTo<RefreshTokensData>().RefreshTokens;
             tokens.Add(refreshToken);
-            var serializedTokens = JsonSerializer.Serialize(tokens);
-            await _refreshToken.Document(userId.ToString()).SetAsync(new RefreshTokensData { TokensSerializedString = serializedTokens });
+            await _refreshToken.Document(userId.ToString()).SetAsync(new RefreshTokensData { RefreshTokens= tokens });
 
         }
 
 
-        public async Task<List<RefreshToken>> GetRefreshTokens(int userId, RefreshToken refreshToken)
+        public async Task<List<RefreshToken>> GetRefreshTokens(int userId)
         {
             var tokensSnap = await _refreshToken.Document(userId.ToString()).GetSnapshotAsync();
 
@@ -532,8 +529,7 @@ namespace FirebaseChachedDatabase
                 return new List<RefreshToken>();
 
             }
-            var tokensJsonData = tokensSnap.ConvertTo<RefreshTokensData>();
-            var tokens = JsonSerializer.Deserialize<List<RefreshToken>>(tokensJsonData.TokensSerializedString);
+            var tokens = tokensSnap.ConvertTo<RefreshTokensData>().RefreshTokens;
 
             return tokens;
         }
@@ -546,26 +542,49 @@ namespace FirebaseChachedDatabase
                 return;
 
             }
-            var tokensJsonData = tokensSnap.ConvertTo<RefreshTokensData>();
-            var tokens = JsonSerializer.Deserialize<List<RefreshToken>>(tokensJsonData.TokensSerializedString);
-            var tokenToDelete = tokens.Where(a => a.Token == refreshToken.Token).FirstOrDefault();
+            var tokens = tokensSnap.ConvertTo<RefreshTokensData>().RefreshTokens;
+            var tokenToDelete = tokens.Where(a => a.RefreshToken == refreshToken.RefreshToken).FirstOrDefault();
             if (tokenToDelete is null)
             {
                 return;
             }
             tokens.Remove(tokenToDelete);
-            var serializedTokens = JsonSerializer.Serialize(tokens);
-            await _refreshToken.Document(userId.ToString()).SetAsync(new RefreshTokensData { TokensSerializedString = serializedTokens });
+            await _refreshToken.Document(userId.ToString()).SetAsync(new RefreshTokensData { RefreshTokens = tokens });
+
+        }
+        public async Task ReplaceRefreshToken(int userId, RefreshToken oldRefreshToken, RefreshToken newRefreshToken)
+        {
+            var tokensSnap = await _refreshToken.Document(userId.ToString()).GetSnapshotAsync();
+
+            if (!tokensSnap.Exists)
+            {
+                return;
+
+            }
+            var tokens = tokensSnap.ConvertTo<RefreshTokensData>().RefreshTokens;
+            var tokenToDelete = tokens.Where(a => a.RefreshToken == oldRefreshToken.RefreshToken).FirstOrDefault();
+            if (tokenToDelete is not null)
+            {
+                tokens.Remove(tokenToDelete); 
+            }
+            tokens.Add(newRefreshToken);
+
+            await _refreshToken.Document(userId.ToString()).SetAsync(new RefreshTokensData { RefreshTokens= tokens });
 
         }
 
-
-
+        //[FirestoreData]
+        //public class RefreshTokensData
+        //{
+        //    [FirestoreProperty]
+        //    public string TokensSerializedString { get; set; }
+        //}
         [FirestoreData]
+
         public class RefreshTokensData
         {
             [FirestoreProperty]
-            public string TokensSerializedString { get; set; }
+            public List<RefreshToken> RefreshTokens { get; set; }= new List<RefreshToken>();
         }
     }
 
