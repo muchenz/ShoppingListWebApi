@@ -502,19 +502,20 @@ namespace FirebaseChachedDatabase
 
         }
 
-        public async Task AddRefreshToken(int userId, RefreshTokenSession refreshToken)
+        public async Task AddRefreshToken(int userId, RefreshTokenSession refreshTokenSession)
         {
             var tokensSnap = await  _refreshToken.Document(userId.ToString()).GetSnapshotAsync();
             
             if (!tokensSnap.Exists) 
             {
-                await _refreshToken.Document(userId.ToString()).SetAsync(new RefreshTokensData { RefreshTokens = new RefreshTokenSession[] { refreshToken }.ToList() });
+                await _refreshToken.Document(userId.ToString()).SetAsync(
+                    new RefreshTokensData { RefreshTokens = new RefreshTokenSession[] { refreshTokenSession }.ToList() });
                 return;
 
             }
 
             var tokens =  tokensSnap.ConvertTo<RefreshTokensData>().RefreshTokens;
-            tokens.Add(refreshToken);
+            tokens.Add(refreshTokenSession);
             await _refreshToken.Document(userId.ToString()).SetAsync(new RefreshTokensData { RefreshTokens= tokens });
 
         }
@@ -533,7 +534,7 @@ namespace FirebaseChachedDatabase
 
             return tokens;
         }
-        public async Task DeleteRefreshToken(int userId, RefreshTokenSession refreshToken)
+        public async Task DeleteRefreshToken(int userId, RefreshTokenSession refreshTokenSession)
         {
             var tokensSnap = await _refreshToken.Document(userId.ToString()).GetSnapshotAsync();
 
@@ -543,7 +544,7 @@ namespace FirebaseChachedDatabase
 
             }
             var tokens = tokensSnap.ConvertTo<RefreshTokensData>().RefreshTokens;
-            var tokenToDelete = tokens.Where(a => a.RefreshToken == refreshToken.RefreshToken).FirstOrDefault();
+            var tokenToDelete = tokens.Where(a => a.RefreshToken == refreshTokenSession.RefreshToken).FirstOrDefault();
             if (tokenToDelete is null)
             {
                 return;
@@ -552,7 +553,7 @@ namespace FirebaseChachedDatabase
             await _refreshToken.Document(userId.ToString()).SetAsync(new RefreshTokensData { RefreshTokens = tokens });
 
         }
-        public async Task ReplaceRefreshToken(int userId, RefreshTokenSession oldRefreshToken, RefreshTokenSession newRefreshToken)
+        public async Task ReplaceRefreshToken(int userId, RefreshTokenSession oldRefreshTokenSession, RefreshTokenSession newRefreshTokenSession)
         {
             var tokensSnap = await _refreshToken.Document(userId.ToString()).GetSnapshotAsync();
 
@@ -562,12 +563,12 @@ namespace FirebaseChachedDatabase
 
             }
             var tokens = tokensSnap.ConvertTo<RefreshTokensData>().RefreshTokens;
-            var tokenToDelete = tokens.Where(a => a.RefreshToken == oldRefreshToken.RefreshToken).FirstOrDefault();
+            var tokenToDelete = tokens.Where(a => a.RefreshToken == oldRefreshTokenSession.RefreshToken).FirstOrDefault();
             if (tokenToDelete is not null)
             {
                 tokens.Remove(tokenToDelete); 
             }
-            tokens.Add(newRefreshToken);
+            tokens.Add(newRefreshTokenSession);
 
             await _refreshToken.Document(userId.ToString()).SetAsync(new RefreshTokensData { RefreshTokens= tokens });
 
@@ -588,15 +589,6 @@ namespace FirebaseChachedDatabase
         }
     }
 
-    public interface ITokenEndpoint
-    {
-
-          Task AddRefreshToken(int userId, RefreshTokenSession refreshToken);
-          Task<List<RefreshTokenSession>> GetRefreshTokens(int userId);
-          Task DeleteRefreshToken(int userId, RefreshTokenSession refreshToken);
-
-          Task ReplaceRefreshToken(int userId, RefreshTokenSession oldRefreshToken, RefreshTokenSession newRefreshToken);
-
-    }
+  
 
 }

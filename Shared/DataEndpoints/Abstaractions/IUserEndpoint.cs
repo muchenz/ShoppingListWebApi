@@ -6,6 +6,16 @@ using System.Threading.Tasks;
 
 namespace Shared.DataEndpoints.Abstaractions
 {
+    public interface ITokenEndpoint
+    {
+
+        Task AddRefreshToken(int userId, RefreshTokenSession refreshTokenSession);
+        Task<List<RefreshTokenSession>> GetRefreshTokens(int userId);
+        Task DeleteRefreshToken(int userId, RefreshTokenSession refreshTokenSession);
+
+        Task ReplaceRefreshToken(int userId, RefreshTokenSession oldRefreshTokenSession, RefreshTokenSession newRefreshTokenSession);
+
+    }
     public interface IUserEndpoint
     {
         public Task<User> FindUserByIdAsync(int id);

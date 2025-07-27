@@ -1,9 +1,11 @@
 ﻿using EFDataBase;
 using FirebaseDatabase;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Shared.DataEndpoints.Abstaractions;
+using Shared.DataEndpoints.Models;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
@@ -19,11 +21,13 @@ public class TokenService : ITokenService
 {
     private readonly IConfiguration _configuration;
     private readonly IServiceProvider _serviceProvider;
+    private readonly ITokenEndpoint _tokenEndpoint;
 
-    public TokenService(IConfiguration configuration, IServiceProvider serviceProvider, i)
+    public TokenService(IConfiguration configuration, IServiceProvider serviceProvider, ITokenEndpoint tokenEndpoint)
     {
         _configuration = configuration;
         _serviceProvider = serviceProvider;
+        _tokenEndpoint = tokenEndpoint;
     }
 
 
@@ -32,9 +36,52 @@ public class TokenService : ITokenService
         var (accessToken, jti) = await GenerateAccessToken(userId);
         var refreshToken = GenerateRefreshToken();
 
+        var  refreshTokenSession = new RefreshTokenSession
+        {
+            RefreshToken = refreshToken,
+            AccessTokenJti = jti,
+            UserId = userId.ToString(),
+            ExpiresAt = DateTime.UtcNow.AddDays(7),
+            CreatedAt= DateTime.UtcNow,
+            Id=Guid.NewGuid(),
+            
+        };
 
+        await _tokenEndpoint.AddRefreshToken(userId, refreshTokenSession);
 
         return (accessToken, refreshToken);
+    }
+
+    public async Task<(string newAccessToken, string newRefreshToken)> RefreshTokensAsync(int userId, string refreshToken, string oldAccessToken)
+    {
+
+        var refreshTokenSessions = await _tokenEndpoint.GetRefreshTokens(userId);
+
+        var refreshTokenSession = refreshTokenSessions.Where(a => a.RefreshToken == refreshToken).FirstOrDefault();
+        
+        if (refreshTokenSession is null || refreshTokenSession.IsRefreshTokenRevoked)
+        {
+            return (string.Empty, string.Empty);
+        }
+
+
+        var (accessToken, jti) = await GenerateAccessToken(userId);
+        var refreshTokenNew = GenerateRefreshToken();
+
+        var refreshTokenSessionNew = new RefreshTokenSession
+        {
+            RefreshToken = refreshToken,
+            AccessTokenJti = jti,
+            UserId = userId.ToString(),
+            ExpiresAt = DateTime.UtcNow.AddDays(7),
+            CreatedAt = DateTime.UtcNow,
+            Id = Guid.NewGuid(),
+
+        };
+
+        await _tokenEndpoint.ReplaceRefreshToken(userId, refreshTokenSession, refreshTokenSessionNew);
+
+        return (accessToken, refreshTokenNew);
     }
 
     private async Task<(string accessToken, string jti )> GenerateAccessToken(int userId)

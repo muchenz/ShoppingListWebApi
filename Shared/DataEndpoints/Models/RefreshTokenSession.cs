@@ -24,9 +24,9 @@ public class RefreshTokenSession
     public string UserId { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime ExpiresAt { get; set; }
-    public bool IsRevoked { get; set; } = false;
+    public bool IsRefreshTokenRevoked { get; set; } = false;
     public string? DeviceInfo { get; set; } 
     public DateTime? RevokedAt { get; set; }
     public string? ReplacedByToken { get; set; } 
-    public bool IsActive => !IsRevoked && DateTime.UtcNow <= ExpiresAt;
+    public bool IsActive => !IsRefreshTokenRevoked && DateTime.UtcNow <= ExpiresAt;
 }
