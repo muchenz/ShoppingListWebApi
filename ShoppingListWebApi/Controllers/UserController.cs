@@ -255,6 +255,9 @@ namespace ShoppingListWebApi.Controllers
         [Authorize]
         public ActionResult VerifyToken2()
         {
+            var a = new JwtSecurityTokenHandler();
+            var b = a.ReadToken("");
+            b.
             return Ok();
         }
 
