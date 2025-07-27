@@ -523,6 +523,44 @@ namespace FirebaseChachedDatabase
         }
 
 
+        public async Task<List<RefreshToken>> GetRefreshTokens(int userId, RefreshToken refreshToken)
+        {
+            var tokensSnap = await _refreshToken.Document(userId.ToString()).GetSnapshotAsync();
+
+            if (!tokensSnap.Exists)
+            {                
+                return new List<RefreshToken>();
+
+            }
+            var tokensJsonData = tokensSnap.ConvertTo<RefreshTokensData>();
+            var tokens = JsonSerializer.Deserialize<List<RefreshToken>>(tokensJsonData.TokensSerializedString);
+
+            return tokens;
+        }
+        public async Task DeleteRefreshToken(int userId, RefreshToken refreshToken)
+        {
+            var tokensSnap = await _refreshToken.Document(userId.ToString()).GetSnapshotAsync();
+
+            if (!tokensSnap.Exists)
+            {
+                return;
+
+            }
+            var tokensJsonData = tokensSnap.ConvertTo<RefreshTokensData>();
+            var tokens = JsonSerializer.Deserialize<List<RefreshToken>>(tokensJsonData.TokensSerializedString);
+            var tokenToDelete = tokens.Where(a => a.Token == refreshToken.Token).FirstOrDefault();
+            if (tokenToDelete is null)
+            {
+                return;
+            }
+            tokens.Remove(tokenToDelete);
+            var serializedTokens = JsonSerializer.Serialize(tokens);
+            await _refreshToken.Document(userId.ToString()).SetAsync(new RefreshTokensData { TokensSerializedString = serializedTokens });
+
+        }
+
+
+
         [FirestoreData]
         public class RefreshTokensData
         {
