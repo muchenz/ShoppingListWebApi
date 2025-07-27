@@ -16,7 +16,7 @@ public class RefreshSession
     public string DeviceInfo { get; set; } = "unknown";
 }
 
-public class RefreshToken
+public class RefreshTokenSession
 {
     public Guid Id { get; set; } 
     public string RefreshToken { get; set; } = string.Empty;

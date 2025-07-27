@@ -245,9 +245,11 @@ namespace ShoppingListWebApi.Controllers
 
         }
 
-        private  Task<string> GenerateToken2(int userId)
+        private async Task<string> GenerateToken2(int userId)
         {
-            return _tokenService.GenerateToken(userId);
+            var (accessToken, refreshToken) = await _tokenService.GenerateTokens(userId);
+
+            return accessToken;
         }
 
 
@@ -255,9 +257,9 @@ namespace ShoppingListWebApi.Controllers
         [Authorize]
         public ActionResult VerifyToken2()
         {
-            var a = new JwtSecurityTokenHandler();
-            var b = a.ReadToken("");
-            b.
+            //var a = new JwtSecurityTokenHandler();
+            //var b = a.ReadToken("");
+            //b.
             return Ok();
         }
 

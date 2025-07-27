@@ -3,6 +3,6 @@
 namespace ShoppingListWebApi.Token;
 public interface ITokenService
 {
-    Task<string> GenerateToken(int userId);
+    Task<(string accessToken, string refreshToken)> GenerateTokens(int userId);
     bool VerifyToken(string accessToken);
 }

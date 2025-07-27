@@ -20,15 +20,24 @@ public class TokenService : ITokenService
     private readonly IConfiguration _configuration;
     private readonly IServiceProvider _serviceProvider;
 
-    public TokenService(IConfiguration configuration, IServiceProvider serviceProvider)
+    public TokenService(IConfiguration configuration, IServiceProvider serviceProvider, i)
     {
         _configuration = configuration;
         _serviceProvider = serviceProvider;
     }
 
 
+    public async Task<(string accessToken, string refreshToken)> GenerateTokens(int userId)
+    {
+        var (accessToken, jti) = await GenerateAccessToken(userId);
+        var refreshToken = GenerateRefreshToken();
 
-    public async Task<string> GenerateToken(int userId)
+
+
+        return (accessToken, refreshToken);
+    }
+
+    private async Task<(string accessToken, string jti )> GenerateAccessToken(int userId)
     {
         using var scope =  _serviceProvider.CreateScope();
 
@@ -78,7 +87,7 @@ public class TokenService : ITokenService
         }
 
 
-        return stringToken;
+        return (stringToken, jti);
     }
 
     private string GenerateJti()

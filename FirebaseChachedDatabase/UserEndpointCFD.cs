@@ -17,7 +17,7 @@ using System.Threading.Tasks;
 
 namespace FirebaseChachedDatabase
 {
-    public class UserEndpointCFD : IUserEndpoint
+    public class UserEndpointCFD : IUserEndpoint, ITokenEndpoint
     {
 
         private readonly IMapper _mapper;
@@ -502,13 +502,13 @@ namespace FirebaseChachedDatabase
 
         }
 
-        public async Task AddRefreshToken(int userId, RefreshToken refreshToken)
+        public async Task AddRefreshToken(int userId, RefreshTokenSession refreshToken)
         {
             var tokensSnap = await  _refreshToken.Document(userId.ToString()).GetSnapshotAsync();
             
             if (!tokensSnap.Exists) 
             {
-                await _refreshToken.Document(userId.ToString()).SetAsync(new RefreshTokensData { RefreshTokens = new RefreshToken[] { refreshToken }.ToList() });
+                await _refreshToken.Document(userId.ToString()).SetAsync(new RefreshTokensData { RefreshTokens = new RefreshTokenSession[] { refreshToken }.ToList() });
                 return;
 
             }
@@ -520,20 +520,20 @@ namespace FirebaseChachedDatabase
         }
 
 
-        public async Task<List<RefreshToken>> GetRefreshTokens(int userId)
+        public async Task<List<RefreshTokenSession>> GetRefreshTokens(int userId)
         {
             var tokensSnap = await _refreshToken.Document(userId.ToString()).GetSnapshotAsync();
 
             if (!tokensSnap.Exists)
             {                
-                return new List<RefreshToken>();
+                return new List<RefreshTokenSession>();
 
             }
             var tokens = tokensSnap.ConvertTo<RefreshTokensData>().RefreshTokens;
 
             return tokens;
         }
-        public async Task DeleteRefreshToken(int userId, RefreshToken refreshToken)
+        public async Task DeleteRefreshToken(int userId, RefreshTokenSession refreshToken)
         {
             var tokensSnap = await _refreshToken.Document(userId.ToString()).GetSnapshotAsync();
 
@@ -552,7 +552,7 @@ namespace FirebaseChachedDatabase
             await _refreshToken.Document(userId.ToString()).SetAsync(new RefreshTokensData { RefreshTokens = tokens });
 
         }
-        public async Task ReplaceRefreshToken(int userId, RefreshToken oldRefreshToken, RefreshToken newRefreshToken)
+        public async Task ReplaceRefreshToken(int userId, RefreshTokenSession oldRefreshToken, RefreshTokenSession newRefreshToken)
         {
             var tokensSnap = await _refreshToken.Document(userId.ToString()).GetSnapshotAsync();
 
@@ -584,9 +584,19 @@ namespace FirebaseChachedDatabase
         public class RefreshTokensData
         {
             [FirestoreProperty]
-            public List<RefreshToken> RefreshTokens { get; set; }= new List<RefreshToken>();
+            public List<RefreshTokenSession> RefreshTokens { get; set; }= new List<RefreshTokenSession>();
         }
     }
 
-  
+    public interface ITokenEndpoint
+    {
+
+          Task AddRefreshToken(int userId, RefreshTokenSession refreshToken);
+          Task<List<RefreshTokenSession>> GetRefreshTokens(int userId);
+          Task DeleteRefreshToken(int userId, RefreshTokenSession refreshToken);
+
+          Task ReplaceRefreshToken(int userId, RefreshTokenSession oldRefreshToken, RefreshTokenSession newRefreshToken);
+
+    }
+
 }
