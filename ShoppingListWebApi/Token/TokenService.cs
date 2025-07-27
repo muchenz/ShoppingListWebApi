@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -35,12 +36,13 @@ public class TokenService : ITokenService
 
 
         var user = await userEndpoint.GetUserWithRolesAsync(userId);
-
+        var jti = GenerateJti();
         var claims = new List<Claim> {
             new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
             new Claim(ClaimTypes.Name,user.EmailAddress),
             new Claim(JwtRegisteredClaimNames.Nbf, new DateTimeOffset(DateTime.Now).ToUnixTimeSeconds().ToString()),
             new Claim(JwtRegisteredClaimNames.Exp, new DateTimeOffset(DateTime.Now.AddDays(1000)).ToUnixTimeSeconds().ToString()),
+            new Claim(JwtRegisteredClaimNames.Jti, jti),
             //new Claim(JwtRegisteredClaimNames.Exp, new DateTimeOffset(DateTime.Now.AddMinutes(1)).ToUnixTimeSeconds().ToString()),
 
             };
@@ -79,6 +81,14 @@ public class TokenService : ITokenService
         return stringToken;
     }
 
+    private string GenerateJti()
+    {
+        Func<char> genLetter = () => (char)(((byte)'a') + Random.Shared.Next(26));
+
+        return $"{genLetter()}{genLetter()}{genLetter()}-{Random.Shared.Next(1000)}";
+    }
+    public string GenerateRefreshToken() =>
+      Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
     public async Task<string> GenerateAccessTokenAsync(int userId)
     {
         using var scope = _serviceProvider.CreateScope();
@@ -150,5 +160,9 @@ public class TokenService : ITokenService
 
         return false;
     }
-       
+    private string Hash(string input)
+    {
+        using var sha = SHA256.Create();
+        return Convert.ToBase64String(sha.ComputeHash(Encoding.UTF8.GetBytes(input)));
+    }
 }

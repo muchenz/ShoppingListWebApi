@@ -18,15 +18,15 @@ public class RefreshSession
 
 public class RefreshToken
 {
-    public Guid Id { get; set; } // unikalny identyfikator refresh tokena
+    public Guid Id { get; set; } 
     public string Token { get; set; } = string.Empty;
-    public string? AccessTokenJti { get; set; } // ID przypisanego access tokena (opcjonalnie)
+    public string? AccessTokenJti { get; set; } 
     public string UserId { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime ExpiresAt { get; set; }
     public bool IsRevoked { get; set; } = false;
-    public string? DeviceInfo { get; set; } // np. "iPhone 15", fingerprint, IP hash, user-agent
+    public string? DeviceInfo { get; set; } 
     public DateTime? RevokedAt { get; set; }
-    public string? ReplacedByToken { get; set; } // np. jeśli został odświeżony
+    public string? ReplacedByToken { get; set; } 
     public bool IsActive => !IsRevoked && DateTime.UtcNow <= ExpiresAt;
 }

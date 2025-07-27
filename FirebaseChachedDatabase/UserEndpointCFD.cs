@@ -1,7 +1,10 @@
 ﻿using AutoMapper;
 using FirebaseDatabase;
+using Google.Apis;
 using Google.Cloud.Firestore;
 using Google.Type;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Caching.Distributed;
 using Shared.DataEndpoints.Abstaractions;
 using Shared.DataEndpoints.Models;
@@ -9,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace FirebaseChachedDatabase
@@ -28,6 +32,7 @@ namespace FirebaseChachedDatabase
         CollectionReference _userListAggrCol;
         CollectionReference _usersCol;
         CollectionReference _indexesCol;
+        CollectionReference _refreshToken;
 
 
         public UserEndpointCFD(IMapper mapper, CacheConveinient cache, UserEndpointFD userEndpointFD)
@@ -43,6 +48,7 @@ namespace FirebaseChachedDatabase
             _userListAggrCol = Db.Collection("userListAggregator");
             _usersCol = Db.Collection("users");
             _indexesCol = Db.Collection("indexes");
+            _refreshToken = Db.Collection("refreshTokens");
         }
 
 
@@ -495,6 +501,35 @@ namespace FirebaseChachedDatabase
             return data;
 
         }
+
+        public async Task AddRefreshToken(int userId, RefreshToken refreshToken)
+        {
+            var tokensSnap = await  _refreshToken.Document(userId.ToString()).GetSnapshotAsync();
+            
+            if (!tokensSnap.Exists) 
+            {
+                var serialized = JsonSerializer.Serialize(new RefreshToken[] {refreshToken});
+                await _refreshToken.Document(userId.ToString()).SetAsync(new RefreshTokensData { TokensSerializedString = serialized });
+                return;
+
+            }
+
+            var tokensJsonData =  tokensSnap.ConvertTo<RefreshTokensData>();
+            var tokens = JsonSerializer.Deserialize<List<RefreshToken>>(tokensJsonData.TokensSerializedString);
+            tokens.Add(refreshToken);
+            var serializedTokens = JsonSerializer.Serialize(tokens);
+            await _refreshToken.Document(userId.ToString()).SetAsync(new RefreshTokensData { TokensSerializedString = serializedTokens });
+
+        }
+
+
+        [FirestoreData]
+        public class RefreshTokensData
+        {
+            [FirestoreProperty]
+            public string TokensSerializedString { get; set; }
+        }
     }
 
+  
 }
