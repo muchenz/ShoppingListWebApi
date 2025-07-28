@@ -1,4 +1,5 @@
 ﻿using Google.Cloud.Firestore;
+using Shared.DataEndpoints.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,7 +14,7 @@ namespace FirebaseDatabase
     }
 
     [FirestoreData]
-    public class UserFD: BaseFD 
+    public class UserFD : BaseFD
     {
 
         public UserFD()
@@ -35,7 +36,7 @@ namespace FirebaseDatabase
 
 
         [FirestoreProperty]
-        public  ICollection<string> Roles { get; set; }
+        public ICollection<string> Roles { get; set; }
 
         // public virtual TokenItemEntity Token { get; set; }
 
@@ -78,7 +79,7 @@ namespace FirebaseDatabase
         public int Order { get; set; }
 
         [FirestoreProperty]
-        public  ICollection<int> Lists { get; set; }
+        public ICollection<int> Lists { get; set; }
 
     }
 
@@ -98,7 +99,7 @@ namespace FirebaseDatabase
         [FirestoreProperty]
         public int Order { get; set; }
         [FirestoreProperty]
-        public  ICollection<int> ListItems { get; set; }
+        public ICollection<int> ListItems { get; set; }
         [FirestoreProperty]
         public int ListAggrId { get; set; }
 
@@ -123,18 +124,87 @@ namespace FirebaseDatabase
     }
 
     [FirestoreData]
-    public class InvitationFD:BaseFD
+    public class InvitationFD : BaseFD
     {
         [FirestoreProperty]
         public int InvitationId { get; set; }
-        [FirestoreProperty] 
+        [FirestoreProperty]
         public string EmailAddress { get; set; }
-        [FirestoreProperty] 
+        [FirestoreProperty]
         public int PermissionLevel { get; set; }
-        [FirestoreProperty] 
+        [FirestoreProperty]
         public int ListAggregatorId { get; set; }
-        [FirestoreProperty] 
+        [FirestoreProperty]
         public string SenderName { get; set; }
+
+    }
+    [FirestoreData]
+    public class RefreshTokenSessionFD
+    {
+        [FirestoreProperty]
+        public string Id { get; set; }
+        public string RefreshToken { get; set; } = string.Empty;
+        [FirestoreProperty]
+        public string? AccessTokenJti { get; set; }
+        [FirestoreProperty]
+        public string UserId { get; set; } = string.Empty;
+        [FirestoreProperty]
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        [FirestoreProperty]
+        public DateTime ExpiresAt { get; set; }
+        [FirestoreProperty]
+        public bool IsRefreshTokenRevoked { get; set; } = false;
+        [FirestoreProperty]
+        public string? DeviceInfo { get; set; }
+        [FirestoreProperty]
+        public DateTime? RevokedAt { get; set; }
+        [FirestoreProperty]
+        public string? ReplacedByToken { get; set; }
+        
+    }
+
+    public static class RefreshTokenSessionExtensions
+    {
+
+        public static RefreshTokenSession ToRefreshTokenSession(this RefreshTokenSessionFD fd)
+        {
+            var session = new RefreshTokenSession()
+            {
+                Id = Guid.Parse(fd.Id),
+                RefreshToken = fd.RefreshToken,
+                ExpiresAt = fd.ExpiresAt,
+                AccessTokenJti = fd.AccessTokenJti,
+                UserId = fd.UserId,
+                CreatedAt = fd.CreatedAt,
+                DeviceInfo = fd.DeviceInfo,
+                IsRefreshTokenRevoked = fd.IsRefreshTokenRevoked,
+                ReplacedByToken = fd.ReplacedByToken,
+                RevokedAt = fd.RevokedAt,
+
+            };
+
+            return session;
+        }
+
+        public static RefreshTokenSessionFD ToRefreshTokenFDSession(this RefreshTokenSession fd)
+        {
+            var session = new RefreshTokenSessionFD()
+            {
+                Id = fd.Id.ToString(),
+                RefreshToken = fd.RefreshToken,
+                ExpiresAt = fd.ExpiresAt,
+                AccessTokenJti = fd.AccessTokenJti,
+                UserId = fd.UserId,
+                CreatedAt = fd.CreatedAt,
+                DeviceInfo = fd.DeviceInfo,
+                IsRefreshTokenRevoked = fd.IsRefreshTokenRevoked,
+                ReplacedByToken = fd.ReplacedByToken,
+                RevokedAt = fd.RevokedAt,
+                
+            };
+
+            return session;
+        }
 
     }
 }

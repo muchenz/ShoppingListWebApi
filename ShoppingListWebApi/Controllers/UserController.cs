@@ -105,9 +105,10 @@ namespace ShoppingListWebApi.Controllers
             {
 
                 user = await _userEndpoint.Register(meResponse.email, string.Empty, LoginType.Facebook);
-                var token = await GenerateToken2(user.UserId);
+                var (accessToken, refreshToken) = await GenerateToken2(user.UserId);
 
-                return new TokenAndEmailData { Token = token, Email = user.EmailAddress };
+
+                return new TokenAndEmailData { Token = accessToken, RefreshToken=refreshToken, Email = user.EmailAddress };
 
 
             }
@@ -115,11 +116,11 @@ namespace ShoppingListWebApi.Controllers
             {
                 if ((LoginType)user.LoginType == LoginType.Facebook)
                 {
-                    var token = await GenerateToken2(user.UserId);
+                    var (accessToken, refreshToken) = await GenerateToken2(user.UserId);
 
                     return Ok(
 
-                        new TokenAndEmailData { Token = token, Email = user.EmailAddress }
+                        new TokenAndEmailData { Token = accessToken, RefreshToken=refreshToken, Email = user.EmailAddress }
                         );
                 }
 
@@ -151,17 +152,17 @@ namespace ShoppingListWebApi.Controllers
             {
 
                 user = await _userEndpoint.Register(meResponse.email, string.Empty, LoginType.Facebook);
-                var token = await GenerateToken2(user.UserId);
+                var (accessToken, refreshToken) = await GenerateToken2(user.UserId);
 
-                return Redirect($"{returnUrl}/#/?token={token}");
+                return Redirect($"{returnUrl}/#/?token={accessToken}&refresh_token={refreshToken}");
 
             }
             else
             {
                 if (user.LoginType == 2) // 2 ==>> LoginType.Facebook
                 {
-                    var token = await GenerateToken2(user.UserId);
-                    return Redirect($"{returnUrl}/#/?token={token}&sss=(rrr)");
+                    var (accessToken, refreshToken) = await GenerateToken2(user.UserId);
+                    return Redirect($"{returnUrl}/#/?token={accessToken}&refresh_token={refreshToken}&sss=(rrr)");
                 }
 
             }
@@ -186,10 +187,12 @@ namespace ShoppingListWebApi.Controllers
                 return Unauthorized(new ProblemDetails { Title = "Invalid username or password." });
             }
 
+            var (accessToken, refreshToken) = await GenerateToken2(user.UserId);
             return new UserNameAndTokenResponse
             {
                 UserName = login.UserName,
-                Token = await GenerateToken2(user.UserId)
+                Token = accessToken,
+                RefreshToken = refreshToken
             };
         }
 
@@ -245,11 +248,11 @@ namespace ShoppingListWebApi.Controllers
 
         }
 
-        private async Task<string> GenerateToken2(int userId)
+        private async Task<(string accessToken, string refreshToken)> GenerateToken2(int userId)
         {
             var (accessToken, refreshToken) = await _tokenService.GenerateTokens(userId);
 
-            return accessToken;
+            return (accessToken, refreshToken);
         }
 
 
