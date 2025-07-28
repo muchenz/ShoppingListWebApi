@@ -52,14 +52,14 @@ public class TokenService : ITokenService
         return (accessToken, refreshToken);
     }
 
-    public async Task<(string newAccessToken, string newRefreshToken)> RefreshTokensAsync(int userId, string refreshToken, string oldAccessToken)
+    public async Task<(string newAccessToken, string newRefreshToken)> RefreshTokensAsync(int userId, string refreshToken)
     {
 
         var refreshTokenSessions = await _tokenEndpoint.GetRefreshTokens(userId);
 
         var refreshTokenSession = refreshTokenSessions.Where(a => a.RefreshToken == refreshToken).FirstOrDefault();
         
-        if (refreshTokenSession is null || refreshTokenSession.IsRefreshTokenRevoked)
+        if (refreshTokenSession is null || refreshTokenSession.IsRefreshTokenRevoked || refreshTokenSession.ExpiresAt < DateTime.UtcNow)
         {
             return (string.Empty, string.Empty);
         }
@@ -70,7 +70,7 @@ public class TokenService : ITokenService
 
         var refreshTokenSessionNew = new RefreshTokenSession
         {
-            RefreshToken = refreshToken,
+            RefreshToken = refreshTokenNew,
             AccessTokenJti = jti,
             UserId = userId.ToString(),
             ExpiresAt = DateTime.UtcNow.AddDays(7),

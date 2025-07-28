@@ -143,6 +143,7 @@ namespace FirebaseDatabase
     {
         [FirestoreProperty]
         public string Id { get; set; }
+        [FirestoreProperty]
         public string RefreshToken { get; set; } = string.Empty;
         [FirestoreProperty]
         public string? AccessTokenJti { get; set; }
@@ -166,40 +167,40 @@ namespace FirebaseDatabase
     public static class RefreshTokenSessionExtensions
     {
 
-        public static RefreshTokenSession ToRefreshTokenSession(this RefreshTokenSessionFD fd)
+        public static RefreshTokenSession ToRefreshTokenSession(this RefreshTokenSessionFD token)
         {
             var session = new RefreshTokenSession()
             {
-                Id = Guid.Parse(fd.Id),
-                RefreshToken = fd.RefreshToken,
-                ExpiresAt = fd.ExpiresAt,
-                AccessTokenJti = fd.AccessTokenJti,
-                UserId = fd.UserId,
-                CreatedAt = fd.CreatedAt,
-                DeviceInfo = fd.DeviceInfo,
-                IsRefreshTokenRevoked = fd.IsRefreshTokenRevoked,
-                ReplacedByToken = fd.ReplacedByToken,
-                RevokedAt = fd.RevokedAt,
+                Id = Guid.Parse(token.Id),
+                RefreshToken = token.RefreshToken,
+                ExpiresAt = token.ExpiresAt,
+                AccessTokenJti = token.AccessTokenJti,
+                UserId = token.UserId,
+                CreatedAt = token.CreatedAt,
+                DeviceInfo = token.DeviceInfo,
+                IsRefreshTokenRevoked = token.IsRefreshTokenRevoked,
+                ReplacedByToken = token.ReplacedByToken,
+                RevokedAt = token.RevokedAt,
 
             };
 
             return session;
         }
 
-        public static RefreshTokenSessionFD ToRefreshTokenFDSession(this RefreshTokenSession fd)
+        public static RefreshTokenSessionFD ToRefreshTokenFDSession(this RefreshTokenSession token)
         {
             var session = new RefreshTokenSessionFD()
             {
-                Id = fd.Id.ToString(),
-                RefreshToken = fd.RefreshToken,
-                ExpiresAt = fd.ExpiresAt,
-                AccessTokenJti = fd.AccessTokenJti,
-                UserId = fd.UserId,
-                CreatedAt = fd.CreatedAt,
-                DeviceInfo = fd.DeviceInfo,
-                IsRefreshTokenRevoked = fd.IsRefreshTokenRevoked,
-                ReplacedByToken = fd.ReplacedByToken,
-                RevokedAt = fd.RevokedAt,
+                Id = token.Id.ToString(),
+                RefreshToken = token.RefreshToken,
+                ExpiresAt = token.ExpiresAt,
+                AccessTokenJti = token.AccessTokenJti,
+                UserId = token.UserId,
+                CreatedAt = token.CreatedAt,
+                DeviceInfo = token.DeviceInfo,
+                IsRefreshTokenRevoked = token.IsRefreshTokenRevoked,
+                ReplacedByToken = token.ReplacedByToken,
+                RevokedAt = token.RevokedAt,
                 
             };
 

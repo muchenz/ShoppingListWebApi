@@ -238,12 +238,26 @@ namespace ShoppingListWebApi.Controllers
 
         [HttpGet("GetNewToken")]
         [Authorize(AuthenticationSchemes = "NoLifetimeBearer")]
-        public async Task<ActionResult<User>> GetNewToken()
+        public async Task<ActionResult<UserNameAndTokenResponse>> GetNewToken()
         {
             var name = User.FindFirstValue(ClaimTypes.Name);
+            var id = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var refreshToken = HttpContext.Request.Headers["refresh_token"];
 
+            var (newAccessToken, newrefreshToken) =  await _tokenService.RefreshTokensAsync(id, refreshToken);
 
-            return Ok(name);
+            if (string.IsNullOrEmpty(newAccessToken) || string.IsNullOrEmpty(newrefreshToken))
+            {
+                return Unauthorized(new ProblemDetails { Title = "Invalid token." });
+
+            }
+
+            return new UserNameAndTokenResponse
+            {
+                UserName = name,
+                Token = newAccessToken,
+                RefreshToken = newrefreshToken
+            }; ;
 
 
         }
