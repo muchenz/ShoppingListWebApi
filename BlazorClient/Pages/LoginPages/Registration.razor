@@ -1,5 +1,6 @@
 ﻿@page  "/register"
 
+@using BlazorClient.Models.Response
 @using Newtonsoft.Json
 @using Services
 @using BlazorClient.Data
@@ -70,7 +71,7 @@
         //assume that user is valid
         //call an API
 
-        MessageAndStatusAndData<string> response = null;
+        MessageAndStatusAndData<UserNameAndTokenResponse> response = null;
         try
         {
             response = await userService.RegisterAsync(registrationrModel);
@@ -83,7 +84,7 @@
 
         if (!response.IsError)
         {
-            ((CustomAuthenticationStateProvider)AuthenticationStateProvider).MarkUserAsAuthenticated(response.Data);
+            await ((CustomAuthenticationStateProvider)AuthenticationStateProvider).MarkUserAsAuthenticatedAsync(response.Data.Token, response.Data.RefreshToken);
              NavigationManager.NavigateTo("/");
         }
         else

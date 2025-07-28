@@ -211,8 +211,14 @@ namespace ShoppingListWebApi.Controllers
                 {
                     return Conflict(new ProblemDetails { Title = "User already exist." });
                 }
+                var (accessToken, refreshToken) = await GenerateToken2(user.UserId);
 
-                return Ok(await GenerateToken2(user.UserId));
+                return Ok(new UserNameAndTokenResponse
+                {
+                    UserName = user.EmailAddress,
+                    Token = accessToken,
+                    RefreshToken = refreshToken
+                });
             }
             catch (Exception ex)
             {

@@ -13,6 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -60,7 +61,7 @@ namespace BlazorClient.Services
         }
 
 
-        public async Task<MessageAndStatusAndData<string>> RegisterAsync(RegistrationModel model)
+        public async Task<MessageAndStatusAndData<UserNameAndTokenResponse>> RegisterAsync(RegistrationModel model)
         {
 
             var loginRequest = new RegistrationRequest
@@ -83,14 +84,14 @@ namespace BlazorClient.Services
             switch (response)
             {
                 case { StatusCode: System.Net.HttpStatusCode.OK }:
-                    var token = await response.Content.ReadAsStringAsync();
-                    return MessageAndStatusAndData<string>.Ok(token);
+                    var tokens = await response.Content.ReadFromJsonAsync<UserNameAndTokenResponse>();
+                    return MessageAndStatusAndData<UserNameAndTokenResponse>.Ok(tokens);
 
                 case { StatusCode: System.Net.HttpStatusCode.Conflict }:
-                    return MessageAndStatusAndData<string>.Fail("User exists.");
+                    return MessageAndStatusAndData<UserNameAndTokenResponse>.Fail("User exists.");
 
                 default:
-                    return MessageAndStatusAndData<string>.Fail("Server error.");
+                    return MessageAndStatusAndData<UserNameAndTokenResponse>.Fail("Server error.");
             }
 
             //if (response.IsSuccessStatusCode)
