@@ -227,7 +227,15 @@ namespace BlazorClient.Services
 
             return await Task.FromResult(user);
         }
+        public async Task LogOutAsync()
+        {
 
+            var requestMessage = new HttpRequestMessage(HttpMethod.Get, "User/LogOut");
+
+            await SetRequestBearerAuthorizationHeader(requestMessage);
+
+            var response = await _httpClient.SendAsync(requestMessage);
+        }
 
         public async Task<MessageAndStatus> AddUserPermission(UserPermissionToListAggregation userPermissionToList, int listAggregationId)
         {

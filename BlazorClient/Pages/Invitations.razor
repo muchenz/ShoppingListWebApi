@@ -95,7 +95,7 @@
         catch
         {
 
-            ((BlazorClient.Data.CustomAuthenticationStateProvider)authenticationStateProvider).MarkUserAsLoggedOut();
+            await ((BlazorClient.Data.CustomAuthenticationStateProvider)authenticationStateProvider).MarkUserAsLoggedOut();
 
             navigationManager.NavigateTo("/login");
 

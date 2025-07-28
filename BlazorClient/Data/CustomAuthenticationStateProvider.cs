@@ -82,11 +82,12 @@ namespace BlazorClient.Data
             NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(claimsPrincipal)));
         }
 
-        public void MarkUserAsLoggedOut()
+        public async Task MarkUserAsLoggedOut()
         {
             // _localStorageService.RemoveItemAsync("refreshToken");
-            _localStorageService.RemoveItemAsync("accessToken");
-            _localStorageService.RemoveItemAsync("refreshToken");
+            await _userService.LogOutAsync();
+            await _localStorageService.RemoveItemAsync("accessToken");
+            await _localStorageService.RemoveItemAsync("refreshToken");
             _stateService.StateInfo.Token = null;
             _stateService.StateInfo.RefreshToken = null;
             var identity = new ClaimsIdentity();

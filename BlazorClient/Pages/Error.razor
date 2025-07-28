@@ -45,7 +45,7 @@
         if (ex is HttpRequestException e && e.StatusCode == System.Net.HttpStatusCode.Unauthorized)
         {
             //await localStorage.RemoveItemAsync("accessToken");
-            ((CustomAuthenticationStateProvider)authenticationStateProvider).MarkUserAsLoggedOut();
+            await ((CustomAuthenticationStateProvider)authenticationStateProvider).MarkUserAsLoggedOut();
             _toastService.ShowError("Authentication problem.");
         }
     }

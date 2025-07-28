@@ -47,11 +47,12 @@ namespace ShoppingListWebApi.Controllers
         private readonly IMediator _mediator;
         private readonly SignarRService _signarRService;
         private readonly IUserEndpoint _userEndpoint;
+        private readonly ITokenEndpoint _tokenEndpoint;
         private readonly ILogger<UserController> _logger;
         private readonly ITokenService _tokenService;
 
         public UserController(IMapper mapper, IConfiguration configuration, IMediator mediator
-            , SignarRService signarRService, IUserEndpoint userEndpoint, ILogger<UserController> logger
+            , SignarRService signarRService, IUserEndpoint userEndpoint, ITokenEndpoint tokenEndpoint,  ILogger<UserController> logger
             , ITokenService tokenService )
         {
             _mapper = mapper;
@@ -59,6 +60,7 @@ namespace ShoppingListWebApi.Controllers
             _mediator = mediator;
             _signarRService = signarRService;
             _userEndpoint = userEndpoint;
+            _tokenEndpoint = tokenEndpoint;
             _logger = logger;
             _tokenService = tokenService;
         }
@@ -291,7 +293,16 @@ namespace ShoppingListWebApi.Controllers
         {
            return _tokenService.VerifyToken(accessToken);
         }
+        [HttpGet("LogOut")]
+        [Authorize]
+        public async  Task<ActionResult> LogOut()
+        {
+            var jti = User.FindFirstValue(JwtRegisteredClaimNames.Jti);
+            var id = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            await _tokenEndpoint.DeleteRefreshTokenByJti(id, jti);
 
+            return Ok();
+        }
 
     }
 }

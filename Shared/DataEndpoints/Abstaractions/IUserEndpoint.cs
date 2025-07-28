@@ -12,7 +12,7 @@ namespace Shared.DataEndpoints.Abstaractions
         Task AddRefreshToken(int userId, RefreshTokenSession refreshTokenSession);
         Task<List<RefreshTokenSession>> GetRefreshTokens(int userId);
         Task DeleteRefreshToken(int userId, RefreshTokenSession refreshTokenSession);
-
+        Task DeleteRefreshTokenByJti(int userId, string jti);
         Task ReplaceRefreshToken(int userId, RefreshTokenSession oldRefreshTokenSession, RefreshTokenSession newRefreshTokenSession);
 
     }
