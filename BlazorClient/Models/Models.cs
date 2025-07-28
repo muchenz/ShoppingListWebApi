@@ -66,11 +66,6 @@ namespace BlazorClient.Models
            new MessageAndStatusAndData<T>(default, msg, MessageSatus.Error);
     }
 
-    public class TokenAndEmailData
-    {
-        public string Token { get; set; }
-        public string Email { get; set; }
-    }
     public static class ItemState
     {
         public static int Normal => 0;

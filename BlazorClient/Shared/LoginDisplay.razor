@@ -18,10 +18,10 @@
 
 @code{
 
-    void ButtonClick()
+    async Task ButtonClick()
     {
 
-        ((CustomAuthenticationStateProvider)authenticationStateProvider).MarkUserAsLoggedOut();
+        await ((CustomAuthenticationStateProvider)authenticationStateProvider).MarkUserAsLoggedOut();
 
         navigationManager.NavigateTo("/login");
 

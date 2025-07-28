@@ -110,7 +110,7 @@ namespace ShoppingListWebApi.Controllers
                 var (accessToken, refreshToken) = await GenerateToken2(user.UserId);
 
 
-                return new TokenAndEmailData { Token = accessToken, RefreshToken=refreshToken, Email = user.EmailAddress };
+                return new UserNameAndTokensResponse { Token = accessToken, RefreshToken=refreshToken, Email = user.EmailAddress };
 
 
             }
@@ -122,7 +122,7 @@ namespace ShoppingListWebApi.Controllers
 
                     return Ok(
 
-                        new TokenAndEmailData { Token = accessToken, RefreshToken=refreshToken, Email = user.EmailAddress }
+                        new UserNameAndTokensResponse { Token = accessToken, RefreshToken=refreshToken, Email = user.EmailAddress }
                         );
                 }
 
@@ -174,7 +174,7 @@ namespace ShoppingListWebApi.Controllers
         }
 
         [HttpPost("Login")]
-        public async Task<ActionResult<UserNameAndTokenResponse>> Login(LoginRequest login)
+        public async Task<ActionResult<UserNameAndTokensResponse>> Login(LoginRequest login)
         {
             _logger.LogInformation($"user controlel log in {login.UserName} ");
 
@@ -190,7 +190,7 @@ namespace ShoppingListWebApi.Controllers
             }
 
             var (accessToken, refreshToken) = await GenerateToken2(user.UserId);
-            return new UserNameAndTokenResponse
+            return new UserNameAndTokensResponse
             {
                 UserName = login.UserName,
                 Token = accessToken,
@@ -215,7 +215,7 @@ namespace ShoppingListWebApi.Controllers
                 }
                 var (accessToken, refreshToken) = await GenerateToken2(user.UserId);
 
-                return Ok(new UserNameAndTokenResponse
+                return Ok(new UserNameAndTokensResponse
                 {
                     UserName = user.EmailAddress,
                     Token = accessToken,
@@ -246,7 +246,7 @@ namespace ShoppingListWebApi.Controllers
 
         [HttpGet("GetNewToken")]
         [Authorize(AuthenticationSchemes = "NoLifetimeBearer")]
-        public async Task<ActionResult<UserNameAndTokenResponse>> GetNewToken()
+        public async Task<ActionResult<UserNameAndTokensResponse>> GetNewToken()
         {
             var name = User.FindFirstValue(ClaimTypes.Name);
             var id = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
@@ -260,7 +260,7 @@ namespace ShoppingListWebApi.Controllers
 
             }
 
-            return new UserNameAndTokenResponse
+            return new UserNameAndTokensResponse
             {
                 UserName = name,
                 Token = newAccessToken,

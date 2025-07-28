@@ -33,13 +33,7 @@ namespace Shared.DataEndpoints.Models
         public List<(string,string)> ValidationErrorList { get; set; }
 
     }
-
-    public class TokenAndEmailData
-    {
-        public string Token { get; set; }
-        public string RefreshToken { get; set; }
-        public string Email { get; set; }
-    }
+      
 
     public class MessageAndStatusAndData<T> : MessageAndStatus
     {
