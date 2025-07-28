@@ -89,7 +89,7 @@ namespace ShoppingListWebApi.Controllers
 
 
         [HttpGet("FacebookToken")]
-        public async Task<ActionResult<TokenAndEmailData>> FacebookToken(string access_token, string state)
+        public async Task<ActionResult<UserNameAndTokensResponse>> FacebookToken(string access_token, string state)
         {
             MeResponse meResponse = null;
 
@@ -110,7 +110,7 @@ namespace ShoppingListWebApi.Controllers
                 var (accessToken, refreshToken) = await GenerateToken2(user.UserId);
 
 
-                return new UserNameAndTokensResponse { Token = accessToken, RefreshToken=refreshToken, Email = user.EmailAddress };
+                return new UserNameAndTokensResponse { Token = accessToken, RefreshToken=refreshToken, UserName = user.EmailAddress };
 
 
             }
@@ -122,7 +122,7 @@ namespace ShoppingListWebApi.Controllers
 
                     return Ok(
 
-                        new UserNameAndTokensResponse { Token = accessToken, RefreshToken=refreshToken, Email = user.EmailAddress }
+                        new UserNameAndTokensResponse { Token = accessToken, RefreshToken=refreshToken, UserName = user.EmailAddress }
                         );
                 }
 
