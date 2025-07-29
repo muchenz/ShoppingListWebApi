@@ -1,6 +1,6 @@
 ﻿namespace BlazorClient.Models.Response;
 
-public class UserNameAndTokenResponse
+public class UserNameAndTokensResponse
 {
     public string UserName { get; set; }
     public string Token { get; set; }

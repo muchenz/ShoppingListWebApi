@@ -22,6 +22,7 @@ public class SignalRService
     private readonly AuthenticationStateProvider _authenticationStateProvider;
     private readonly IServiceProvider _serviceProvider;
     private readonly StateService _stateService;
+    private readonly TokenClientService _tokenClientService;
     private HubConnection? _hubConnection;
     private int _userId;
 
@@ -31,12 +32,14 @@ public class SignalRService
         IConfiguration configuration, 
         AuthenticationStateProvider authenticationStateProvider,
         IServiceProvider serviceProvider,
-        StateService stateService)
+        StateService stateService,
+        TokenClientService tokenClientService)
     {
         _configuration = configuration;
         _authenticationStateProvider = authenticationStateProvider;
         _serviceProvider = serviceProvider;
         _stateService = stateService;
+        _tokenClientService = tokenClientService;
     }
 
     public async Task StartConnectionAsync()
@@ -62,8 +65,18 @@ public class SignalRService
 
         _hubConnection = new HubConnectionBuilder().WithUrl(_configuration.GetSection("AppSettings")["SignlRAddress"], (opts) =>
         {
-            opts.Headers.Add("Access_Token", accessToken);
+            //opts.Headers.Add("Access_Token", accessToken);
             //opts.Headers.Add("Authorization", $"Bearer {accessToken}"); //for normal authorization in HUB
+
+            opts.AccessTokenProvider = async () => 
+            {
+             if (_tokenClientService.IsTokenExpired())
+                {
+                    await _tokenClientService.RefreshTokensAsync();
+                }
+
+                return _stateService.StateInfo.Token;
+            };
 
             opts.HttpMessageHandlerFactory = (message) =>
             {
@@ -74,6 +87,7 @@ public class SignalRService
                 return message;
             };
         }).WithAutomaticReconnect().Build();
+
 
         try
         {

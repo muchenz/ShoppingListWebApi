@@ -71,7 +71,7 @@
         //assume that user is valid
         //call an API
 
-        MessageAndStatusAndData<UserNameAndTokenResponse> response = null;
+        MessageAndStatusAndData<UserNameAndTokensResponse> response = null;
         try
         {
             response = await userService.RegisterAsync(registrationrModel);

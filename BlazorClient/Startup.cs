@@ -44,6 +44,7 @@ namespace BlazorClient
             services.AddServerSideBlazor().AddCircuitOptions(options => { options.DetailedErrors = true; });
             services.AddSingleton<WeatherForecastService>();
             services.AddScoped<StateService>();
+            services.AddScoped<TokenClientService>();
             services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
             services.AddScoped<CustomAuthorizationHeaderHandler>();
             services.AddScoped<SignalRService>();
@@ -51,7 +52,15 @@ namespace BlazorClient
 
             // services.AddHttpClient<UserService>();
             // services.AddHttpClient<ShoppingListService>();
+            services.AddHttpClient<TokenClientService>(client => {
+                // code to configure headers etc..
+            }).ConfigurePrimaryHttpMessageHandler(() => {
+                var handler = new HttpClientHandler();
 
+                handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => { return true; };
+
+                return handler;
+            }).AddHttpMessageHandler<AuthRedirectHandler>(); ;//.AddHttpMessageHandler<CustomAuthorizationHeaderHandler>(); ;
             services.AddHttpClient<UserService>(client => {
                 // code to configure headers etc..
             }).ConfigurePrimaryHttpMessageHandler(() => {

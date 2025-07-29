@@ -21,6 +21,7 @@
 @inject NavigationManager navigationManager
 @inject IConfiguration configuration
 @inject SignalRService signalRService
+@inject TokenClientService tokenClientService
 
 <div class="row d-lg-none" style="margin-bottom:15px">
     <div class="col">
@@ -608,7 +609,7 @@
 
         data.ListAggregators = data.ListAggregators.OrderByDescending(a => a.Order).ToList();
 
-         //await SaveAllOrder(data.ListAggregators);
+        //await SaveAllOrder(data.ListAggregators);
         //listAggregatorChoosed = newItem;
         //listChoosed = null;
     }
@@ -662,6 +663,11 @@
     }
     protected override async Task OnInitializedAsync()
     {
+        // TODO: only of test 
+
+        //var  isExpired = tokenClientService.IsTokenExpired(stateService.StateInfo.Token);
+        //await tokenClientService.RefreshTokensAsync();
+        //
         
         BrowserService.OnResize += BrowserHasResized;
         await JSRuntime.InvokeAsync<object>("browserResize.registerResizeCallback");

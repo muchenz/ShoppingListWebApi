@@ -49,8 +49,8 @@ namespace BlazorClient.Services
             if (token != null)
             {
 
-                httpRequestMessage.Headers.Authorization
-                    = new System.Net.Http.Headers.AuthenticationHeaderValue("bearer", token);
+                    httpRequestMessage.Headers.Authorization
+                        = new System.Net.Http.Headers.AuthenticationHeaderValue("bearer", token);
                 // _httpClient.DefaultRequestHeaders.Add("Authorization", $"bearer  {token}");
             }
 
@@ -61,7 +61,7 @@ namespace BlazorClient.Services
         }
 
 
-        public async Task<MessageAndStatusAndData<UserNameAndTokenResponse>> RegisterAsync(RegistrationModel model)
+        public async Task<MessageAndStatusAndData<UserNameAndTokensResponse>> RegisterAsync(RegistrationModel model)
         {
 
             var loginRequest = new RegistrationRequest
@@ -84,14 +84,14 @@ namespace BlazorClient.Services
             switch (response)
             {
                 case { StatusCode: System.Net.HttpStatusCode.OK }:
-                    var tokens = await response.Content.ReadFromJsonAsync<UserNameAndTokenResponse>();
-                    return MessageAndStatusAndData<UserNameAndTokenResponse>.Ok(tokens);
+                    var tokens = await response.Content.ReadFromJsonAsync<UserNameAndTokensResponse>();
+                    return MessageAndStatusAndData<UserNameAndTokensResponse>.Ok(tokens);
 
                 case { StatusCode: System.Net.HttpStatusCode.Conflict }:
-                    return MessageAndStatusAndData<UserNameAndTokenResponse>.Fail("User exists.");
+                    return MessageAndStatusAndData<UserNameAndTokensResponse>.Fail("User exists.");
 
                 default:
-                    return MessageAndStatusAndData<UserNameAndTokenResponse>.Fail("Server error.");
+                    return MessageAndStatusAndData<UserNameAndTokensResponse>.Fail("Server error.");
             }
 
             //if (response.IsSuccessStatusCode)
@@ -112,7 +112,7 @@ namespace BlazorClient.Services
         }
 
 
-        public async Task<MessageAndStatusAndData<UserNameAndTokenResponse>> LoginAsync(string userName, string password)
+        public async Task<MessageAndStatusAndData<UserNameAndTokensResponse>> LoginAsync(string userName, string password)
         {
             var loginRequest = new LoginRequest
             {
@@ -132,15 +132,15 @@ namespace BlazorClient.Services
 
             if (!response.IsSuccessStatusCode)
             {
-                return MessageAndStatusAndData<UserNameAndTokenResponse>.Fail("Invalid username or password.");
+                return MessageAndStatusAndData<UserNameAndTokensResponse>.Fail("Invalid username or password.");
             }
 
             var content = await response.Content.ReadAsStringAsync();
 
-            var tokenAndUsername = JsonConvert.DeserializeObject<UserNameAndTokenResponse>(content);
+            var tokenAndUsername = JsonConvert.DeserializeObject<UserNameAndTokensResponse>(content);
 
 
-            return MessageAndStatusAndData<UserNameAndTokenResponse>.Ok(tokenAndUsername);
+            return MessageAndStatusAndData<UserNameAndTokensResponse>.Ok(tokenAndUsername);
 
         }
 
