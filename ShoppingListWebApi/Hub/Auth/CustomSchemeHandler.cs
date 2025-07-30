@@ -39,19 +39,25 @@ namespace ShoppingListWebApi.Hub.Auth
         {
             try
             {
+                             
                 //goto god;
-                var isToken = Request.Headers.ContainsKey("Access_Token");
+                //var isToken = Request.Headers.ContainsKey("Access_Token");
+                var isHeader = Request.Headers.ContainsKey("Authorization");
 
-                if (!isToken)
-                    return await Task.FromResult(AuthenticateResult.Fail("Not authorized. Lack Access_Token."));
+                string accessToken = string.Empty;
+                if (isHeader && Request.Headers.Authorization[0].Length>7) 
+                {
+                    accessToken=Request.Headers.Authorization[0].Substring(7);
+                }
 
-                var accessToken = Request.Headers["Access_Token"].ToString();
+                if (!isHeader)
+                    return await Task.FromResult(AuthenticateResult.Fail("Not authorized. Lack AccessToken."));
 
                 var isTokenGood = await _authService.IsValidateTokenAsync(accessToken);
                 //var isTokenGood = await _authService.IsValidateTokenAsync(accessToken);
 
                 if (!isTokenGood)
-                    return await Task.FromResult(AuthenticateResult.Fail("Not authorized.  Access_Token is wrong."));
+                    return await Task.FromResult(AuthenticateResult.Fail("Not authorized.  AccessToken is wrong."));
 
 
                 // pozyskać nameidentifier (user ID)

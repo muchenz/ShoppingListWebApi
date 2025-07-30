@@ -195,7 +195,8 @@ public class TokenService : ITokenService
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(key),
                 ValidateIssuer = false,
-                ValidateAudience = false
+                ValidateAudience = false,
+                ClockSkew=TimeSpan.FromMilliseconds(10)
             };
 
             SecurityToken securityToken;

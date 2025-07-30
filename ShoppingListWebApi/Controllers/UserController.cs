@@ -279,7 +279,7 @@ namespace ShoppingListWebApi.Controllers
 
 
         [HttpGet("VerifyToken2")]
-        [Authorize]
+        [Authorize(AuthenticationSchemes = "ClockSkewZero")]
         public ActionResult VerifyToken2()
         {
             //var a = new JwtSecurityTokenHandler();

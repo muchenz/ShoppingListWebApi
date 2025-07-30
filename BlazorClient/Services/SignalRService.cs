@@ -68,9 +68,9 @@ public class SignalRService
             //opts.Headers.Add("Access_Token", accessToken);
             //opts.Headers.Add("Authorization", $"Bearer {accessToken}"); //for normal authorization in HUB
 
-            opts.AccessTokenProvider = async () => 
+            opts.AccessTokenProvider = async () =>
             {
-             if (_tokenClientService.IsTokenExpired())
+                if (_tokenClientService.IsTokenExpired())
                 {
                     await _tokenClientService.RefreshTokensAsync();
                 }

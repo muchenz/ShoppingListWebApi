@@ -23,7 +23,7 @@ namespace SignalRService
             _hubConnection = new HubConnectionBuilder().WithUrl(_configuration.GetSection("SignalR")["ChatHub"], (opts) =>
             //_hubConnection = new HubConnectionBuilder().WithUrl(" https://127.0.0.1:5013/chatHub", (opts) =>
            {
-               opts.Headers.Add("Access_Token", "I am a god of hellfire.");
+               opts.Headers.Add("Authorization", "Bearer I_am_a_god_of_hellfire.");
 
                opts.HttpMessageHandlerFactory = (message) =>
                {

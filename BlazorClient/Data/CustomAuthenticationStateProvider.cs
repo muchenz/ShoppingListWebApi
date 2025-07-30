@@ -40,6 +40,7 @@ namespace BlazorClient.Data
 
                 identity = new ClaimsIdentity();
                 _stateService.StateInfo.Token = null;
+                _stateService.StateInfo.RefreshToken = null;
 
             }
             else

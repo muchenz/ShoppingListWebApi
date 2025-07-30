@@ -132,7 +132,7 @@ namespace ShoppingListWebApi
                   ValidateAudience = false,
                   ValidateLifetime = true,
                   //ClockSkew = TimeSpan.FromDays(1)
-                  ClockSkew = TimeSpan.FromMilliseconds(100)
+                  ClockSkew = TimeSpan.FromMilliseconds(100) //TODO: inutes rather
 
               };
               x.Events = new JwtBearerEvents
@@ -156,7 +156,19 @@ namespace ShoppingListWebApi
                   ValidateIssuerSigningKey = true,
                   IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration.GetSection("Secrets")["JWTSecurityKey"])),
               }; 
-          });
+          }).AddJwtBearer("ClockSkewZero", options =>
+          {
+              options.TokenValidationParameters = new TokenValidationParameters
+              {
+                  ValidateIssuer = false,
+                  ValidateAudience = false,
+                  ValidateLifetime = false,
+                  ValidateIssuerSigningKey = true,
+                  IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration.GetSection("Secrets")["JWTSecurityKey"])),
+                  ClockSkew = TimeSpan.FromMilliseconds(10)
+
+              };
+          }); ;
             services.AddHttpContextAccessor();
             services.AddScoped<IAuthorizationHandler, CustomRequirePermissionLevelHandler>();
             services.AddSingleton<IAuthorizationPolicyProvider, CustomAuthorizationPolicyProvider>();

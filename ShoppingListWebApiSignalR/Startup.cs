@@ -185,7 +185,7 @@ namespace ShoppingListWebApiSignalR
         public async Task<bool> IsValidateTokenAsync(string token)
         {
 
-            if (token == "I am a god of hellfire.") return true;
+            if (token == "I_am_a_god_of_hellfire.") return true;
 
             var client = _httpClientFactory.CreateClient("api");
 
