@@ -20,16 +20,16 @@ namespace BlazorClient.Services
         private readonly IConfiguration _configuration;
         private readonly ILocalStorageService _localStorage;
         private readonly StateService _userInfoService;
-        private readonly TokenClientService _tokenClientService;
+        private readonly TokenHttpClient _tokenHttpClient;
 
         public ShoppingListService(HttpClient httpClient, IConfiguration configuration, ILocalStorageService localStorage
-            ,StateService userInfoService, TokenClientService tokenClientService)
+            ,StateService userInfoService, TokenHttpClient tokenHttpClient)
         {
             _httpClient = httpClient;
             _configuration = configuration;
             _localStorage = localStorage;
             _userInfoService = userInfoService;
-            _tokenClientService = tokenClientService;
+            _tokenHttpClient = tokenHttpClient;
             _httpClient.BaseAddress = new Uri(_configuration.GetSection("AppSettings")["ShoppingWebAPIBaseAddress"]);
             _httpClient.DefaultRequestHeaders.Add("User-Agent", "BlazorServer");
                       
@@ -102,10 +102,11 @@ namespace BlazorClient.Services
                  = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
 
 
-            await SetRequestBearerAuthorizationHeader(requestMessage);
+            //await SetRequestBearerAuthorizationHeader(requestMessage);
             SetRequestAuthorizationLevelHeader(requestMessage, listAggregationId);
 
-            var response = await _httpClient.SendAsync(requestMessage);
+            //var response = await _httpClient.SendAsync(requestMessage);
+            var response = await _tokenHttpClient.SendAsync(requestMessage);
 
             var responseStatusCode = response.StatusCode;
 
@@ -132,11 +133,12 @@ namespace BlazorClient.Services
             //var requestMessage = new HttpRequestMessage(HttpMethod.Post, "ListItem/DeleteListItem" + querry.ToString());                                  
 
 
-            await SetRequestBearerAuthorizationHeader(requestMessage);
+            //await SetRequestBearerAuthorizationHeader(requestMessage);
             SetRequestAuthorizationLevelHeader(requestMessage, listAggregationId);
 
 
-            var response = await _httpClient.SendAsync(requestMessage);
+            //var response = await _httpClient.SendAsync(requestMessage);
+            var response = await _tokenHttpClient.SendAsync(requestMessage);
 
             var responseStatusCode = response.StatusCode;
 
@@ -167,11 +169,12 @@ namespace BlazorClient.Services
               = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
 
 
-            await SetRequestBearerAuthorizationHeader(requestMessage);
+            //await SetRequestBearerAuthorizationHeader(requestMessage);
             SetRequestAuthorizationLevelHeader(requestMessage, listAggregationId);
 
 
-            var response = await _httpClient.SendAsync(requestMessage);
+            //var response = await _httpClient.SendAsync(requestMessage);
+            var response = await _tokenHttpClient.SendAsync(requestMessage);
 
             var responseStatusCode = response.StatusCode;
 
@@ -202,10 +205,11 @@ namespace BlazorClient.Services
               = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
 
 
-            await SetRequestBearerAuthorizationHeader(requestMessage);
+            //await SetRequestBearerAuthorizationHeader(requestMessage);
 
 
-            var response = await _httpClient.SendAsync(requestMessage);
+           //var response = await _httpClient.SendAsync(requestMessage);
+            var response = await _tokenHttpClient.SendAsync(requestMessage);
 
             var responseStatusCode = response.StatusCode;
 
@@ -240,11 +244,12 @@ namespace BlazorClient.Services
               = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
 
 
-            await SetRequestBearerAuthorizationHeader(requestMessage);
+            //await SetRequestBearerAuthorizationHeader(requestMessage);
             SetRequestAuthorizationLevelHeader(requestMessage, listAggregationId);
 
 
-            var response = await _httpClient.SendAsync(requestMessage);
+            //var response = await _httpClient.SendAsync(requestMessage);
+            var response = await _tokenHttpClient.SendAsync(requestMessage);
 
             var responseStatusCode = response.StatusCode;
 
@@ -276,11 +281,12 @@ namespace BlazorClient.Services
             //  = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
 
 
-            await SetRequestBearerAuthorizationHeader(requestMessage);
+            //await SetRequestBearerAuthorizationHeader(requestMessage);
             SetRequestAuthorizationLevelHeader(requestMessage, listAggregationId);
 
 
-            var response = await _httpClient.SendAsync(requestMessage);
+            //var response = await _httpClient.SendAsync(requestMessage);
+            var response = await _tokenHttpClient.SendAsync(requestMessage);
 
             var responseStatusCode = response.StatusCode;
 

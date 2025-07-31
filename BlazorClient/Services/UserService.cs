@@ -154,10 +154,11 @@ namespace BlazorClient.Services
             var requestMessage = new HttpRequestMessage(HttpMethod.Get, "User/ListAggregationWithUsersPermission");
 
 
-            await SetRequestBearerAuthorizationHeader(requestMessage);
+            //await SetRequestBearerAuthorizationHeader(requestMessage);
 
 
-            var response = await _httpClient.SendAsync(requestMessage);
+            //var response = await _httpClient.SendAsync(requestMessage);
+            var response = await _tokenHttpClient.SendAsync(requestMessage);
 
             var data = await response.Content.ReadAsStringAsync();
 
@@ -171,10 +172,11 @@ namespace BlazorClient.Services
             var requestMessage = new HttpRequestMessage(HttpMethod.Get, "Permissions/ListAggregationWithUsersPermission_Empty");
 
 
-            await SetRequestBearerAuthorizationHeader(requestMessage);
+           // await SetRequestBearerAuthorizationHeader(requestMessage);
 
 
-            var response = await _httpClient.SendAsync(requestMessage);
+            //var response = await _httpClient.SendAsync(requestMessage);
+            var response = await _tokenHttpClient.SendAsync(requestMessage);
 
             var data = await response.Content.ReadAsStringAsync();
 
@@ -196,10 +198,11 @@ namespace BlazorClient.Services
                 "Permissions/ListUsersPermissionByListAggrId" + querry.ToString());
 
 
-            await SetRequestBearerAuthorizationHeader(requestMessage);
+            //await SetRequestBearerAuthorizationHeader(requestMessage);
             SetRequestAuthorizationLevelHeader(requestMessage, listAggregationId);
 
-            var response = await _httpClient.SendAsync(requestMessage);
+            //var response = await _httpClient.SendAsync(requestMessage);
+            var response = await _tokenHttpClient.SendAsync(requestMessage);
 
             var data = await response.Content.ReadAsStringAsync();
 
@@ -235,9 +238,11 @@ namespace BlazorClient.Services
 
             var requestMessage = new HttpRequestMessage(HttpMethod.Get, "User/LogOut");
 
-            await SetRequestBearerAuthorizationHeader(requestMessage);
+            //await SetRequestBearerAuthorizationHeader(requestMessage);
 
-            var response = await _httpClient.SendAsync(requestMessage);
+            //var response = await _httpClient.SendAsync(requestMessage);
+            var response = await _tokenHttpClient.SendAsync(requestMessage);
+
         }
 
         public async Task<MessageAndStatus> AddUserPermission(UserPermissionToListAggregation userPermissionToList, int listAggregationId)
@@ -283,10 +288,11 @@ namespace BlazorClient.Services
               = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
 
 
-            await SetRequestBearerAuthorizationHeader(requestMessage);
+            //await SetRequestBearerAuthorizationHeader(requestMessage);
             SetRequestAuthorizationLevelHeader(requestMessage, listAggregationId);
 
-            var response = await _httpClient.SendAsync(requestMessage);
+            //var response = await _httpClient.SendAsync(requestMessage);
+            var response = await _tokenHttpClient.SendAsync(requestMessage);
 
             var responseStatusCode = response.StatusCode;
 
@@ -319,10 +325,11 @@ namespace BlazorClient.Services
             var requestMessage = new HttpRequestMessage(HttpMethod.Get, "Invitation/InvitationsList");
 
 
-            await SetRequestBearerAuthorizationHeader(requestMessage);
+            //await SetRequestBearerAuthorizationHeader(requestMessage);
 
 
-            var response = await _httpClient.SendAsync(requestMessage);
+            //var response = await _httpClient.SendAsync(requestMessage);
+            var response = await _tokenHttpClient.SendAsync(requestMessage);
 
             var data = await response.Content.ReadAsStringAsync();
 
@@ -360,9 +367,10 @@ namespace BlazorClient.Services
               = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
 
 
-            await SetRequestBearerAuthorizationHeader(requestMessage);
+            //await SetRequestBearerAuthorizationHeader(requestMessage);
 
-            var response = await _httpClient.SendAsync(requestMessage);
+            //var response = await _httpClient.SendAsync(requestMessage);
+            var response = await _tokenHttpClient.SendAsync(requestMessage);
 
             if (response.IsSuccessStatusCode)
             {
