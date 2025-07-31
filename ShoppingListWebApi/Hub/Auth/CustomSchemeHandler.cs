@@ -80,7 +80,7 @@ namespace ShoppingListWebApi.Hub.Auth
                 }
                 else
                 {
-                    claims = [new Claim(ClaimTypes.Name, "Sever"), 
+                    claims = [new Claim(ClaimTypes.Name, "Server"), 
                               new Claim(ClaimTypes.NameIdentifier,"-1")  ];
                 }
 
