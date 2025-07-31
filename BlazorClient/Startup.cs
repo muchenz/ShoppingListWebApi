@@ -45,6 +45,7 @@ namespace BlazorClient
             services.AddSingleton<WeatherForecastService>();
             services.AddScoped<StateService>();
             services.AddScoped<TokenClientService>();
+            services.AddScoped<TokenHttpClient>();
             services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
             services.AddScoped<CustomAuthorizationHeaderHandler>();
             services.AddScoped<SignalRService>();
@@ -72,6 +73,18 @@ namespace BlazorClient
             }).AddHttpMessageHandler<AuthRedirectHandler>(); ;//.AddHttpMessageHandler<CustomAuthorizationHeaderHandler>(); ;
 
             services.AddHttpClient<ShoppingListService>(client => {
+                // code to configure headers etc..
+            }).ConfigurePrimaryHttpMessageHandler(() => {
+                var handler = new HttpClientHandler();
+
+                handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => { return true; };
+
+                return handler;
+            }).AddHttpMessageHandler<AuthRedirectHandler>();
+
+            services.AddHttpClient("api", client => {
+                client.BaseAddress = new Uri(Configuration.GetSection("AppSettings")["ShoppingWebAPIBaseAddress"]);
+
                 // code to configure headers etc..
             }).ConfigurePrimaryHttpMessageHandler(() => {
                 var handler = new HttpClientHandler();
