@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -33,12 +34,20 @@ public class TokenHttpClient
 
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
-        var response = await httpClient.SendAsync(request);
+        HttpResponseMessage response = null; try
+        {
+            response = await httpClient.SendAsync(request);
+        }
+        catch(Exception ex)
+        {
 
+        }
         if(response.StatusCode== HttpStatusCode.Unauthorized && response.Headers.TryGetValues("Token-Expired", out var values))
         {
             await _tokenClientService.RefreshTokensAsync();
             accessToken = _stateService.StateInfo.Token;
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
             request = CloneRequest(request);
             response = await httpClient.SendAsync(request);
         }

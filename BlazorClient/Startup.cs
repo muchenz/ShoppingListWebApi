@@ -171,8 +171,15 @@ public class AuthRedirectHandler : DelegatingHandler
     {
         var response = await base.SendAsync(request, cancellationToken);
 
+        var isRejectedByExpiredToken = false;
+        if(response.Headers.TryGetValues("Token-Expired", out var values))
+        {
+            isRejectedByExpiredToken = bool.Parse(values.FirstOrDefault("false"));
+        }
+
         if (response.StatusCode == HttpStatusCode.Unauthorized &&
-    !       request.RequestUri.AbsolutePath.Contains("user/login", StringComparison.OrdinalIgnoreCase))
+            !request.RequestUri.AbsolutePath.Contains("user/login", StringComparison.OrdinalIgnoreCase) &&
+            !isRejectedByExpiredToken)
         {
            throw new UnauthorizedAccessException();
 

@@ -97,9 +97,9 @@ public class TokenService : ITokenService
             new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
             new Claim(ClaimTypes.Name,user.EmailAddress),
             new Claim(JwtRegisteredClaimNames.Nbf, new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString()),
-            new Claim(JwtRegisteredClaimNames.Exp, new DateTimeOffset(DateTime.UtcNow.AddDays(1000)).ToUnixTimeSeconds().ToString()),
+            //new Claim(JwtRegisteredClaimNames.Exp, new DateTimeOffset(DateTime.UtcNow.AddDays(1000)).ToUnixTimeSeconds().ToString()),
             new Claim(JwtRegisteredClaimNames.Jti, jti),
-            //new Claim(JwtRegisteredClaimNames.Exp, new DateTimeOffset(DateTime.Now.AddMinutes(1)).ToUnixTimeSeconds().ToString()),
+            new Claim(JwtRegisteredClaimNames.Exp, new DateTimeOffset(DateTime.Now.AddSeconds(5)).ToUnixTimeSeconds().ToString()),
 
             };
 
@@ -145,43 +145,49 @@ public class TokenService : ITokenService
     }
     public string GenerateRefreshToken() =>
       Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
-    public async Task<string> GenerateAccessTokenAsync(int userId)
-    {
-        using var scope = _serviceProvider.CreateScope();
-
-        var userEndpoint = scope.ServiceProvider.GetRequiredService<IUserEndpoint>();
 
 
-        var tokenHandler = new JwtSecurityTokenHandler();
 
-        var key = Encoding.UTF8.GetBytes(_configuration.GetSection("Secrets")["JWTSecurityKey"]);
+    //public async Task<string> GenerateAccessTokenAsync(int userId)
+    //{
+    //    using var scope = _serviceProvider.CreateScope();
 
-
-        var roles = await userEndpoint.GetUserRolesByUserIdAsync(userId);
-        var claims = new List<Claim>();
-
-        claims.Add(new Claim(ClaimTypes.Name, Convert.ToString(userId)));
-
-        foreach (var role in roles)
-        {
-            claims.Add(new Claim(ClaimTypes.Role, role));
-
-        }
+    //    var userEndpoint = scope.ServiceProvider.GetRequiredService<IUserEndpoint>();
 
 
-        var tokenDescriptor = new SecurityTokenDescriptor
-        {
-            Subject = new ClaimsIdentity(claims),
-            Expires = DateTime.UtcNow.AddDays(10),
-            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key),
-            SecurityAlgorithms.HmacSha256Signature)
+    //    var tokenHandler = new JwtSecurityTokenHandler();
 
-        };
+    //    var key = Encoding.UTF8.GetBytes(_configuration.GetSection("Secrets")["JWTSecurityKey"]);
 
 
-        var token = tokenHandler.CreateToken(tokenDescriptor);
-        return tokenHandler.WriteToken(token);
-    }
+    //    var roles = await userEndpoint.GetUserRolesByUserIdAsync(userId);
+    //    var claims = new List<Claim>();
+
+    //    claims.Add(new Claim(ClaimTypes.Name, Convert.ToString(userId)));
+
+    //    foreach (var role in roles)
+    //    {
+    //        claims.Add(new Claim(ClaimTypes.Role, role));
+
+    //    }
+
+
+    //    var tokenDescriptor = new SecurityTokenDescriptor
+    //    {
+    //        Subject = new ClaimsIdentity(claims),
+    //        //Expires = DateTime.UtcNow.AddDays(10),
+    //        Expires = DateTime.UtcNow.AddDays(10),
+    //        SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key),
+    //        SecurityAlgorithms.HmacSha256Signature)
+
+    //    };
+
+
+    //    var token = tokenHandler.CreateToken(tokenDescriptor);
+    //    return tokenHandler.WriteToken(token);
+    //}
+
+
     public bool VerifyToken(string accessToken)
     {
         try

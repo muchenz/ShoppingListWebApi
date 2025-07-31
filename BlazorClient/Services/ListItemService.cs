@@ -20,14 +20,16 @@ namespace BlazorClient.Services
         private readonly IConfiguration _configuration;
         private readonly ILocalStorageService _localStorage;
         private readonly StateService _userInfoService;
+        private readonly TokenClientService _tokenClientService;
 
         public ShoppingListService(HttpClient httpClient, IConfiguration configuration, ILocalStorageService localStorage
-            ,StateService userInfoService)
+            ,StateService userInfoService, TokenClientService tokenClientService)
         {
             _httpClient = httpClient;
             _configuration = configuration;
             _localStorage = localStorage;
             _userInfoService = userInfoService;
+            _tokenClientService = tokenClientService;
             _httpClient.BaseAddress = new Uri(_configuration.GetSection("AppSettings")["ShoppingWebAPIBaseAddress"]);
             _httpClient.DefaultRequestHeaders.Add("User-Agent", "BlazorServer");
                       

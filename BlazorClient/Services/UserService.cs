@@ -26,14 +26,16 @@ namespace BlazorClient.Services
         private readonly IConfiguration _configuration;
         private readonly ILocalStorageService _localStorage;
         private readonly StateService _userInfoService;
+        private readonly TokenHttpClient _tokenHttpClient;
 
         public UserService(HttpClient httpClient, IConfiguration configuration, ILocalStorageService localStorage
-            , StateService userInfoService)
+            , StateService userInfoService, TokenHttpClient tokenHttpClient)
         {
             _httpClient = httpClient;
             _configuration = configuration;
             _localStorage = localStorage;
             _userInfoService = userInfoService;
+            _tokenHttpClient = tokenHttpClient;
             _httpClient.BaseAddress = new Uri(_configuration.GetSection("AppSettings")["ShoppingWebAPIBaseAddress"]);
             _httpClient.DefaultRequestHeaders.Add("User-Agent", "BlazorServer");
 
@@ -215,10 +217,11 @@ namespace BlazorClient.Services
             var requestMessage = new HttpRequestMessage(HttpMethod.Get, "User/UserDataTree");
 
 
-            await SetRequestBearerAuthorizationHeader(requestMessage);
+            //await SetRequestBearerAuthorizationHeader(requestMessage);
 
+            var response = await _tokenHttpClient.SendAsync(requestMessage);
 
-            var response = await _httpClient.SendAsync(requestMessage);
+            //var response = await _httpClient.SendAsync(requestMessage);
 
             var data = await response.Content.ReadAsStringAsync();
 

@@ -77,9 +77,9 @@ public class TokenClientService
         var claimsList = claims.ToList();   
 
         var expiration = claims.Where(a=>a.Type == "exp_datetime").First().Value;
-
-        // UTC czas, więc trzeba porównać z DateTime.UtcNow
-        return DateTime.Parse( expiration )< DateTime.UtcNow;
+        var timeExpiration = DateTimeOffset.Parse(expiration);
+        var isExpiered = timeExpiration < DateTime.UtcNow;
+        return isExpiered;
     }
 
     private IEnumerable<Claim> ParseClaimsFromJwt(string jwt)
