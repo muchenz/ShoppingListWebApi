@@ -10,6 +10,7 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace BlazorClient.Services;
@@ -36,7 +37,7 @@ public class TokenClientService
     {
         var refreshToken = _stateService.StateInfo.RefreshToken;
         var accessToken = _stateService.StateInfo.Token;
-         
+
 
         var requestMessage = new HttpRequestMessage(HttpMethod.Get, "User/GetNewToken");
 
@@ -45,7 +46,7 @@ public class TokenClientService
         requestMessage.Headers.Add("refresh_token", refreshToken);
 
         HttpResponseMessage response = null;
-            response = await _httpClient.SendAsync(requestMessage);
+        response = await _httpClient.SendAsync(requestMessage);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -59,6 +60,27 @@ public class TokenClientService
         return true;
     }
 
+    SemaphoreSlim semSlim = new SemaphoreSlim(1);
+
+    public async Task CheckAndSetNewTokens()
+    {
+        if (!IsTokenExpired())
+        {
+            return;
+        }
+        try
+        {
+            await semSlim.WaitAsync();
+            if (IsTokenExpired())
+            {
+                await RefreshTokensAsync();
+            }
+        }
+        finally
+        {
+            semSlim.Release();
+        }
+    }
 
 
     private async Task SetTokens(string accessToken, string refreshToken)
@@ -66,7 +88,7 @@ public class TokenClientService
         await _localStorage.SetItemAsync("accessToken", accessToken);
         await _localStorage.SetItemAsync("refreshToken", refreshToken);
 
-        _stateService.StateInfo.Token =accessToken;
+        _stateService.StateInfo.Token = accessToken;
         _stateService.StateInfo.RefreshToken = refreshToken;
     }
     public bool IsTokenExpired()
@@ -74,9 +96,9 @@ public class TokenClientService
         var token = _stateService.StateInfo.Token;
         var claims = ParseClaimsFromJwt(token);
 
-        var claimsList = claims.ToList();   
+        var claimsList = claims.ToList();
 
-        var expiration = claims.Where(a=>a.Type == "exp_datetime").First().Value;
+        var expiration = claims.Where(a => a.Type == "exp_datetime").First().Value;
         var timeExpiration = DateTimeOffset.Parse(expiration);
         var isExpiered = timeExpiration < DateTime.UtcNow;
         return isExpiered;
@@ -118,7 +140,7 @@ public class TokenClientService
         if (keyValuePairs.TryGetValue("exp", out var expValue))
         {
 
-            var exp = long.Parse(((JsonElement) expValue).GetString());
+            var exp = long.Parse(((JsonElement)expValue).GetString());
             var expDate = DateTimeOffset.FromUnixTimeSeconds(exp);
             claims.Add(new Claim("exp_datetime", expDate.ToUniversalTime().ToString("o")));
         }

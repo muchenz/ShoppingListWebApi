@@ -3,6 +3,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace BlazorClient.Services;
@@ -20,14 +21,16 @@ public class TokenHttpClient
         _stateService = stateService;
     }
 
+
     public async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request)
     {
         var httpClient = _httpClientFactory.CreateClient("api");
 
-        if (_tokenClientService.IsTokenExpired())
-        {
-            await _tokenClientService.RefreshTokensAsync();
-        }
+        await _tokenClientService.CheckAndSetNewTokens();
+
+        var signalRId = _stateService.StateInfo.ClientSignalRID;
+
+        request.Headers.Add("SignalRId", signalRId);
 
         var accessToken = _stateService.StateInfo.Token;
 
@@ -42,15 +45,15 @@ public class TokenHttpClient
         {
 
         }
-        if(response.StatusCode== HttpStatusCode.Unauthorized && response.Headers.TryGetValues("Token-Expired", out var values))
-        {
-            await _tokenClientService.RefreshTokensAsync();
-            accessToken = _stateService.StateInfo.Token;
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        //if(response.StatusCode== HttpStatusCode.Unauthorized && response.Headers.TryGetValues("Token-Expired", out var values))
+        //{
+        //    await _tokenClientService.RefreshTokensAsync();
+        //    accessToken = _stateService.StateInfo.Token;
+        //    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
-            request = CloneRequest(request);
-            response = await httpClient.SendAsync(request);
-        }
+        //    request = CloneRequest(request);
+        //    response = await httpClient.SendAsync(request);
+        //}
                 
         return response;
     }

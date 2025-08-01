@@ -83,13 +83,14 @@
         {
             var authProvider = await authenticationStateProvider.GetAuthenticationStateAsync();
 
-            NuberOfInvitations = (await userService.GetInvitationsListAsync()).Count;
+            
 
             var sUserId = authProvider.User.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier).FirstOrDefault()?.Value;
             if (sUserId != null)
             {
                 userId = int.Parse(sUserId);
                 SignalRInit();
+                NuberOfInvitations = (await userService.GetInvitationsListAsync()).Count;
             }
 
 
