@@ -102,7 +102,7 @@ public class TokenService : ITokenService
     }
 
 
-    public async Task<bool> VerifyAllTokens(int userId, string jti, VerifyAllTokensRequest tokens)
+    public async Task<bool> VerifyAcceessRefreshTokens(int userId, string jti, VerifyAccessRefreshTokenRequest tokens)
     {
         var refreshTokenSessions = await _tokenEndpoint.GetRefreshTokens(userId);
 

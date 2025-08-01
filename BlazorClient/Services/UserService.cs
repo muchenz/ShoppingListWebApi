@@ -379,16 +379,16 @@ namespace BlazorClient.Services
             return MessageAndStatus.Fail();
         }
 
-        public async Task<bool> VerifyAllTokens(string accessToken, string refreshToken)
+        public async Task<bool> VerifyAcceessRefreshTokens(string accessToken, string refreshToken)
         {
-            var veryfiRequest = new VerifyAllTokensRequest
+            var veryfiRequest = new VerifyAccessRefreshTokenRequest
             {
                 RefreshToken = refreshToken
             };
 
             var json = JsonConvert.SerializeObject(veryfiRequest);
 
-            var requestMessage = new HttpRequestMessage(HttpMethod.Post, "User/VerifyAllTokens")
+            var requestMessage = new HttpRequestMessage(HttpMethod.Post, "User/VerifyAcceessRefreshTokens")
             {
                 Content = new StringContent(json, Encoding.UTF8, "application/json")
             };

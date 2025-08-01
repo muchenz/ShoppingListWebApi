@@ -1,7 +1,6 @@
 ﻿namespace Shared.DataEndpoints.Models.Requests;
 
-public class VerifyAllTokensRequest
+public class VerifyAccessRefreshTokenRequest
 {
-    public string AccessToken { get; set; }
     public string RefreshToken { get; set; }
 }

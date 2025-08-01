@@ -60,7 +60,7 @@ namespace BlazorClient.Data
                 var accessToken = await _localStorageService.GetItemAsync<string>("accessToken");
                 var refreshToken = await _localStorageService.GetItemAsync<string>("refreshToken");
 
-                var isTokensOK = await _userService.VerifyAllTokens(accessToken, refreshToken);
+                var isTokensOK = await _userService.VerifyAcceessRefreshTokens(accessToken, refreshToken);
                 if (isTokensOK is false)
                 {
                     //await _userService.LogOutAsync();

@@ -312,13 +312,13 @@ namespace ShoppingListWebApi.Controllers
             return _tokenService.VerifyToken(accessToken);
         }
 
-        [HttpPost("VerifyAllTokens")]
+        [HttpPost("VerifyAcceessRefreshTokens")]
         [Authorize(AuthenticationSchemes = "NoLifetimeBearer")]
-        public async Task<ActionResult> VerifyAllTokens(VerifyAllTokensRequest request)
+        public async Task<ActionResult> VerifyAcceessRefreshTokens(VerifyAccessRefreshTokenRequest request)
         {
             var id = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
             var jti = User.FindFirstValue(JwtRegisteredClaimNames.Jti);
-            if ( await _tokenService.VerifyAllTokens(id, jti, request))
+            if ( await _tokenService.VerifyAcceessRefreshTokens(id, jti, request))
             {
                 return Ok();
             }
