@@ -1,7 +1,12 @@
-﻿@using Microsoft.Extensions.Configuration;
+﻿@using BlazorClient.Services
+@using Microsoft.Extensions.Configuration;
 
 @inherits LayoutComponentBase
 @inject IConfiguration configuration
+@inject TokenClientService TokenClientService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
 @using Blazored.Toast.Configuration
 
 <BlazoredModal />
@@ -81,4 +86,46 @@
     //    await Data.SignalRHelper.SignalRInitAsync(configuration);
 
     //}
+    protected override void OnInitialized()
+    {
+        NavigationManager.LocationChanged += HandleLocationChange;
+    }
+
+    private void HandleLocationChange(object sender, LocationChangedEventArgs e)
+    {
+        if (e.IsNavigationIntercepted)
+        {
+            //only for naviagtion
+            TokenClientService._cts.Cancel();
+        }
+    }
+
+
+    //---------------------------- polible not working as should be
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("eval", @"
+            window.addEventListener('beforeunload', () => {
+                sessionStorage.setItem('blazor_refresh', 'true');
+            });
+        ");
+        }
+    }
+
+   
+
+    protected override async Task OnInitializedAsync()
+    {
+        var wasRefresh = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "blazor_refresh");
+        if (wasRefresh == "true")
+        {
+            TokenClientService._cts?.Cancel();
+
+            await JSRuntime.InvokeVoidAsync("sessionStorage.removeItem", "blazor_refresh");
+        }
+    }
+
 }

@@ -91,9 +91,14 @@ public class TokenService : ITokenService
 
         var (accessToken, jti) = await GenerateAccessToken(userId);
         var refreshTokenNew = GenerateRefreshToken();
-
-        return await _tokenEndpoint.ReplaceRefreshToken2(userId, refreshToken, accessToken,  jti, refreshTokenNew, cancellationToken);
-
+        try
+        {
+            return await _tokenEndpoint.ReplaceRefreshToken2(userId, refreshToken, accessToken, jti, refreshTokenNew, cancellationToken);
+        }
+        catch(Exception ex)
+        {
+            return ("", "");
+        }
     }
 
 
@@ -126,7 +131,7 @@ public class TokenService : ITokenService
             new Claim(JwtRegisteredClaimNames.Nbf, new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString()),
             //new Claim(JwtRegisteredClaimNames.Exp, new DateTimeOffset(DateTime.UtcNow.AddDays(1000)).ToUnixTimeSeconds().ToString()),
             new Claim(JwtRegisteredClaimNames.Jti, jti),
-            new Claim(JwtRegisteredClaimNames.Exp, new DateTimeOffset(DateTime.Now.AddHours(3)).ToUnixTimeSeconds().ToString()),
+            new Claim(JwtRegisteredClaimNames.Exp, new DateTimeOffset(DateTime.Now.AddSeconds(10)).ToUnixTimeSeconds().ToString()),
 
             };
 

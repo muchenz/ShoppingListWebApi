@@ -27,13 +27,14 @@ public class TokenHttpClient
 
     }
 
+
     static ConcurrentDictionary<string, SemaphoreSlim>  dic =new();
    // public async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken=default,  int? listAggregationId = null)
     public async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, int? listAggregationId = null)
     {
         var httpClient = _httpClientFactory.CreateClient("api");
 
-        await _tokenClientService.CheckAndSetNewTokens();
+        //await _tokenClientService.CheckAndSetNewTokens();
 
       
         if (listAggregationId is not null)
@@ -58,20 +59,20 @@ public class TokenHttpClient
         {
 
         }
-        //if (response.StatusCode == HttpStatusCode.Unauthorized && response.Headers.TryGetValues("Token-Expired", out var values))
-        //{
-        //    await _tokenClientService.CheckAndSetNewTokens();
-        //    accessToken = _stateService.StateInfo.Token;
+        if (response.StatusCode == HttpStatusCode.Unauthorized && response.Headers.TryGetValues("Token-Expired", out var values))
+        {
+            await _tokenClientService.CheckAndSetNewTokens();
+            accessToken = _stateService.StateInfo.Token;
 
-        //    var requestClone = CloneRequest(request);
-        //    requestClone.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-        //    if (listAggregationId is not null)
-        //    {
-        //        SetRequestAuthorizationLevelHeader(requestClone, (int)listAggregationId);
-        //    }
+            var requestClone = CloneRequest(request);
+            requestClone.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            if (listAggregationId is not null)
+            {
+                SetRequestAuthorizationLevelHeader(requestClone, (int)listAggregationId);
+            }
 
-        //    response = await httpClient.SendAsync(requestClone);
-        //}
+            response = await httpClient.SendAsync(requestClone);
+        }
 
         return response;
     }

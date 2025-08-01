@@ -24,6 +24,8 @@ public class TokenClientService
     private readonly IConfiguration _configuration;
     private readonly StateService _stateService;
 
+    public CancellationTokenSource _cts = new();
+
     public TokenClientService(ILocalStorageService localStorage, HttpClient httpClient, IConfiguration configuration, StateService stateService
         )
     {
@@ -53,7 +55,7 @@ public class TokenClientService
         requestMessage.Headers.Add("refresh_token", refreshToken);
 
         HttpResponseMessage response = null;
-        response = await _httpClient.SendAsync(requestMessage);
+        response = await _httpClient.SendAsync(requestMessage, _cts.Token);
 
         if (!response.IsSuccessStatusCode)
         {

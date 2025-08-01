@@ -71,7 +71,7 @@ namespace BlazorClient.Data
                     _stateService.StateInfo.UserName = null;
                     var nullClaimPrincipal = new ClaimsPrincipal(new ClaimsIdentity());
 
-                    NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(nullClaimPrincipal)));
+                    //NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(nullClaimPrincipal)));
                     _navigationManager.NavigateTo("/login", forceLoad: true);
 
                     return await Task.FromResult(new AuthenticationState(nullClaimPrincipal));
