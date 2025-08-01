@@ -600,7 +600,7 @@ namespace FirebaseChachedDatabase
 
                 var refreshTokenSessionNew = new RefreshTokenSession
                 {
-                    RefreshToken = refreshTokenNew,
+                    RefreshToken = refreshTokenNew, 
                     AccessTokenJti = jti,
                     UserId = userId.ToString(),
                     ExpiresAt = System.DateTime.UtcNow.AddDays(7),

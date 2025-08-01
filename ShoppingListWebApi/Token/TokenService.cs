@@ -72,7 +72,7 @@ public class TokenService : ITokenService
 
         var refreshTokenSessionNew = new RefreshTokenSession
         {
-            RefreshToken = refreshTokenNew,
+            RefreshToken = refreshTokenNew, 
             AccessTokenJti = jti,
             UserId = userId.ToString(),
             ExpiresAt = DateTime.UtcNow.AddDays(7),
@@ -126,7 +126,7 @@ public class TokenService : ITokenService
             new Claim(JwtRegisteredClaimNames.Nbf, new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString()),
             //new Claim(JwtRegisteredClaimNames.Exp, new DateTimeOffset(DateTime.UtcNow.AddDays(1000)).ToUnixTimeSeconds().ToString()),
             new Claim(JwtRegisteredClaimNames.Jti, jti),
-            new Claim(JwtRegisteredClaimNames.Exp, new DateTimeOffset(DateTime.Now.AddSeconds(3)).ToUnixTimeSeconds().ToString()),
+            new Claim(JwtRegisteredClaimNames.Exp, new DateTimeOffset(DateTime.Now.AddHours(3)).ToUnixTimeSeconds().ToString()),
 
             };
 

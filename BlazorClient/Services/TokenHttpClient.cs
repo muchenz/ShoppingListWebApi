@@ -35,7 +35,7 @@ public class TokenHttpClient
 
         await _tokenClientService.CheckAndSetNewTokens();
 
-        string old = null; 
+      
         if (listAggregationId is not null)
         {
            SetRequestAuthorizationLevelHeader(request, (int)listAggregationId);

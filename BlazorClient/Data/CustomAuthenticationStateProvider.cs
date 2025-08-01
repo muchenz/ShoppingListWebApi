@@ -64,14 +64,17 @@ namespace BlazorClient.Data
                 if (isTokensOK is false)
                 {
                     //await _userService.LogOutAsync();
-                    _navigationManager.NavigateTo("/login", forceLoad: true);
                     await _localStorageService.RemoveItemAsync("accessToken");
                     await _localStorageService.RemoveItemAsync("refreshToken");
                     _stateService.StateInfo.Token = null;
                     _stateService.StateInfo.RefreshToken = null;
                     _stateService.StateInfo.UserName = null;
-                    
-                    return await Task.FromResult(new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity())));
+                    var nullClaimPrincipal = new ClaimsPrincipal(new ClaimsIdentity());
+
+                    NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(nullClaimPrincipal)));
+                    _navigationManager.NavigateTo("/login", forceLoad: true);
+
+                    return await Task.FromResult(new AuthenticationState(nullClaimPrincipal));
                 }
 
 
