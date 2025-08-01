@@ -1,12 +1,15 @@
 ﻿using BlazorClient.Services;
 using Blazored.LocalStorage;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace BlazorClient.Data
@@ -15,16 +18,21 @@ namespace BlazorClient.Data
     {
         private readonly UserService _userService;
         private readonly StateService _stateService;
+        private readonly ConcurrentDictionary<string, List<SemaphoreSlim>> _tokenCoordiantor;
+        private readonly TokenClientService _tokenClientService;
+        private readonly NavigationManager _navigationManager;
 
         public ILocalStorageService _localStorageService { get; }
 
         public CustomAuthenticationStateProvider(ILocalStorageService localStorageService,
-            UserService userService, StateService stateService)
+            UserService userService, StateService stateService, TokenClientService tokenClientService, NavigationManager navigationManager)
         {
             //throw new Exception("CustomAuthenticationStateProviderException");
             _localStorageService = localStorageService;
             _userService = userService;
             _stateService = stateService;
+            _tokenClientService = tokenClientService;
+            _navigationManager = navigationManager;
         }
 
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
@@ -33,7 +41,6 @@ namespace BlazorClient.Data
             var isRefreshToken = await _localStorageService.ContainKeyAsync("refreshToken");
 
             ClaimsIdentity identity;
-
 
             if (isAccessToken == false || isRefreshToken == false)
             {
@@ -45,20 +52,44 @@ namespace BlazorClient.Data
             }
             else
             {
+                while (_tokenClientService.IsTokenRefresing)
+                {
+                    await Task.Delay(100);
+                }
+
                 var accessToken = await _localStorageService.GetItemAsync<string>("accessToken");
                 var refreshToken = await _localStorageService.GetItemAsync<string>("refreshToken");
+
+                var isTokensOK = await _userService.VerifyAllTokens(accessToken, refreshToken);
+                if (isTokensOK is false)
+                {
+                    //await _userService.LogOutAsync();
+                    _navigationManager.NavigateTo("/login", forceLoad: true);
+                    await _localStorageService.RemoveItemAsync("accessToken");
+                    await _localStorageService.RemoveItemAsync("refreshToken");
+                    _stateService.StateInfo.Token = null;
+                    _stateService.StateInfo.RefreshToken = null;
+                    _stateService.StateInfo.UserName = null;
+                    
+                    return await Task.FromResult(new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity())));
+                }
+
+
                 try
                 {
                     identity = GetClaimsIdentity(accessToken);
+                    _stateService.StateInfo.UserName = identity.Claims.Where(a => a.Type == ClaimTypes.Name).First().Value;
+                 
                     _stateService.StateInfo.Token=accessToken;
                     _stateService.StateInfo.RefreshToken=refreshToken;
+
                 }
                 catch
                 {
                     identity = new ClaimsIdentity();
                     _stateService.StateInfo.Token = null;
                     _stateService.StateInfo.RefreshToken = null;
-
+                    
                 }
             }
 
@@ -77,8 +108,9 @@ namespace BlazorClient.Data
             _stateService.StateInfo.Token = token;
             _stateService.StateInfo.RefreshToken = refreshToken;
             var identity = GetClaimsIdentity(token);
-
+            
             var claimsPrincipal = new ClaimsPrincipal(identity);
+            
 
             NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(claimsPrincipal)));
         }
@@ -91,6 +123,7 @@ namespace BlazorClient.Data
             await _localStorageService.RemoveItemAsync("refreshToken");
             _stateService.StateInfo.Token = null;
             _stateService.StateInfo.RefreshToken = null;
+            _stateService.StateInfo.UserName = null;
             var identity = new ClaimsIdentity();
 
             var user = new ClaimsPrincipal(identity);

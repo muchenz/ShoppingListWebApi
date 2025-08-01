@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Shared.DataEndpoints.Abstaractions;
 using Shared.DataEndpoints.Models;
+using Shared.DataEndpoints.Models.Requests;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
@@ -13,6 +14,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ShoppingListWebApi.Token;
@@ -84,6 +86,31 @@ public class TokenService : ITokenService
         return (accessToken, refreshTokenNew);
     }
 
+    public async Task<(string newAccessToken, string newRefreshToken)> RefreshTokensAsync2(int userId, string refreshToken, CancellationToken cancellationToken)
+    {
+
+        var (accessToken, jti) = await GenerateAccessToken(userId);
+        var refreshTokenNew = GenerateRefreshToken();
+
+        return await _tokenEndpoint.ReplaceRefreshToken2(userId, refreshToken, accessToken,  jti, refreshTokenNew, cancellationToken);
+
+    }
+
+
+    public async Task<bool> VerifyAllTokens(int userId, string jti, VerifyAllTokensRequest tokens)
+    {
+        var refreshTokenSessions = await _tokenEndpoint.GetRefreshTokens(userId);
+
+        var refreshToken = refreshTokenSessions.Where(a=>a.RefreshToken==tokens.RefreshToken).FirstOrDefault();
+
+        if (refreshToken is null || refreshToken.AccessTokenJti != jti)
+        {
+            return false;    
+        }
+
+        return true;
+    }
+
     private async Task<(string accessToken, string jti )> GenerateAccessToken(int userId)
     {
         using var scope =  _serviceProvider.CreateScope();
@@ -99,7 +126,7 @@ public class TokenService : ITokenService
             new Claim(JwtRegisteredClaimNames.Nbf, new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString()),
             //new Claim(JwtRegisteredClaimNames.Exp, new DateTimeOffset(DateTime.UtcNow.AddDays(1000)).ToUnixTimeSeconds().ToString()),
             new Claim(JwtRegisteredClaimNames.Jti, jti),
-            new Claim(JwtRegisteredClaimNames.Exp, new DateTimeOffset(DateTime.Now.AddSeconds(5)).ToUnixTimeSeconds().ToString()),
+            new Claim(JwtRegisteredClaimNames.Exp, new DateTimeOffset(DateTime.Now.AddSeconds(3)).ToUnixTimeSeconds().ToString()),
 
             };
 

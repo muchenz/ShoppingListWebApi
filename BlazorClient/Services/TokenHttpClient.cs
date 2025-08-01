@@ -1,8 +1,13 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -19,14 +24,22 @@ public class TokenHttpClient
         _httpClientFactory = httpClientFactory;
         _tokenClientService = tokenClientService;
         _stateService = stateService;
+
     }
 
-
-    public async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request)
+    static ConcurrentDictionary<string, SemaphoreSlim>  dic =new();
+   // public async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken=default,  int? listAggregationId = null)
+    public async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, int? listAggregationId = null)
     {
         var httpClient = _httpClientFactory.CreateClient("api");
 
         await _tokenClientService.CheckAndSetNewTokens();
+
+        string old = null; 
+        if (listAggregationId is not null)
+        {
+           SetRequestAuthorizationLevelHeader(request, (int)listAggregationId);
+        }
 
         var signalRId = _stateService.StateInfo.ClientSignalRID;
 
@@ -41,20 +54,25 @@ public class TokenHttpClient
         {
             response = await httpClient.SendAsync(request);
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
 
         }
-        //if(response.StatusCode== HttpStatusCode.Unauthorized && response.Headers.TryGetValues("Token-Expired", out var values))
+        //if (response.StatusCode == HttpStatusCode.Unauthorized && response.Headers.TryGetValues("Token-Expired", out var values))
         //{
-        //    await _tokenClientService.RefreshTokensAsync();
+        //    await _tokenClientService.CheckAndSetNewTokens();
         //    accessToken = _stateService.StateInfo.Token;
-        //    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
-        //    request = CloneRequest(request);
-        //    response = await httpClient.SendAsync(request);
+        //    var requestClone = CloneRequest(request);
+        //    requestClone.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        //    if (listAggregationId is not null)
+        //    {
+        //        SetRequestAuthorizationLevelHeader(requestClone, (int)listAggregationId);
+        //    }
+
+        //    response = await httpClient.SendAsync(requestClone);
         //}
-                
+
         return response;
     }
 
@@ -73,5 +91,30 @@ public class TokenHttpClient
             clone.Options.Set(new HttpRequestOptionsKey<object>(property.Key), property.Value);
 
         return clone;
+    }
+
+    void  SetRequestAuthorizationLevelHeader(HttpRequestMessage httpRequestMessage, int listAggregationId)
+    {
+
+        if (_stateService.StateInfo.Token != null)
+        {
+            if (httpRequestMessage.Headers.Contains("listAggregationId"))
+                httpRequestMessage.Headers.Remove("listAggregationId");
+
+            if (httpRequestMessage.Headers.Contains("Hash"))
+                httpRequestMessage.Headers.Remove("Hash");
+
+            httpRequestMessage.Headers.Add("listAggregationId", listAggregationId.ToString());
+
+            using SHA256 mySHA256 = SHA256.Create();
+
+            var bytes = Encoding.ASCII.GetBytes(_stateService.StateInfo.Token + listAggregationId.ToString());
+
+            var hashBytes = mySHA256.ComputeHash(bytes);
+
+            var hashString = Convert.ToBase64String(hashBytes);
+            
+            httpRequestMessage.Headers.Add("Hash", hashString);
+        }
     }
 }

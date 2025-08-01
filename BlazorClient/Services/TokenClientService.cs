@@ -1,8 +1,10 @@
 ﻿using BlazorClient.Models.Response;
 using Blazored.LocalStorage;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -22,7 +24,8 @@ public class TokenClientService
     private readonly IConfiguration _configuration;
     private readonly StateService _stateService;
 
-    public TokenClientService(ILocalStorageService localStorage, HttpClient httpClient, IConfiguration configuration, StateService stateService)
+    public TokenClientService(ILocalStorageService localStorage, HttpClient httpClient, IConfiguration configuration, StateService stateService
+        )
     {
         _localStorage = localStorage;
         _httpClient = httpClient;
@@ -37,9 +40,13 @@ public class TokenClientService
     {
         var refreshToken = _stateService.StateInfo.RefreshToken;
         var accessToken = _stateService.StateInfo.Token;
+        return await RefreshTokensAsync(accessToken, refreshToken);
+    }
+    public async Task<bool> RefreshTokensAsync(string accessToken, string refreshToken)
+    {
+      
 
-
-        var requestMessage = new HttpRequestMessage(HttpMethod.Get, "User/GetNewToken");
+    var requestMessage = new HttpRequestMessage(HttpMethod.Get, "User/GetNewToken");
 
         requestMessage.Headers.Authorization
                     = new System.Net.Http.Headers.AuthenticationHeaderValue("bearer", accessToken);
@@ -61,9 +68,11 @@ public class TokenClientService
     }
 
     SemaphoreSlim semSlim = new SemaphoreSlim(1);
-
+    public bool IsTokenRefresing { get; private set; } =false;
     public async Task CheckAndSetNewTokens()
     {
+        IsTokenRefresing = true;
+
         if (!IsTokenExpired())
         {
             return;
@@ -73,12 +82,14 @@ public class TokenClientService
             await semSlim.WaitAsync();
             if (IsTokenExpired())
             {
-                await RefreshTokensAsync();
+                    await RefreshTokensAsync();
             }
         }
         finally
         {
             semSlim.Release();
+            IsTokenRefresing = false;
+
         }
     }
 
@@ -91,9 +102,24 @@ public class TokenClientService
         _stateService.StateInfo.Token = accessToken;
         _stateService.StateInfo.RefreshToken = refreshToken;
     }
+
+    public async Task<(string accessToken, string refreshToken)> GetTokens(string accessToken, string refreshToken)
+    {
+        await _localStorage.SetItemAsync("accessToken", accessToken);
+        await _localStorage.SetItemAsync("refreshToken", refreshToken);
+
+        _stateService.StateInfo.Token = accessToken;
+        _stateService.StateInfo.RefreshToken = refreshToken;
+        return (accessToken, refreshToken);
+    }
+
     public bool IsTokenExpired()
     {
         var token = _stateService.StateInfo.Token;
+        if (token is null)
+        {
+            return false;
+        }
         var claims = ParseClaimsFromJwt(token);
 
         var claimsList = claims.ToList();

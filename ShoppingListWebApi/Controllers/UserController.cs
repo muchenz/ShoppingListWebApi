@@ -1,17 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Data;
-using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
-using System.Web;
-using AutoMapper;
+﻿using AutoMapper;
 using EFDataBase;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -28,11 +15,27 @@ using NuGet.Protocol;
 using ServiceMediatR.SignalREvents;
 using Shared.DataEndpoints.Abstaractions;
 using Shared.DataEndpoints.Models;
+using Shared.DataEndpoints.Models.Requests;
 using ShoppingListWebApi.Data;
 using ShoppingListWebApi.Models.Requests;
 using ShoppingListWebApi.Models.Response;
 using ShoppingListWebApi.Token;
 using SignalRService;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Data;
+using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Web;
 
 
 namespace ShoppingListWebApi.Controllers
@@ -244,28 +247,41 @@ namespace ShoppingListWebApi.Controllers
 
         }
 
+        private static readonly ConcurrentDictionary<string, SemaphoreSlim> _userLocks = new();
+
         [HttpGet("GetNewToken")]
         [Authorize(AuthenticationSchemes = "NoLifetimeBearer")]
-        public async Task<ActionResult<UserNameAndTokensResponse>> GetNewToken()
+        public async Task<ActionResult<UserNameAndTokensResponse>> GetNewToken(CancellationToken cancellationToken)
         {
-            var name = User.FindFirstValue(ClaimTypes.Name);
+
+            var userName = User.FindFirstValue(ClaimTypes.Name);
+            var sem = _userLocks.GetOrAdd(userName, _ => new SemaphoreSlim(1, 1));
+
+            await sem.WaitAsync(TimeSpan.FromSeconds(5));
             var id = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-            var refreshToken = HttpContext.Request.Headers["refresh_token"];
-
-            var (newAccessToken, newrefreshToken) =  await _tokenService.RefreshTokensAsync(id, refreshToken);
-
-            if (string.IsNullOrEmpty(newAccessToken) || string.IsNullOrEmpty(newrefreshToken))
+            try
             {
-                return Unauthorized(new ProblemDetails { Title = "Invalid token." });
+                var refreshToken = HttpContext.Request.Headers["refresh_token"];
 
+               // var (newAccessToken, newrefreshToken) = await _tokenService.RefreshTokensAsync(id, refreshToken);
+                var (newAccessToken, newrefreshToken) = await _tokenService.RefreshTokensAsync2(id, refreshToken, cancellationToken);
+
+                if (string.IsNullOrEmpty(newAccessToken) || string.IsNullOrEmpty(newrefreshToken))
+                {
+                    return Unauthorized(new ProblemDetails { Title = "Invalid token." });
+
+                }
+
+                return new UserNameAndTokensResponse
+                {
+                    UserName = userName,
+                    Token = newAccessToken,
+                    RefreshToken = newrefreshToken
+                }; ;
             }
-
-            return new UserNameAndTokensResponse
-            {
-                UserName = name,
-                Token = newAccessToken,
-                RefreshToken = newrefreshToken
-            }; ;
+            finally { 
+                sem.Release(); 
+            }
 
 
         }
@@ -291,8 +307,24 @@ namespace ShoppingListWebApi.Controllers
         [HttpGet("VerifyToken")]
         public bool GetUserFromAccessTokenAsync(string accessToken)
         {
-           return _tokenService.VerifyToken(accessToken);
+            var userName = User.FindFirstValue(ClaimTypes.Name);
+
+            return _tokenService.VerifyToken(accessToken);
         }
+
+        [HttpPost("VerifyAllTokens")]
+        [Authorize(AuthenticationSchemes = "NoLifetimeBearer")]
+        public async Task<ActionResult> VerifyAllTokens(VerifyAllTokensRequest request)
+        {
+            var id = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var jti = User.FindFirstValue(JwtRegisteredClaimNames.Jti);
+            if ( await _tokenService.VerifyAllTokens(id, jti, request))
+            {
+                return Ok();
+            }
+            return Unauthorized();
+        }
+
         [HttpGet("LogOut")]
         [Authorize]
         public async  Task<ActionResult> LogOut()

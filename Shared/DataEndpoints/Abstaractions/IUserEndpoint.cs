@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Shared.DataEndpoints.Abstaractions
@@ -14,6 +15,8 @@ namespace Shared.DataEndpoints.Abstaractions
         Task DeleteRefreshToken(int userId, RefreshTokenSession refreshTokenSession);
         Task DeleteRefreshTokenByJti(int userId, string jti);
         Task ReplaceRefreshToken(int userId, RefreshTokenSession oldRefreshTokenSession, RefreshTokenSession newRefreshTokenSession);
+        Task<(string, string)> ReplaceRefreshToken2(int userId, string refreshTokenOld, string accessTokenNew, string jti, string refreshTokenNew
+            , CancellationToken cancellationToken);
 
     }
     public interface IUserEndpoint

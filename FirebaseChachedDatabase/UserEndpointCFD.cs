@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FirebaseChachedDatabase
@@ -572,6 +573,59 @@ namespace FirebaseChachedDatabase
 
             await _refreshToken.Document(userId.ToString()).SetAsync(new RefreshTokensDataFD { RefreshTokens= tokens });
 
+        }
+
+        public async Task<(string, string)> ReplaceRefreshToken2(int userId, string refreshTokenOld, string accessTokenNew, 
+            string jti, string refreshTokenNew, CancellationToken cancellationToken)
+        {
+            bool isGood = false;
+
+            await Db.RunTransactionAsync(async transation =>
+            {
+
+                var tokensSnap = await transation.Database.Collection("refreshTokens").Document(userId.ToString()).GetSnapshotAsync();
+
+                if (!tokensSnap.Exists)
+                {
+                    return;
+
+                }
+                var tokens = tokensSnap.ConvertTo<RefreshTokensDataFD>().RefreshTokens;
+                var refreshTokenSessionToDelete = tokens.Where(a => a.RefreshToken == refreshTokenOld).FirstOrDefault();
+
+                if (refreshTokenSessionToDelete is null || refreshTokenSessionToDelete.IsRefreshTokenRevoked || refreshTokenSessionToDelete.ExpiresAt < System.DateTime.UtcNow)
+                {
+                    return;
+                }
+
+                var refreshTokenSessionNew = new RefreshTokenSession
+                {
+                    RefreshToken = refreshTokenNew,
+                    AccessTokenJti = jti,
+                    UserId = userId.ToString(),
+                    ExpiresAt = System.DateTime.UtcNow.AddDays(7),
+                    CreatedAt = System.DateTime.UtcNow,
+                    Id = Guid.NewGuid(),
+
+                };
+
+                if (refreshTokenSessionToDelete is not null)
+                {
+                    tokens.Remove(refreshTokenSessionToDelete);
+                }
+
+                tokens.Add(refreshTokenSessionNew.ToRefreshTokenFDSession());
+
+                await transation.Database.Collection("refreshTokens").Document(userId.ToString()).SetAsync(new RefreshTokensDataFD { RefreshTokens = tokens });
+                isGood= true;
+            }, cancellationToken: cancellationToken);
+
+            if (isGood)
+            {
+                return (accessTokenNew, refreshTokenNew);
+
+            }
+            return (string.Empty, string.Empty);
         }
         public async Task DeleteRefreshTokenByJti(int userId, string jti)
         {

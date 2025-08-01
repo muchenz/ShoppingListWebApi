@@ -51,8 +51,8 @@ namespace BlazorClient.Services
             if (token != null)
             {
 
-                    httpRequestMessage.Headers.Authorization
-                        = new System.Net.Http.Headers.AuthenticationHeaderValue("bearer", token);
+                httpRequestMessage.Headers.Authorization
+                    = new System.Net.Http.Headers.AuthenticationHeaderValue("bearer", token);
                 // _httpClient.DefaultRequestHeaders.Add("Authorization", $"bearer  {token}");
             }
 
@@ -172,7 +172,7 @@ namespace BlazorClient.Services
             var requestMessage = new HttpRequestMessage(HttpMethod.Get, "Permissions/ListAggregationWithUsersPermission_Empty");
 
 
-           // await SetRequestBearerAuthorizationHeader(requestMessage);
+            // await SetRequestBearerAuthorizationHeader(requestMessage);
 
 
             //var response = await _httpClient.SendAsync(requestMessage);
@@ -199,10 +199,10 @@ namespace BlazorClient.Services
 
 
             //await SetRequestBearerAuthorizationHeader(requestMessage);
-            SetRequestAuthorizationLevelHeader(requestMessage, listAggregationId);
+            //SetRequestAuthorizationLevelHeader(requestMessage, listAggregationId);
 
             //var response = await _httpClient.SendAsync(requestMessage);
-            var response = await _tokenHttpClient.SendAsync(requestMessage);
+            var response = await _tokenHttpClient.SendAsync(requestMessage, listAggregationId);
 
             var data = await response.Content.ReadAsStringAsync();
 
@@ -289,10 +289,10 @@ namespace BlazorClient.Services
 
 
             //await SetRequestBearerAuthorizationHeader(requestMessage);
-            SetRequestAuthorizationLevelHeader(requestMessage, listAggregationId);
+            //SetRequestAuthorizationLevelHeader(requestMessage, listAggregationId);
 
             //var response = await _httpClient.SendAsync(requestMessage);
-            var response = await _tokenHttpClient.SendAsync(requestMessage);
+            var response = await _tokenHttpClient.SendAsync(requestMessage, listAggregationId);
 
             var responseStatusCode = response.StatusCode;
 
@@ -305,7 +305,7 @@ namespace BlazorClient.Services
                 return MessageAndStatus.Fail(problem.Title);
             }
 
-            var message =  actionName switch
+            var message = actionName switch
             {
                 "AddUserPermission" => "User was added.",
                 "ChangeUserPermission" => "Permission has changed.",
@@ -377,6 +377,39 @@ namespace BlazorClient.Services
                 return MessageAndStatus.Ok();
             }
             return MessageAndStatus.Fail();
+        }
+
+        public async Task<bool> VerifyAllTokens(string accessToken, string refreshToken)
+        {
+            var veryfiRequest = new VerifyAllTokensRequest
+            {
+                RefreshToken = refreshToken
+            };
+
+            var json = JsonConvert.SerializeObject(veryfiRequest);
+
+            var requestMessage = new HttpRequestMessage(HttpMethod.Post, "User/VerifyAllTokens")
+            {
+                Content = new StringContent(json, Encoding.UTF8, "application/json")
+            };
+            requestMessage.Headers.Authorization
+                    = new System.Net.Http.Headers.AuthenticationHeaderValue("bearer", accessToken);
+            HttpResponseMessage response = null;
+            try
+            {
+                 response = await _httpClient.SendAsync(requestMessage);
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+
+            if (response.IsSuccessStatusCode)
+            {
+                return true;
+            }
+
+            return false;
         }
 
         void SetRequestAuthorizationLevelHeader(HttpRequestMessage httpRequestMessage, int listAggregationId)
