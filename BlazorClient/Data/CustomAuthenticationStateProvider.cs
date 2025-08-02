@@ -39,10 +39,11 @@ namespace BlazorClient.Data
         {
             var isAccessToken = await _localStorageService.ContainKeyAsync("accessToken");
             var isRefreshToken = await _localStorageService.ContainKeyAsync("refreshToken");
+            var isExpectedVersion = await _localStorageService.ContainKeyAsync("expectedVersion");
 
             ClaimsIdentity identity;
 
-            if (isAccessToken == false || isRefreshToken == false)
+            if (isAccessToken == false || isRefreshToken == false || isExpectedVersion == false)
             {
 
                 identity = new ClaimsIdentity();
@@ -52,39 +53,45 @@ namespace BlazorClient.Data
             }
             else
             {
-                while (_tokenClientService.IsTokenRefresing)
-                {
-                    await Task.Delay(100);
-                }
-
-                var accessToken = await _localStorageService.GetItemAsync<string>("accessToken");
-                var refreshToken = await _localStorageService.GetItemAsync<string>("refreshToken");
-
-                var isTokensOK = await _userService.VerifyAcceessRefreshTokens(accessToken, refreshToken);
-                if (isTokensOK is false)
-                {
-                    //await _userService.LogOutAsync();
-                    await _localStorageService.RemoveItemAsync("accessToken");
-                    await _localStorageService.RemoveItemAsync("refreshToken");
-                    _stateService.StateInfo.Token = null;
-                    _stateService.StateInfo.RefreshToken = null;
-                    _stateService.StateInfo.UserName = null;
-                    var nullClaimPrincipal = new ClaimsPrincipal(new ClaimsIdentity());
-
-                    //NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(nullClaimPrincipal)));
-                    _navigationManager.NavigateTo("/login", forceLoad: true);
-
-                    return await Task.FromResult(new AuthenticationState(nullClaimPrincipal));
-                }
-
-
+                //while (_tokenClientService.IsTokenRefresing)
+                //{
+                //    await Task.Delay(100);
+                //}
                 try
                 {
+                    var accessToken = await _localStorageService.GetItemAsync<string>("accessToken");
+                    var refreshToken = await _localStorageService.GetItemAsync<string>("refreshToken");
+                    var expectedVersion = await _localStorageService.GetItemAsync<int>("expectedVersion");
+
+
                     identity = GetClaimsIdentity(accessToken);
+
+                    //var isTokensOK = await _userService.VerifyAcceessRefreshTokens(accessToken, refreshToken);
+                    var actualVersion = identity.Claims.First(a => a.Type == ClaimTypes.Version).Value;
+                    if (int.Parse(actualVersion) != expectedVersion)
+                    {
+                        //await _userService.LogOutAsync();
+                        await _localStorageService.RemoveItemAsync("accessToken");
+                        await _localStorageService.RemoveItemAsync("refreshToken");
+                        await _localStorageService.RemoveItemAsync("expectedVersion");
+                        _stateService.StateInfo.Token = null;
+                        _stateService.StateInfo.RefreshToken = null;
+                        _stateService.StateInfo.UserName = null;
+                        var nullClaimPrincipal = new ClaimsPrincipal(new ClaimsIdentity());
+
+                        //NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(nullClaimPrincipal)));
+                        _navigationManager.NavigateTo("/login", forceLoad: true);
+
+                        return await Task.FromResult(new AuthenticationState(nullClaimPrincipal));
+                    }
+
+
+
+
                     _stateService.StateInfo.UserName = identity.Claims.Where(a => a.Type == ClaimTypes.Name).First().Value;
-                 
-                    _stateService.StateInfo.Token=accessToken;
-                    _stateService.StateInfo.RefreshToken=refreshToken;
+
+                    _stateService.StateInfo.Token = accessToken;
+                    _stateService.StateInfo.RefreshToken = refreshToken;
 
                 }
                 catch
@@ -92,7 +99,7 @@ namespace BlazorClient.Data
                     identity = new ClaimsIdentity();
                     _stateService.StateInfo.Token = null;
                     _stateService.StateInfo.RefreshToken = null;
-                    
+
                 }
             }
 
@@ -107,13 +114,14 @@ namespace BlazorClient.Data
         {
             await _localStorageService.SetItemAsync("accessToken", token);
             await _localStorageService.SetItemAsync("refreshToken", refreshToken);
+            await _localStorageService.SetItemAsync("expectedVersion", 1);
             //await _localStorageService.SetItemAsync("refreshToken", user.RefreshToken);
             _stateService.StateInfo.Token = token;
             _stateService.StateInfo.RefreshToken = refreshToken;
             var identity = GetClaimsIdentity(token);
-            
+
             var claimsPrincipal = new ClaimsPrincipal(identity);
-            
+
 
             NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(claimsPrincipal)));
         }
@@ -124,6 +132,7 @@ namespace BlazorClient.Data
             await _userService.LogOutAsync();
             await _localStorageService.RemoveItemAsync("accessToken");
             await _localStorageService.RemoveItemAsync("refreshToken");
+            await _localStorageService.RemoveItemAsync("expectedVersion");
             _stateService.StateInfo.Token = null;
             _stateService.StateInfo.RefreshToken = null;
             _stateService.StateInfo.UserName = null;
@@ -183,7 +192,7 @@ namespace BlazorClient.Data
         private byte[] ParseBase64WithoutPadding(string base64)
         {
             //base64 = base64.Replace('-', '+').Replace('_', '/');
-            
+
             switch (base64.Length % 4)
             {
                 case 2: base64 += "=="; break;

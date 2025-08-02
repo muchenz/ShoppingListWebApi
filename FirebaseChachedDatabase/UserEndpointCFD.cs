@@ -576,7 +576,7 @@ namespace FirebaseChachedDatabase
         }
 
         public async Task<(string, string)> ReplaceRefreshToken2(int userId, string refreshTokenOld, string accessTokenNew, 
-            string jti, string refreshTokenNew, CancellationToken cancellationToken)
+            string jti, int version,  string refreshTokenNew, CancellationToken cancellationToken)
         {
             bool isGood = false;
 
@@ -603,6 +603,7 @@ namespace FirebaseChachedDatabase
                     RefreshToken = refreshTokenNew, 
                     AccessTokenJti = jti,
                     UserId = userId.ToString(),
+                    Version = version,
                     ExpiresAt = System.DateTime.UtcNow.AddDays(7),
                     CreatedAt = System.DateTime.UtcNow,
                     Id = Guid.NewGuid(),

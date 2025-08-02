@@ -90,12 +90,12 @@ public class TokenService : ITokenService
     public async Task<(string newAccessToken, string newRefreshToken)> RefreshTokensAsync2(int userId, string refreshToken, int version, CancellationToken cancellationToken)
     {
 
-
-        var (accessToken, jti) = await GenerateAccessToken(userId, version + 1);
+        version += 1;
+        var (accessToken, jti) = await GenerateAccessToken(userId, version);
         var refreshTokenNew = GenerateRefreshToken();
         try
         {
-            return await _tokenEndpoint.ReplaceRefreshToken2(userId, refreshToken, accessToken, jti, refreshTokenNew, cancellationToken);
+            return await _tokenEndpoint.ReplaceRefreshToken2(userId, refreshToken, accessToken, jti, version, refreshTokenNew, cancellationToken);
         }
         catch(Exception ex)
         {
@@ -133,7 +133,7 @@ public class TokenService : ITokenService
             new Claim(JwtRegisteredClaimNames.Nbf, new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString()),
             //new Claim(JwtRegisteredClaimNames.Exp, new DateTimeOffset(DateTime.UtcNow.AddDays(1000)).ToUnixTimeSeconds().ToString()),
             new Claim(JwtRegisteredClaimNames.Jti, jti),
-            new Claim(JwtRegisteredClaimNames.Exp, new DateTimeOffset(DateTime.Now.AddMinutes(120)).ToUnixTimeSeconds().ToString()),
+            new Claim(JwtRegisteredClaimNames.Exp, new DateTimeOffset(DateTime.Now.AddSeconds(3)).ToUnixTimeSeconds().ToString()),
             new Claim(ClaimTypes.Version, version==null ? 1.ToString():version.ToString()),
             };
 

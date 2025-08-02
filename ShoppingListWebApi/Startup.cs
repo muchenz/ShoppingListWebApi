@@ -132,7 +132,7 @@ namespace ShoppingListWebApi
                   ValidateAudience = false,
                   ValidateLifetime = true,
                   //ClockSkew = TimeSpan.FromDays(1)
-                  ClockSkew = TimeSpan.FromMinutes(5) //TODO: minutes rather
+                  ClockSkew = TimeSpan.FromSeconds(1) //TODO: minutes rather
 
               };
               x.Events = new JwtBearerEvents

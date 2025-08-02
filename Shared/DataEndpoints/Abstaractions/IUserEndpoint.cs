@@ -15,7 +15,7 @@ namespace Shared.DataEndpoints.Abstaractions
         Task DeleteRefreshToken(int userId, RefreshTokenSession refreshTokenSession);
         Task DeleteRefreshTokenByJti(int userId, string jti);
         Task ReplaceRefreshToken(int userId, RefreshTokenSession oldRefreshTokenSession, RefreshTokenSession newRefreshTokenSession);
-        Task<(string, string)> ReplaceRefreshToken2(int userId, string refreshTokenOld, string accessTokenNew, string jti, string refreshTokenNew
+        Task<(string, string)> ReplaceRefreshToken2(int userId, string refreshTokenOld, string accessTokenNew, string jti, int version, string refreshTokenNew
             , CancellationToken cancellationToken);
 
     }

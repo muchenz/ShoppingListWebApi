@@ -42,9 +42,11 @@ public class TokenClientService
     {
         var refreshToken = _stateService.StateInfo.RefreshToken;
         var accessToken = _stateService.StateInfo.Token;
+        var expectedVersion = int.Parse(ParseClaimsFromJwt(accessToken).First(a => a.Type == ClaimTypes.Version).Value) + 1;
+        await _localStorage.SetItemAsync("expectedVersion",expectedVersion);
         return await RefreshTokensAsync(accessToken, refreshToken);
     }
-    public async Task<bool> RefreshTokensAsync(string accessToken, string refreshToken)
+    private async Task<bool> RefreshTokensAsync(string accessToken, string refreshToken)
     {
       
 

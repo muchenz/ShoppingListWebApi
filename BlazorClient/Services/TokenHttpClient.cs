@@ -57,7 +57,7 @@ public class TokenHttpClient
         }
         catch (Exception ex)
         {
-
+            throw;
         }
         if (response.StatusCode == HttpStatusCode.Unauthorized && response.Headers.TryGetValues("Token-Expired", out var values))
         {
