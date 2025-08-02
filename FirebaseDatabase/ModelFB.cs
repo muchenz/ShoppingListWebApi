@@ -150,6 +150,8 @@ namespace FirebaseDatabase
         [FirestoreProperty]
         public string UserId { get; set; } = string.Empty;
         [FirestoreProperty]
+        public int Version { get; set; } 
+        [FirestoreProperty]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         [FirestoreProperty]
         public DateTime ExpiresAt { get; set; }
@@ -176,6 +178,7 @@ namespace FirebaseDatabase
                 ExpiresAt = token.ExpiresAt,
                 AccessTokenJti = token.AccessTokenJti,
                 UserId = token.UserId,
+                Version = token.Version,
                 CreatedAt = token.CreatedAt,
                 DeviceInfo = token.DeviceInfo,
                 IsRefreshTokenRevoked = token.IsRefreshTokenRevoked,
@@ -196,6 +199,7 @@ namespace FirebaseDatabase
                 ExpiresAt = token.ExpiresAt,
                 AccessTokenJti = token.AccessTokenJti,
                 UserId = token.UserId,
+                Version = token.Version,
                 CreatedAt = token.CreatedAt,
                 DeviceInfo = token.DeviceInfo,
                 IsRefreshTokenRevoked = token.IsRefreshTokenRevoked,

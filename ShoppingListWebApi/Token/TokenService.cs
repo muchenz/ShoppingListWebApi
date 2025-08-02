@@ -33,20 +33,21 @@ public class TokenService : ITokenService
     }
 
 
-    public async Task<(string accessToken, string refreshToken)> GenerateTokens(int userId)
+    public async Task<(string accessToken, string refreshToken)> GenerateTokens(int userId, int? tokenVersion = null)
     {
         var (accessToken, jti) = await GenerateAccessToken(userId);
         var refreshToken = GenerateRefreshToken();
 
-        var  refreshTokenSession = new RefreshTokenSession
+        var refreshTokenSession = new RefreshTokenSession
         {
             RefreshToken = refreshToken,
             AccessTokenJti = jti,
             UserId = userId.ToString(),
+            Version = tokenVersion ?? 1,
             ExpiresAt = DateTime.UtcNow.AddDays(7),
-            CreatedAt= DateTime.UtcNow,
-            Id=Guid.NewGuid(),
-            
+            CreatedAt = DateTime.UtcNow,
+            Id = Guid.NewGuid(),
+
         };
 
         await _tokenEndpoint.AddRefreshToken(userId, refreshTokenSession);
@@ -86,10 +87,11 @@ public class TokenService : ITokenService
         return (accessToken, refreshTokenNew);
     }
 
-    public async Task<(string newAccessToken, string newRefreshToken)> RefreshTokensAsync2(int userId, string refreshToken, CancellationToken cancellationToken)
+    public async Task<(string newAccessToken, string newRefreshToken)> RefreshTokensAsync2(int userId, string refreshToken, int version, CancellationToken cancellationToken)
     {
 
-        var (accessToken, jti) = await GenerateAccessToken(userId);
+
+        var (accessToken, jti) = await GenerateAccessToken(userId, version + 1);
         var refreshTokenNew = GenerateRefreshToken();
         try
         {
@@ -116,7 +118,7 @@ public class TokenService : ITokenService
         return true;
     }
 
-    private async Task<(string accessToken, string jti )> GenerateAccessToken(int userId)
+    private async Task<(string accessToken, string jti )> GenerateAccessToken(int userId, int? version=null)
     {
         using var scope =  _serviceProvider.CreateScope();
 
@@ -132,7 +134,7 @@ public class TokenService : ITokenService
             //new Claim(JwtRegisteredClaimNames.Exp, new DateTimeOffset(DateTime.UtcNow.AddDays(1000)).ToUnixTimeSeconds().ToString()),
             new Claim(JwtRegisteredClaimNames.Jti, jti),
             new Claim(JwtRegisteredClaimNames.Exp, new DateTimeOffset(DateTime.Now.AddMinutes(120)).ToUnixTimeSeconds().ToString()),
-
+            new Claim(ClaimTypes.Version, version==null ? 1.ToString():version.ToString()),
             };
 
         //var roles = await GetUserRoles(userId);

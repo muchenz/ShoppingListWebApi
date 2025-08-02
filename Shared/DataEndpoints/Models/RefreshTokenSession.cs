@@ -22,6 +22,7 @@ public class RefreshTokenSession
     public string RefreshToken { get; set; } = string.Empty;
     public string? AccessTokenJti { get; set; } 
     public string UserId { get; set; } = string.Empty;
+    public int Version { get; set; } 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime ExpiresAt { get; set; }
     public bool IsRefreshTokenRevoked { get; set; } = false;

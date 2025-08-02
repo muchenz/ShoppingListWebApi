@@ -259,12 +259,13 @@ namespace ShoppingListWebApi.Controllers
 
             await sem.WaitAsync(TimeSpan.FromSeconds(5));
             var id = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var version = int.Parse(User.FindFirstValue(ClaimTypes.Version));
             try
             {
                 var refreshToken = HttpContext.Request.Headers["refresh_token"];
 
                // var (newAccessToken, newrefreshToken) = await _tokenService.RefreshTokensAsync(id, refreshToken);
-                var (newAccessToken, newrefreshToken) = await _tokenService.RefreshTokensAsync2(id, refreshToken, cancellationToken);
+                var (newAccessToken, newrefreshToken) = await _tokenService.RefreshTokensAsync2(id, refreshToken, version, cancellationToken);
 
                 if (string.IsNullOrEmpty(newAccessToken) || string.IsNullOrEmpty(newrefreshToken))
                 {
