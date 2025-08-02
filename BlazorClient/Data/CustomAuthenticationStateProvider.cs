@@ -72,20 +72,6 @@ namespace BlazorClient.Data
 
                     if (int.Parse(actualVersion) != expectedVersion)
                     {
-                        await Task.Delay(5000);
-                        accessToken = await _localStorageService.GetItemAsync<string>("accessToken");
-                        identity = GetClaimsIdentity(accessToken);
-                        actualVersion = identity.Claims.First(a => a.Type == ClaimTypes.Version).Value;
-                        if (int.Parse(actualVersion) != expectedVersion)
-                        {
-
-                        }
-
-                        if (int.Parse(actualVersion) == expectedVersion)
-                        {
-
-                        }
-
                         await CleanAndLogout();
 
 
