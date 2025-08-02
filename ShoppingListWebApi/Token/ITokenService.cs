@@ -9,7 +9,7 @@ public interface ITokenService
     Task<(string newAccessToken, string newRefreshToken)> RefreshTokensAsync(int userId, string refreshToken);
     bool VerifyToken(string accessToken);
     Task<bool> VerifyAcceessRefreshTokens(int userId, string jti, VerifyAccessRefreshTokenRequest tokens);
-    Task<(string newAccessToken, string newRefreshToken)> RefreshTokensAsync2(int userId, string refreshToken, CancellationToken cancellationToken);
+    Task<(string newAccessToken, string newRefreshToken)> RefreshTokensAsync2(int userId, string refreshToken, int version,  CancellationToken cancellationToken);
     
 
 }
