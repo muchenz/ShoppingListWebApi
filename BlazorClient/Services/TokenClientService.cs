@@ -1,6 +1,7 @@
 ﻿using BlazorClient.Models.Response;
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
 using System;
@@ -43,14 +44,14 @@ public class TokenClientService
         var refreshToken = _stateService.StateInfo.RefreshToken;
         var accessToken = _stateService.StateInfo.Token;
         var expectedVersion = int.Parse(ParseClaimsFromJwt(accessToken).First(a => a.Type == ClaimTypes.Version).Value) + 1;
-        await _localStorage.SetItemAsync("expectedVersion",expectedVersion);
+        await _localStorage.SetItemAsync("expectedVersion", expectedVersion);
         return await RefreshTokensAsync(accessToken, refreshToken);
     }
     private async Task<bool> RefreshTokensAsync(string accessToken, string refreshToken)
     {
-      
 
-    var requestMessage = new HttpRequestMessage(HttpMethod.Get, "User/GetNewToken");
+
+        var requestMessage = new HttpRequestMessage(HttpMethod.Get, "User/GetNewToken");
 
         requestMessage.Headers.Authorization
                     = new System.Net.Http.Headers.AuthenticationHeaderValue("bearer", accessToken);
@@ -72,11 +73,9 @@ public class TokenClientService
     }
 
     SemaphoreSlim semSlim = new SemaphoreSlim(1);
-    public bool IsTokenRefresing { get; private set; } =false;
+    public bool IsTokenRefresing { get ; set;} =false;
     public async Task CheckAndSetNewTokens()
     {
-        IsTokenRefresing = true;
-
         if (!IsTokenExpired())
         {
             return;
@@ -86,13 +85,16 @@ public class TokenClientService
             await semSlim.WaitAsync();
             if (IsTokenExpired())
             {
-                    await RefreshTokensAsync();
+                _stateService.StateInfo.IsTokenRefresing = true;
+               // IsTokenRefresing = true; // why this not working !???!!!!
+                await RefreshTokensAsync();
             }
         }
         finally
         {
+            _stateService.StateInfo.IsTokenRefresing = false;
+            //IsTokenRefresing = false;
             semSlim.Release();
-            IsTokenRefresing = false;
 
         }
     }

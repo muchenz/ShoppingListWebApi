@@ -53,10 +53,10 @@ namespace BlazorClient.Data
             }
             else
             {
-                //while (_tokenClientService.IsTokenRefresing)
-                //{
-                //    await Task.Delay(100);
-                //}
+                while (_stateService.StateInfo.IsTokenRefresing) // for _tokenClientService.IsTokenRefresing NOT WORKING !!!!!???
+                {
+                    await Task.Delay(50);
+                }
                 try
                 {
                     var accessToken = await _localStorageService.GetItemAsync<string>("accessToken");
@@ -68,15 +68,27 @@ namespace BlazorClient.Data
 
                     //var isTokensOK = await _userService.VerifyAcceessRefreshTokens(accessToken, refreshToken);
                     var actualVersion = identity.Claims.First(a => a.Type == ClaimTypes.Version).Value;
+
+
                     if (int.Parse(actualVersion) != expectedVersion)
                     {
-                        //await _userService.LogOutAsync();
-                        await _localStorageService.RemoveItemAsync("accessToken");
-                        await _localStorageService.RemoveItemAsync("refreshToken");
-                        await _localStorageService.RemoveItemAsync("expectedVersion");
-                        _stateService.StateInfo.Token = null;
-                        _stateService.StateInfo.RefreshToken = null;
-                        _stateService.StateInfo.UserName = null;
+                        await Task.Delay(5000);
+                        accessToken = await _localStorageService.GetItemAsync<string>("accessToken");
+                        identity = GetClaimsIdentity(accessToken);
+                        actualVersion = identity.Claims.First(a => a.Type == ClaimTypes.Version).Value;
+                        if (int.Parse(actualVersion) != expectedVersion)
+                        {
+
+                        }
+
+                        if (int.Parse(actualVersion) == expectedVersion)
+                        {
+
+                        }
+
+                        await CleanAndLogout();
+
+
                         var nullClaimPrincipal = new ClaimsPrincipal(new ClaimsIdentity());
 
                         //NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(nullClaimPrincipal)));
@@ -128,19 +140,28 @@ namespace BlazorClient.Data
 
         public async Task MarkUserAsLoggedOut()
         {
-            // _localStorageService.RemoveItemAsync("refreshToken");
-            await _userService.LogOutAsync();
+            await CleanAndLogout();
+
+             var identity = new ClaimsIdentity();
+
+            var user = new ClaimsPrincipal(identity);
+
+            NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(user)));
+        }
+
+
+        private async Task CleanAndLogout()
+        {
+            if (_stateService.StateInfo.Token is not null)
+            {
+                await _userService.LogOutAsync();
+            }
             await _localStorageService.RemoveItemAsync("accessToken");
             await _localStorageService.RemoveItemAsync("refreshToken");
             await _localStorageService.RemoveItemAsync("expectedVersion");
             _stateService.StateInfo.Token = null;
             _stateService.StateInfo.RefreshToken = null;
             _stateService.StateInfo.UserName = null;
-            var identity = new ClaimsIdentity();
-
-            var user = new ClaimsPrincipal(identity);
-
-            NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(user)));
         }
 
         private ClaimsIdentity GetClaimsIdentity(string token)

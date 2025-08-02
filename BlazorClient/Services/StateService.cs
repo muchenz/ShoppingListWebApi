@@ -9,7 +9,6 @@ namespace BlazorClient.Services
     public class StateService
     {
         public StateInfo StateInfo { get; set; } = new StateInfo();
-
     }
 
 
@@ -19,6 +18,7 @@ namespace BlazorClient.Services
         public string RefreshToken { get; set; }
         public string ClientSignalRID { get; set; }
         public string UserName { get; set; }
+        public bool IsTokenRefresing { get; set; }
 
     }
 
