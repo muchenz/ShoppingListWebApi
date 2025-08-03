@@ -86,23 +86,7 @@
         {
             try
             {
-                var isGid = await localStorageService.ContainKeyAsync("gid");
-                string gId = string.Empty;
-
-                if (isGid is false)
-                {
-                    gId = Guid.NewGuid().ToString();
-                    await localStorageService.SetItemAsync("gid", gId);
-                }
-                else
-                {
-                    gId = await localStorageService.GetItemAsync<string>("gid");
-
-                }
-
-                var message = await userService.LoginAsync(userName, password, gId);
-
-
+                var message = await userService.LoginAsync(userName, password);
 
                 if (!message.IsError)
                 {

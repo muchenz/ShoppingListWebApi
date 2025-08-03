@@ -94,6 +94,8 @@ namespace ShoppingListWebApi.Controllers
         [HttpGet("FacebookToken")]
         public async Task<ActionResult<UserNameAndTokensResponse>> FacebookToken(string access_token, string state)
         {
+            var deviceId = state.Split("=").Last();
+
             MeResponse meResponse = null;
 
             if (string.IsNullOrEmpty(access_token))
@@ -110,7 +112,7 @@ namespace ShoppingListWebApi.Controllers
             {
 
                 user = await _userEndpoint.Register(meResponse.email, string.Empty, LoginType.Facebook);
-                var (accessToken, refreshToken) = await GenerateToken2(user.UserId, string.Empty); //TODO
+                var (accessToken, refreshToken) = await GenerateToken2(user.UserId, deviceId); 
 
 
                 return new UserNameAndTokensResponse { Token = accessToken, RefreshToken=refreshToken, UserName = user.EmailAddress };
@@ -121,7 +123,7 @@ namespace ShoppingListWebApi.Controllers
             {
                 if ((LoginType)user.LoginType == LoginType.Facebook)
                 {
-                    var (accessToken, refreshToken) = await GenerateToken2(user.UserId, string.Empty); //TODO;
+                    var (accessToken, refreshToken) = await GenerateToken2(user.UserId, deviceId); //TODO;
 
                     return Ok(
 
