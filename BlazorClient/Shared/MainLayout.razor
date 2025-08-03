@@ -4,6 +4,8 @@
 @inherits LayoutComponentBase
 @inject IConfiguration configuration
 @inject NavigationManager NavigationManager
+@inject Blazored.LocalStorage.ILocalStorageService localStorageService
+
 @inject IJSRuntime JSRuntime
 
 @using Blazored.Toast.Configuration
@@ -78,13 +80,7 @@
     </div>
     </BlazorClient.Pages.SignalR>
 @code{
-    //protected override async Task OnInitializedAsync()
-    //{
-
-
-    //    await Data.SignalRHelper.SignalRInitAsync(configuration);
-
-    //}
+   
     protected override void OnInitialized()
     {
         NavigationManager.LocationChanged += HandleLocationChange;
@@ -118,6 +114,13 @@
 
     protected override async Task OnInitializedAsync()
     {
+
+        var isGid = await localStorageService.ContainKeyAsync("gid");
+        if (isGid is false)
+        {
+            await localStorageService.SetItemAsync("gid", Guid.NewGuid().ToString());
+        }
+
         var wasRefresh = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "blazor_refresh");
         if (wasRefresh == "true")
         {

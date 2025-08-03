@@ -40,6 +40,7 @@ namespace BlazorClient.Data
             var isAccessToken = await _localStorageService.ContainKeyAsync("accessToken");
             var isRefreshToken = await _localStorageService.ContainKeyAsync("refreshToken");
             var isExpectedVersion = await _localStorageService.ContainKeyAsync("expectedVersion");
+            var isGid = await _localStorageService.ContainKeyAsync("Gid");
 
             ClaimsIdentity identity;
 
@@ -64,7 +65,7 @@ namespace BlazorClient.Data
                     var refreshToken = await _localStorageService.GetItemAsync<string>("refreshToken");
                     var expectedVersion = await _localStorageService.GetItemAsync<int>("expectedVersion");
 
-
+                    
                     identity = GetClaimsIdentity(accessToken);
 
                     //var isTokensOK = await _userService.VerifyAcceessRefreshTokens(accessToken, refreshToken);
@@ -111,6 +112,7 @@ namespace BlazorClient.Data
 
         public async Task MarkUserAsAuthenticatedAsync(string token, string refreshToken)
         {
+           
             await _localStorageService.SetItemAsync("accessToken", token);
             await _localStorageService.SetItemAsync("refreshToken", refreshToken);
             await _localStorageService.SetItemAsync("expectedVersion", 1);

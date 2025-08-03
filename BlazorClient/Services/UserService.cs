@@ -114,12 +114,13 @@ namespace BlazorClient.Services
         }
 
 
-        public async Task<MessageAndStatusAndData<UserNameAndTokensResponse>> LoginAsync(string userName, string password)
+        public async Task<MessageAndStatusAndData<UserNameAndTokensResponse>> LoginAsync(string userName, string password, string deviceId)
         {
             var loginRequest = new LoginRequest
             {
                 UserName = userName,
-                Password = password
+                Password = password,
+                DeviceId = deviceId
             };
 
             var json = JsonConvert.SerializeObject(loginRequest);
