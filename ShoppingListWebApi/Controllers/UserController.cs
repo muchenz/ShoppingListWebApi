@@ -143,7 +143,7 @@ namespace ShoppingListWebApi.Controllers
 
             string referer = Request.Headers["Referer"].ToString();
             var returnUrl = state.Split(",").Last().Split("=").Last();
-
+            var deviceId = state.Split(",")[^2].Split("=").Last();
             string myDomain = Request.GetDisplayUrl().Split('?')[0];
 
             if (!string.IsNullOrEmpty(code))
@@ -157,7 +157,7 @@ namespace ShoppingListWebApi.Controllers
             {
 
                 user = await _userEndpoint.Register(meResponse.email, string.Empty, LoginType.Facebook);
-                var (accessToken, refreshToken) = await GenerateToken2(user.UserId, string.Empty); //TODO
+                var (accessToken, refreshToken) = await GenerateToken2(user.UserId, deviceId); 
 
                 return Redirect($"{returnUrl}/#/?token={accessToken}&refresh_token={refreshToken}");
 
@@ -166,7 +166,7 @@ namespace ShoppingListWebApi.Controllers
             {
                 if (user.LoginType == 2) // 2 ==>> LoginType.Facebook
                 {
-                    var (accessToken, refreshToken) = await GenerateToken2(user.UserId, string.Empty); //TODO
+                    var (accessToken, refreshToken) = await GenerateToken2(user.UserId, deviceId); //TODO
                     return Redirect($"{returnUrl}/#/?token={accessToken}&refresh_token={refreshToken}&sss=(rrr)");
                 }
 

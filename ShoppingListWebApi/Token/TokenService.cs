@@ -179,7 +179,9 @@ public class TokenService : ITokenService
         return $"{genLetter()}{genLetter()}{genLetter()}-{Random.Shared.Next(1000)}";
     }
     public string GenerateRefreshToken() =>
-      Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
+      Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)).Replace("+", "-")
+                                                                      .Replace("/", "_")
+                                                                      .TrimEnd('=');
 
 
 
