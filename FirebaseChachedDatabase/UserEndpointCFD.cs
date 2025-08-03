@@ -514,8 +514,12 @@ namespace FirebaseChachedDatabase
                 return;
 
             }
-
             var tokens =  tokensSnap.ConvertTo<RefreshTokensDataFD>().RefreshTokens;
+            
+            tokens.RemoveAll(a => a.ExpiresAt < System.DateTime.Now);
+            tokens.RemoveAll(a => a.DeviceInfo == refreshTokenSession.DeviceInfo);
+
+
             tokens.Add(refreshTokenSession.ToRefreshTokenFDSession());
             await _refreshToken.Document(userId.ToString()).SetAsync(new RefreshTokensDataFD { RefreshTokens= tokens });
 
@@ -575,7 +579,7 @@ namespace FirebaseChachedDatabase
 
         }
 
-        public async Task<(string, string)> ReplaceRefreshToken2(int userId, string refreshTokenOld, string accessTokenNew, 
+        public async Task<(string, string)> ReplaceRefreshToken2(int userId, string deviceId, string refreshTokenOld, string accessTokenNew, 
             string jti, int version,  string refreshTokenNew, CancellationToken cancellationToken)
         {
             bool isGood = false;
@@ -607,6 +611,7 @@ namespace FirebaseChachedDatabase
                     ExpiresAt = System.DateTime.UtcNow.AddDays(7),
                     CreatedAt = System.DateTime.UtcNow,
                     Id = Guid.NewGuid(),
+                    DeviceInfo= deviceId
 
                 };
 

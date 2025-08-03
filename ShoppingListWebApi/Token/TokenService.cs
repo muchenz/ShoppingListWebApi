@@ -33,7 +33,7 @@ public class TokenService : ITokenService
     }
 
 
-    public async Task<(string accessToken, string refreshToken)> GenerateTokens(int userId, int? tokenVersion = null)
+    public async Task<(string accessToken, string refreshToken)> GenerateTokens(int userId, string derviceId, int? tokenVersion = null)
     {
         var (accessToken, jti) = await GenerateAccessToken(userId);
         var refreshToken = GenerateRefreshToken();
@@ -47,6 +47,7 @@ public class TokenService : ITokenService
             ExpiresAt = DateTime.UtcNow.AddDays(7),
             CreatedAt = DateTime.UtcNow,
             Id = Guid.NewGuid(),
+            DeviceInfo = derviceId
 
         };
 
@@ -87,7 +88,7 @@ public class TokenService : ITokenService
         return (accessToken, refreshTokenNew);
     }
 
-    public async Task<(string newAccessToken, string newRefreshToken)> RefreshTokensAsync2(int userId, string refreshToken, int version, CancellationToken cancellationToken)
+    public async Task<(string newAccessToken, string newRefreshToken)> RefreshTokensAsync2(int userId, string deviceId, string refreshToken, int version, CancellationToken cancellationToken)
     {
 
         version += 1;
@@ -95,7 +96,7 @@ public class TokenService : ITokenService
         var refreshTokenNew = GenerateRefreshToken();
         try
         {
-            return await _tokenEndpoint.ReplaceRefreshToken2(userId, refreshToken, accessToken, jti, version, refreshTokenNew, cancellationToken);
+            return await _tokenEndpoint.ReplaceRefreshToken2(userId, deviceId, refreshToken, accessToken, jti, version, refreshTokenNew, cancellationToken);
         }
         catch(Exception ex)
         {

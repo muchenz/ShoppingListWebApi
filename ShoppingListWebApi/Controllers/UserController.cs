@@ -110,7 +110,7 @@ namespace ShoppingListWebApi.Controllers
             {
 
                 user = await _userEndpoint.Register(meResponse.email, string.Empty, LoginType.Facebook);
-                var (accessToken, refreshToken) = await GenerateToken2(user.UserId);
+                var (accessToken, refreshToken) = await GenerateToken2(user.UserId, string.Empty); //TODO
 
 
                 return new UserNameAndTokensResponse { Token = accessToken, RefreshToken=refreshToken, UserName = user.EmailAddress };
@@ -121,7 +121,7 @@ namespace ShoppingListWebApi.Controllers
             {
                 if ((LoginType)user.LoginType == LoginType.Facebook)
                 {
-                    var (accessToken, refreshToken) = await GenerateToken2(user.UserId);
+                    var (accessToken, refreshToken) = await GenerateToken2(user.UserId, string.Empty); //TODO;
 
                     return Ok(
 
@@ -157,7 +157,7 @@ namespace ShoppingListWebApi.Controllers
             {
 
                 user = await _userEndpoint.Register(meResponse.email, string.Empty, LoginType.Facebook);
-                var (accessToken, refreshToken) = await GenerateToken2(user.UserId);
+                var (accessToken, refreshToken) = await GenerateToken2(user.UserId, string.Empty); //TODO
 
                 return Redirect($"{returnUrl}/#/?token={accessToken}&refresh_token={refreshToken}");
 
@@ -166,7 +166,7 @@ namespace ShoppingListWebApi.Controllers
             {
                 if (user.LoginType == 2) // 2 ==>> LoginType.Facebook
                 {
-                    var (accessToken, refreshToken) = await GenerateToken2(user.UserId);
+                    var (accessToken, refreshToken) = await GenerateToken2(user.UserId, string.Empty); //TODO
                     return Redirect($"{returnUrl}/#/?token={accessToken}&refresh_token={refreshToken}&sss=(rrr)");
                 }
 
@@ -192,7 +192,7 @@ namespace ShoppingListWebApi.Controllers
                 return Unauthorized(new ProblemDetails { Title = "Invalid username or password." });
             }
 
-            var (accessToken, refreshToken) = await GenerateToken2(user.UserId);
+            var (accessToken, refreshToken) = await GenerateToken2(user.UserId, login.DeviceId);
             return new UserNameAndTokensResponse
             {
                 UserName = login.UserName,
@@ -216,7 +216,7 @@ namespace ShoppingListWebApi.Controllers
                 {
                     return Conflict(new ProblemDetails { Title = "User already exist." });
                 }
-                var (accessToken, refreshToken) = await GenerateToken2(user.UserId);
+                var (accessToken, refreshToken) = await GenerateToken2(user.UserId, request.DeviceId);
 
                 return Ok(new UserNameAndTokensResponse
                 {
@@ -263,9 +263,10 @@ namespace ShoppingListWebApi.Controllers
             try
             {
                 var refreshToken = HttpContext.Request.Headers["refresh_token"];
+                var deviceId = HttpContext.Request.Headers["deviceid"];
 
-               // var (newAccessToken, newrefreshToken) = await _tokenService.RefreshTokensAsync(id, refreshToken);
-                var (newAccessToken, newrefreshToken) = await _tokenService.RefreshTokensAsync2(id, refreshToken, version, cancellationToken);
+                // var (newAccessToken, newrefreshToken) = await _tokenService.RefreshTokensAsync(id, refreshToken);
+                var (newAccessToken, newrefreshToken) = await _tokenService.RefreshTokensAsync2(id, deviceId, refreshToken, version, cancellationToken);
 
                 if (string.IsNullOrEmpty(newAccessToken) || string.IsNullOrEmpty(newrefreshToken))
                 {
@@ -287,9 +288,9 @@ namespace ShoppingListWebApi.Controllers
 
         }
 
-        private async Task<(string accessToken, string refreshToken)> GenerateToken2(int userId)
+        private async Task<(string accessToken, string refreshToken)> GenerateToken2(int userId, string deviceId)
         {
-            var (accessToken, refreshToken) = await _tokenService.GenerateTokens(userId);
+            var (accessToken, refreshToken) = await _tokenService.GenerateTokens(userId, deviceId);
 
             return (accessToken, refreshToken);
         }
