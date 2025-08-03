@@ -20,24 +20,29 @@ namespace BlazorClient.Services;
 
 public class TokenClientService
 {
-    private readonly ILocalStorageService _localStorage;
     private readonly HttpClient _httpClient;
+    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly ILocalStorageService _localStorage;
     private readonly IConfiguration _configuration;
     private readonly StateService _stateService;
 
     public CancellationTokenSource _cts = new();
 
-    public TokenClientService(ILocalStorageService localStorage, HttpClient httpClient, IConfiguration configuration, StateService stateService
+    public TokenClientService(IHttpClientFactory httpClientFactory, ILocalStorageService localStorage, IConfiguration configuration, StateService stateService
         )
     {
+        _httpClientFactory = httpClientFactory;
         _localStorage = localStorage;
-        _httpClient = httpClient;
         _configuration = configuration;
         _stateService = stateService;
-        _httpClient.BaseAddress = new Uri(configuration.GetSection("AppSettings")["ShoppingWebAPIBaseAddress"]);
-        _httpClient.DefaultRequestHeaders.Add("User-Agent", "BlazorServer");
     }
+    private readonly Guid _instanceId = Guid.NewGuid();
 
+    public void LogInstance(string from)
+    {
+        Console.WriteLine($"######## TokenClientService instance: {_instanceId}");
+        Console.WriteLine($"######## ###########################:  {from}");
+    }
 
     public async Task<bool> RefreshTokensAsync()
     {
@@ -49,7 +54,8 @@ public class TokenClientService
     }
     private async Task<bool> RefreshTokensAsync(string accessToken, string refreshToken)
     {
-
+        var httpClient = _httpClientFactory.CreateClient("api");
+        //var httpClient = _httpClient;
 
         var requestMessage = new HttpRequestMessage(HttpMethod.Get, "User/GetNewToken");
 
@@ -58,7 +64,7 @@ public class TokenClientService
         requestMessage.Headers.Add("refresh_token", refreshToken);
 
         HttpResponseMessage response = null;
-        response = await _httpClient.SendAsync(requestMessage, _cts.Token);
+        response = await httpClient.SendAsync(requestMessage, _cts.Token);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -85,15 +91,16 @@ public class TokenClientService
             await semSlim.WaitAsync();
             if (IsTokenExpired())
             {
-                _stateService.StateInfo.IsTokenRefresing = true;
-               // IsTokenRefresing = true; // why this not working !???!!!!
+                //_stateService.StateInfo.IsTokenRefresing = true;
+                IsTokenRefresing = true; // why this not working !???!!!!
                 await RefreshTokensAsync();
             }
         }
         finally
         {
-            _stateService.StateInfo.IsTokenRefresing = false;
-            //IsTokenRefresing = false;
+            LogInstance("CheckAndSetNewTokens");
+            //_stateService.StateInfo.IsTokenRefresing = false;
+            IsTokenRefresing = false;
             semSlim.Release();
 
         }

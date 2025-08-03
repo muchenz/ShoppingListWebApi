@@ -54,15 +54,17 @@ namespace BlazorClient
 
             // services.AddHttpClient<UserService>();
             // services.AddHttpClient<ShoppingListService>();
-            services.AddHttpClient<TokenClientService>(client => {
-                // code to configure headers etc..
-            }).ConfigurePrimaryHttpMessageHandler(() => {
-                var handler = new HttpClientHandler();
+            //services.AddHttpClient<TokenClientService>(client =>
+            //{        // registred TokenClientService as TRANSENT !!!
+            //    // code to configure headers etc..
+            //}).ConfigurePrimaryHttpMessageHandler(() =>
+            //{
+            //    var handler = new HttpClientHandler();
 
-                handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => { return true; };
+            //    handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => { return true; };
 
-                return handler;
-            }).AddHttpMessageHandler<AuthRedirectHandler>(); ;//.AddHttpMessageHandler<CustomAuthorizationHeaderHandler>(); ;
+            //    return handler;
+            //}).AddHttpMessageHandler<AuthRedirectHandler>(); ;//.AddHttpMessageHandler<CustomAuthorizationHeaderHandler>(); ;
             services.AddHttpClient<UserService>(client => {
                 // code to configure headers etc..
             }).ConfigurePrimaryHttpMessageHandler(() => {

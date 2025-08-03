@@ -3,7 +3,6 @@
 
 @inherits LayoutComponentBase
 @inject IConfiguration configuration
-@inject TokenClientService TokenClientService
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
 
@@ -95,13 +94,13 @@
     {
         if (e.IsNavigationIntercepted)
         {
+            // do stuff when location changed (clicked navigation button eg. "Users permissions")
             //only for naviagtion
-            TokenClientService._cts.Cancel();
         }
     }
 
 
-    //---------------------------- polibly not working as should be
+    //---------------------------- probably not working as should be
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -122,7 +121,9 @@
         var wasRefresh = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "blazor_refresh");
         if (wasRefresh == "true")
         {
-            TokenClientService._cts?.Cancel();
+            //TokenClientService._cts?.Cancel();
+
+            //do stuff after 'F5'
 
             await JSRuntime.InvokeVoidAsync("sessionStorage.removeItem", "blazor_refresh");
         }

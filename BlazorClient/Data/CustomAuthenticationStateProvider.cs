@@ -53,9 +53,10 @@ namespace BlazorClient.Data
             }
             else
             {
-                while (_stateService.StateInfo.IsTokenRefresing) // for _tokenClientService.IsTokenRefresing NOT WORKING !!!!!???
+                _tokenClientService.LogInstance("CustomAuthenticationStateProvider");
+                while (_tokenClientService.IsTokenRefresing) 
                 {
-                    await Task.Delay(50);
+                    await Task.Delay(100);
                 }
                 try
                 {
@@ -92,7 +93,7 @@ namespace BlazorClient.Data
                     _stateService.StateInfo.RefreshToken = refreshToken;
 
                 }
-                catch
+                catch(Exception ex)
                 {
                     identity = new ClaimsIdentity();
                     _stateService.StateInfo.Token = null;
