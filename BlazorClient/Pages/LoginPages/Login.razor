@@ -130,9 +130,10 @@
         }
     }
 
-    void FacebookSignIn()
+    async Task FacebookSignIn()
     {
         var apiAddress = configuration.GetSection("AppSettings")["ShoppingWebAPIBaseAddress"];
+        var gid =  await localStorageService.GetItemAsync<string>("gid"); 
 
         NavigationManager.NavigateTo(string.Format("https://www.facebook.com/v10.0/dialog/oauth?client_id={0}&response_type=code&redirect_uri={1}&state={2}&scope={3}",
     259675572518658,
@@ -140,7 +141,7 @@
        //"https://localhost:5001/api/User",
        apiAddress + "User",
     // "https://www.facebook.com/connect/login_success.html",
-    $"st=state123abc,ds=123456789, returnUrl={NavigationManager.Uri}", "public_profile,email"));
+    $"st=state123abc,ds=123456789, di={gid}, returnUrl={NavigationManager.Uri}", "public_profile,email"));
     }
 
 

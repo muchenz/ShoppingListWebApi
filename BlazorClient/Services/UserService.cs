@@ -65,11 +65,12 @@ namespace BlazorClient.Services
 
         public async Task<MessageAndStatusAndData<UserNameAndTokensResponse>> RegisterAsync(RegistrationModel model)
         {
-
+            var gid = await _localStorage.GetItemAsync<string>("gid");
             var loginRequest = new RegistrationRequest
             {
                 UserName = model.UserName,
-                Password = model.Password
+                Password = model.Password,
+                DeviceId = gid,
             };
 
             var json = JsonConvert.SerializeObject(loginRequest);
