@@ -50,23 +50,23 @@ namespace FirebaseDatabase
             {
 
 
-                var docIndexesRef = transation.Database.Collection("indexes").Document("indexes");
+                var docIndexesRef = Db.Collection("indexes").Document("indexes");
                 var snapIndexesDoc = await docIndexesRef.GetSnapshotAsync();
 
                 var index = snapIndexesDoc.GetValue<long>("listAggregator");
 
                 listAggrFD.ListAggregatorId = (int)index + 1;
                 
-                var refDocListAggr =  transation.Database.Collection("listAggregator").Document((index+1).ToString());
-                var t1 = refDocListAggr.SetAsync(listAggrFD);
+                var refDocListAggr = Db.Collection("listAggregator").Document((index+1).ToString());
+                transation.Set(refDocListAggr, listAggrFD);
 
                 userListAggregatorFD.ListAggregatorId = (int)index + 1;
+                var refUserListAggregatorFD = Db.Collection("userListAggregator").Document();
 
-                var t2 =  transation.Database.Collection("userListAggregator").AddAsync(userListAggregatorFD);
+                transation.Set(refUserListAggregatorFD, userListAggregatorFD);
 
-                var t3 = docIndexesRef.UpdateAsync("listAggregator", index + 1);
+                transation.Update(docIndexesRef, "listAggregator", index + 1);
 
-                await Task.WhenAll(t1, t2, t3);
             });
 
             var listAggr = _mapper.Map<ListAggregator>(listAggrFD);
