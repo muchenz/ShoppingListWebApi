@@ -101,23 +101,28 @@ namespace FirebaseDatabase
         //}
         public async Task AcceptInvitationAsync(Invitation invitation, int userId)
         {
-            await Db.RunTransactionAsync(transaction =>
+            await Db.RunTransactionAsync(async transaction =>
             {
                 DocumentReference invitationRef = Db.Collection("invitations").Document(invitation.InvitationId.ToString());
-            
-                transaction.Delete(invitationRef);
-            
-                var userListAggregatorFD = new UserListAggregatorFD
-                {
-                    ListAggregatorId = invitation.ListAggregatorId,
-                    UserId = userId,
-                    PermissionLevel = invitation.PermissionLevel
-                };
-            
-                DocumentReference userListAggregatorRef = Db.Collection("userListAggregator").Document();
-                transaction.Set(userListAggregatorRef, userListAggregatorFD);
+                DocumentReference listAggrRef = Db.Collection("listAggregator").Document(invitation.ListAggregatorId.ToString());
+                var snapDoc = await transaction.GetSnapshotAsync(listAggrRef);
 
-                return Task.CompletedTask;
+                transaction.Delete(invitationRef);
+
+
+                if (snapDoc.Exists)
+                {
+                    var userListAggregatorFD = new UserListAggregatorFD
+                    {
+                        ListAggregatorId = invitation.ListAggregatorId,
+                        UserId = userId,
+                        PermissionLevel = invitation.PermissionLevel
+                    };
+
+                    DocumentReference userListAggregatorRef = Db.Collection("userListAggregator").Document();
+                    transaction.Set(userListAggregatorRef, userListAggregatorFD);
+                }
+
             });
         }
     }
