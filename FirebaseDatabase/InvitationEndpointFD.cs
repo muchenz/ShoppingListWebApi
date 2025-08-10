@@ -26,7 +26,7 @@ namespace FirebaseDatabase
 
         public InvitationEndpointFD(IMapper mapper)
         {
-            
+
             Db = FirestoreDb.Create("testnosqldb1");
             _mapper = mapper;
 
@@ -41,7 +41,7 @@ namespace FirebaseDatabase
 
         }
 
-       
+
 
         public async Task<List<Invitation>> GetInvitationsListAsync(string userName)
         {
@@ -56,10 +56,10 @@ namespace FirebaseDatabase
             foreach (var itemInvFD in listInvFD)
             {
 
-                var snapDoc =  await _listAggrCol.Document(itemInvFD.ListAggregatorId.ToString()).GetSnapshotAsync();
+                var snapDoc = await _listAggrCol.Document(itemInvFD.ListAggregatorId.ToString()).GetSnapshotAsync();
 
                 if (!snapDoc.Exists)
-                { 
+                {
                     await _invitationsCol.Document(itemInvFD.InvitationId.ToString()).DeleteAsync();
                 }
                 else
@@ -79,24 +79,45 @@ namespace FirebaseDatabase
             await _invitationsCol.Document(invitation.InvitationId.ToString()).DeleteAsync();
         }
 
+        //public async Task AcceptInvitationAsync(Invitation invitation, int userId)
+        //{
+        //    await Db.RunTransactionAsync(async transation =>
+        //    {
+        //        var invitationEntity = _mapper.Map<InvitationFD>(invitation);
+
+        //        await transation.Database.Collection("invitations").Document(invitation.InvitationId.ToString()).DeleteAsync();
+
+        //        var userListAggregatorFD = new UserListAggregatorFD
+        //        {
+        //            ListAggregatorId = invitation.ListAggregatorId,
+        //            UserId = userId,
+        //            PermissionLevel = invitation.PermissionLevel
+        //        };
+
+
+        //        await transation.Database.Collection("userListAggregator").AddAsync(userListAggregatorFD);
+
+        //    });
+        //}
         public async Task AcceptInvitationAsync(Invitation invitation, int userId)
         {
-            await Db.RunTransactionAsync(async transation =>
+            await Db.RunTransactionAsync(transaction =>
             {
-                var invitationEntity = _mapper.Map<InvitationFD>(invitation);
-
-                await transation.Database.Collection("invitations").Document(invitation.InvitationId.ToString()).DeleteAsync();
-
+                DocumentReference invitationRef = Db.Collection("invitations").Document(invitation.InvitationId.ToString());
+            
+                transaction.Delete(invitationRef);
+            
                 var userListAggregatorFD = new UserListAggregatorFD
                 {
                     ListAggregatorId = invitation.ListAggregatorId,
                     UserId = userId,
                     PermissionLevel = invitation.PermissionLevel
                 };
+            
+                DocumentReference userListAggregatorRef = Db.Collection("userListAggregator").Document();
+                transaction.Set(userListAggregatorRef, userListAggregatorFD);
 
-
-                await transation.Database.Collection("userListAggregator").AddAsync(userListAggregatorFD);
-
+                return Task.CompletedTask;
             });
         }
     }
