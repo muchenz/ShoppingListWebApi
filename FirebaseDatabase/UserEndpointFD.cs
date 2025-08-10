@@ -7,11 +7,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FirebaseDatabase
 {
-    public class UserEndpointFD : IUserEndpoint
+    public class UserEndpointFD : IUserEndpoint, ITokenEndpoint
     {
         private readonly IMapper _mapper;
         private readonly ILogger<UserEndpointFD> _logger;
@@ -24,6 +25,7 @@ namespace FirebaseDatabase
         CollectionReference _userListAggrCol;
         CollectionReference _usersCol;
         CollectionReference _indexesCol;
+        CollectionReference _refreshToken;
 
         public UserEndpointFD(IMapper mapper, ILogger<UserEndpointFD> logger)
         {
@@ -39,7 +41,7 @@ namespace FirebaseDatabase
             _userListAggrCol = Db.Collection("userListAggregator");
             _usersCol = Db.Collection("users");
             _indexesCol = Db.Collection("indexes");
-
+            _refreshToken = Db.Collection("refreshTokens");
         }
 
         public async Task AddInvitationAsync(string toUserName, int listAggregationId, int permission, string fromSenderName)
@@ -653,5 +655,168 @@ namespace FirebaseDatabase
 
         }
 
+        public async Task AddRefreshToken(int userId, RefreshTokenSession refreshTokenSession)
+        {
+            var tokensSnap = await _refreshToken.Document(userId.ToString()).GetSnapshotAsync();
+
+            if (!tokensSnap.Exists)
+            {
+                await _refreshToken.Document(userId.ToString()).SetAsync(
+                    new RefreshTokensDataFD { RefreshTokens = new RefreshTokenSessionFD[] { refreshTokenSession.ToRefreshTokenFDSession() }.ToList() });
+                return;
+
+            }
+            var tokens = tokensSnap.ConvertTo<RefreshTokensDataFD>().RefreshTokens;
+
+            tokens.RemoveAll(a => a.ExpiresAt < System.DateTime.Now);
+            tokens.RemoveAll(a => a.DeviceInfo == refreshTokenSession.DeviceInfo);
+
+
+            tokens.Add(refreshTokenSession.ToRefreshTokenFDSession());
+            await _refreshToken.Document(userId.ToString()).SetAsync(new RefreshTokensDataFD { RefreshTokens = tokens });
+
+        }
+
+
+        public async Task<List<RefreshTokenSession>> GetRefreshTokens(int userId)
+        {
+            var tokensSnap = await _refreshToken.Document(userId.ToString()).GetSnapshotAsync();
+
+            if (!tokensSnap.Exists)
+            {
+                return new List<RefreshTokenSession>();
+
+            }
+            var tokens = tokensSnap.ConvertTo<RefreshTokensDataFD>().RefreshTokens;
+
+            return tokens.Select(a => a.ToRefreshTokenSession()).ToList();
+        }
+        public async Task DeleteRefreshToken(int userId, RefreshTokenSession refreshTokenSession)
+        {
+            var tokensSnap = await _refreshToken.Document(userId.ToString()).GetSnapshotAsync();
+
+            if (!tokensSnap.Exists)
+            {
+                return;
+
+            }
+            var tokens = tokensSnap.ConvertTo<RefreshTokensDataFD>().RefreshTokens;
+            var tokenToDelete = tokens.Where(a => a.RefreshToken == refreshTokenSession.RefreshToken).FirstOrDefault();
+            if (tokenToDelete is null)
+            {
+                return;
+            }
+            tokens.Remove(tokenToDelete);
+            await _refreshToken.Document(userId.ToString()).SetAsync(new RefreshTokensDataFD { RefreshTokens = tokens });
+
+        }
+        public async Task ReplaceRefreshToken(int userId, RefreshTokenSession oldRefreshTokenSession, RefreshTokenSession newRefreshTokenSession)
+        {
+            var tokensSnap = await _refreshToken.Document(userId.ToString()).GetSnapshotAsync();
+
+            if (!tokensSnap.Exists)
+            {
+                return;
+
+            }
+            var tokens = tokensSnap.ConvertTo<RefreshTokensDataFD>().RefreshTokens;
+            var tokenToDelete = tokens.Where(a => a.RefreshToken == oldRefreshTokenSession.RefreshToken).FirstOrDefault();
+            if (tokenToDelete is not null)
+            {
+                tokens.Remove(tokenToDelete);
+            }
+            tokens.Add(newRefreshTokenSession.ToRefreshTokenFDSession());
+
+            await _refreshToken.Document(userId.ToString()).SetAsync(new RefreshTokensDataFD { RefreshTokens = tokens });
+
+        }
+
+        public async Task<(string, string)> ReplaceRefreshToken2(int userId, string deviceId, string refreshTokenOld, string accessTokenNew,
+            string jti, int version, string refreshTokenNew, CancellationToken cancellationToken)
+        {
+            bool isGood = false;
+
+            await Db.RunTransactionAsync(async transation =>
+            {
+
+                var tokensSnap = await transation.Database.Collection("refreshTokens").Document(userId.ToString()).GetSnapshotAsync();
+
+                if (!tokensSnap.Exists)
+                {
+                    return;
+
+                }
+                var tokens = tokensSnap.ConvertTo<RefreshTokensDataFD>().RefreshTokens;
+                var refreshTokenSessionToDelete = tokens.Where(a => a.RefreshToken == refreshTokenOld).FirstOrDefault();
+
+                if (refreshTokenSessionToDelete is null || refreshTokenSessionToDelete.IsRefreshTokenRevoked || refreshTokenSessionToDelete.ExpiresAt < System.DateTime.UtcNow)
+                {
+                    return;
+                }
+
+                var refreshTokenSessionNew = new RefreshTokenSession
+                {
+                    RefreshToken = refreshTokenNew,
+                    AccessTokenJti = jti,
+                    UserId = userId.ToString(),
+                    Version = version,
+                    ExpiresAt = System.DateTime.UtcNow.AddDays(7),
+                    CreatedAt = System.DateTime.UtcNow,
+                    Id = Guid.NewGuid(),
+                    DeviceInfo = deviceId
+
+                };
+
+                if (refreshTokenSessionToDelete is not null)
+                {
+                    tokens.Remove(refreshTokenSessionToDelete);
+                }
+
+                tokens.Add(refreshTokenSessionNew.ToRefreshTokenFDSession());
+
+                await transation.Database.Collection("refreshTokens").Document(userId.ToString()).SetAsync(new RefreshTokensDataFD { RefreshTokens = tokens });
+                isGood = true;
+            }, cancellationToken: cancellationToken);
+
+            if (isGood)
+            {
+                return (accessTokenNew, refreshTokenNew);
+
+            }
+            return (string.Empty, string.Empty);
+        }
+        public async Task DeleteRefreshTokenByJti(int userId, string jti)
+        {
+            var tokensSnap = await _refreshToken.Document(userId.ToString()).GetSnapshotAsync();
+
+            if (!tokensSnap.Exists)
+            {
+                return;
+
+            }
+            var tokens = tokensSnap.ConvertTo<RefreshTokensDataFD>().RefreshTokens;
+            var tokenToDelete = tokens.Where(a => a.AccessTokenJti == jti).FirstOrDefault();
+            if (tokenToDelete is null)
+            {
+                return;
+            }
+            tokens.Remove(tokenToDelete);
+
+            await _refreshToken.Document(userId.ToString()).SetAsync(new RefreshTokensDataFD { RefreshTokens = tokens });
+
+        }
+        //[FirestoreData]
+        //public class RefreshTokensData
+        //{
+        //    [FirestoreProperty]
+        //    public string TokensSerializedString { get; set; }
+        //}
+        [FirestoreData]
+
+        public class RefreshTokensDataFD
+        {
+            [FirestoreProperty]
+            public List<RefreshTokenSessionFD> RefreshTokens { get; set; } = new List<RefreshTokenSessionFD>();
+        }
     }
 }

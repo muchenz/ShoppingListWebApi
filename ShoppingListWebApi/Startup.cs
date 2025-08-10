@@ -95,12 +95,12 @@ namespace ShoppingListWebApi
             //services.AddEFDatabase();
 
             //---------------------------------------------
-            //services.AddFirebasedDatabase();
+            services.AddFirebasedDatabase();
 
             //------------------------------------------------
-            services.AddFirebaseCaschedDatabas();
-            services.AddSingleton<CacheConveinient>();
-            services.AddSingleton<IMiniDistributedCache, FirabaseCache>();
+            //services.AddFirebaseCaschedDatabas();
+            //services.AddSingleton<CacheConveinient>();
+            //services.AddSingleton<IMiniDistributedCache, FirabaseCache>();
             //-----------------------------------------------
 
             services.AddSingleton<ITokenService, TokenService>();
