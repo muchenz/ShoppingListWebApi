@@ -39,30 +39,30 @@ namespace FirebaseDatabase
             {
 
 
-                var docIndexesRef = transation.Database.Collection("indexes").Document("indexes");
-                var snapIndexesDoc = await docIndexesRef.GetSnapshotAsync();
+                var docIndexesRef = Db.Collection("indexes").Document("indexes");
+                var snapIndexesDoc = await transation.GetSnapshotAsync(docIndexesRef);
 
                 var index = snapIndexesDoc.GetValue<long>("listItem");
 
-                var listDocSnap = await transation.Database.Collection("list").Document(parentId.ToString()).GetSnapshotAsync();
+                var indexNew = index + 1;
+                var listDocRef = Db.Collection("list").Document(parentId.ToString());
+                var listDocSnap = await transation.GetSnapshotAsync(listDocRef);
 
                 var lista = listDocSnap.ConvertTo<ListFD>();
-                lista.ListItems.Add((int)index + 1);
 
-                var t1 =  transation.Database.Collection("list").Document(parentId.ToString())
-                        .UpdateAsync(nameof(ListFD.ListItems), lista.ListItems);
+                lista.ListItems.Add((int)indexNew);
 
-
-                var newListItemDoc = transation.Database.Collection("listItem").Document((index + 1).ToString());
-
-                listItemFD.ListItemId = (int)index + 1;
+                transation.Set(listDocRef, lista);
 
 
-                var t2 =  newListItemDoc.SetAsync(listItemFD);
+                var newListItemRef =Db.Collection("listItem").Document(indexNew.ToString());
 
-                var t3 =  docIndexesRef.UpdateAsync("listItem", index + 1);
+                listItemFD.ListItemId = (int)indexNew;
 
-                await Task.WhenAll(t1, t2, t3);
+
+                transation.Set(newListItemRef, listItemFD);
+
+                transation.Update(docIndexesRef,"listItem", indexNew);
 
             });
 
