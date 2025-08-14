@@ -52,30 +52,35 @@ namespace FirebaseDatabase
             {
 
 
-                var docIndexesRef = transation.Database.Collection("indexes").Document("indexes");
-                var snapIndexesDoc = await docIndexesRef.GetSnapshotAsync();
+                var docIndexesRef = _indexesCol.Document("indexes");
+                var snapIndexesDoc = await transation.GetSnapshotAsync(docIndexesRef);
 
                 var index = snapIndexesDoc.GetValue<long>("list");
+                var indexNew = index + 1;
 
-                var listAggrDocSnap = await transation.Database.Collection("listAggregator").Document(parentId.ToString()).GetSnapshotAsync();
+                var listAggrDocRef = _listAggrCol.Document(parentId.ToString());
+                var listAggrDocSnap = await transation.GetSnapshotAsync(listAggrDocRef);
+
+                if (!listAggrDocSnap.Exists)
+                {
+                    return;
+                }
 
                 var listAggr = listAggrDocSnap.ConvertTo<ListAggregatorFD>();
-                listAggr.Lists.Add((int)index + 1);
+                listAggr.Lists.Add((int)indexNew);
 
-                var t1 = transation.Database.Collection("listAggregator").Document(parentId.ToString())
-                        .UpdateAsync(nameof(ListAggregatorFD.Lists), listAggr.Lists);
-
-
-                var newListDoc = transation.Database.Collection("list").Document((index + 1).ToString());
-
-                listFD.ListId = (int)index + 1;
+                transation.Update(listAggrDocRef, nameof(ListAggregatorFD.Lists), listAggr.Lists);
 
 
-                var t2 =  newListDoc.SetAsync(listFD);
+                var newListRef = _listCol.Document((indexNew).ToString());
 
-                var t3 =  docIndexesRef.UpdateAsync("list", index + 1);
+                listFD.ListId = (int)indexNew;
 
-                await Task.WhenAll(t1, t2, t3);
+
+                transation.Set(newListRef, listFD);
+
+                transation.Update(docIndexesRef, "list", indexNew);
+
             });
 
 
