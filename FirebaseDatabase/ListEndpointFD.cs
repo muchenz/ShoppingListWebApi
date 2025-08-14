@@ -105,48 +105,33 @@ namespace FirebaseDatabase
 
         public async Task<int> DeleteListAsync(int listId, int listAggregationId)
         {
-            Task<WriteResult> writeResultTask = null;
-            
             await Db.RunTransactionAsync(async transation =>
             {
 
-                var listDocSnap = await transation.Database.Collection("list").Document(listId.ToString()).GetSnapshotAsync();
+                var listDocRef = _listCol.Document(listId.ToString());
+                var listDocSnap = await transation.GetSnapshotAsync(listDocRef);
 
                 if (!listDocSnap.Exists) return;
 
                 var listToDelete = listDocSnap.ConvertTo<ListFD>();
 
-                var listAggrDocSnap = await transation.Database.Collection("listAggregator")
-                        .Document(listToDelete.ListAggrId.ToString()).GetSnapshotAsync();
-
-                var listArrgDoc = listAggrDocSnap.ConvertTo<ListAggregatorFD>();
-
-                listArrgDoc.Lists.Remove(listId);
-
-
-                var listTask = new List<Task>();
-
+                var listAggrDocRef = _listAggrCol.Document(listToDelete.ListAggrId.ToString());
+                transation.Update(listAggrDocRef, nameof(ListAggregatorFD.Lists), FieldValue.ArrayRemove(listId));
+                
                 foreach (var listItemId in listToDelete.ListItems)
                 {
-                    listTask.Add(transation.Database.Collection("listItem")
-                        .Document(listItemId.ToString()).DeleteAsync());
+                    var _listItemToDeleteRef = _listItemCol.Document(listItemId.ToString());
+                    transation.Delete(_listItemToDeleteRef);
                 }
 
 
-                var t1 =  transation.Database.Collection("listAggregator").Document(listToDelete.ListAggrId.ToString())
-                        .UpdateAsync(nameof(ListAggregatorFD.Lists), listArrgDoc.Lists);
-                listTask.Add(t1);
+                //transation.Update(listAggrDocRef, nameof(ListAggregatorFD.Lists), listArrgDoc.Lists);
 
-                writeResultTask = transation.Database.Collection("list").Document(listId.ToString()).DeleteAsync();
+                transation.Delete(listDocRef);
 
-                listTask.Add(writeResultTask);
-
-                await Task.WhenAll(listTask);
             });
 
-            if (writeResultTask?.Result != null) return 1;
-
-            return 0;
+            return 1;
         }
 
         public async Task<List> EditListAsync(List list, int listAggregationId)
