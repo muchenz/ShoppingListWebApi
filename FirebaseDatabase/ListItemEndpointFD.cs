@@ -45,8 +45,13 @@ namespace FirebaseDatabase
                 var index = snapIndexesDoc.GetValue<long>("listItem");
 
                 var indexNew = index + 1;
-                var listDocRef = Db.Collection("list").Document(parentId.ToString());
+                var listDocRef = _listCol.Document(parentId.ToString());
                 var listDocSnap = await transation.GetSnapshotAsync(listDocRef);
+
+                if (!listDocSnap.Exists)
+                {
+                    return;
+                }
 
                 var lista = listDocSnap.ConvertTo<ListFD>();
 
@@ -55,7 +60,7 @@ namespace FirebaseDatabase
                 transation.Set(listDocRef, lista);
 
 
-                var newListItemRef =Db.Collection("listItem").Document(indexNew.ToString());
+                var newListItemRef = _listItemCol.Document(indexNew.ToString());
 
                 listItemFD.ListItemId = (int)indexNew;
 
@@ -108,39 +113,36 @@ namespace FirebaseDatabase
 
         public async Task<int> DeleteListItemAsync(int listItemId, int listAggregationId)
         {
-            Task<WriteResult> writeResultTask = null;
 
             await Db.RunTransactionAsync(async transation =>
             {
 
-                var listItemDocSnap = await transation.Database.Collection("listItem").Document(listItemId.ToString()).GetSnapshotAsync();
+                var listItemDocRef = _listItemCol.Document(listItemId.ToString());
+                var listItemDocSnap = await transation.GetSnapshotAsync(listItemDocRef);
 
-                if (!listItemDocSnap.Exists) return;
+                if (!listItemDocSnap.Exists)
+                {
+                    return;
+                }
 
                 var listItemToDelete = listItemDocSnap.ConvertTo<ListItemFD>();
 
-                
-                var listDocSnap = await transation.Database.Collection("list")
-                        .Document(listItemToDelete.ListId.ToString()).GetSnapshotAsync();
+                var listDocSnapRef = _listCol.Document(listItemToDelete.ListId.ToString());
+                var listDocSnap = await transation.GetSnapshotAsync(listDocSnapRef);
 
                 var listDoc = listDocSnap.ConvertTo<ListFD>();
 
                 listDoc.ListItems.Remove(listItemId);
 
-                var t1 =  transation.Database.Collection("list").Document(listItemToDelete.ListId.ToString())
-                        .UpdateAsync(nameof(ListFD.ListItems), listDoc.ListItems);
+                transation.Update(listDocSnapRef, nameof(ListFD.ListItems), listDoc.ListItems); 
 
-                writeResultTask = transation.Database.Collection("listItem").Document(listItemId.ToString()).DeleteAsync();
-
-                await Task.WhenAll(t1, writeResultTask);
-
+                transation.Delete(listItemDocRef);
                 
 
             });
 
-            if (writeResultTask?.Result != null) return 1;
+            return 1;
 
-            return 0;
         }
 
 
