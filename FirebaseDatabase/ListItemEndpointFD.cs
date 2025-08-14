@@ -113,6 +113,7 @@ namespace FirebaseDatabase
 
         public async Task<int> DeleteListItemAsync(int listItemId, int listAggregationId)
         {
+            int amountDeleted = 0;
 
             await Db.RunTransactionAsync(async transation =>
             {
@@ -128,20 +129,15 @@ namespace FirebaseDatabase
                 var listItemToDelete = listItemDocSnap.ConvertTo<ListItemFD>();
 
                 var listDocSnapRef = _listCol.Document(listItemToDelete.ListId.ToString());
-                var listDocSnap = await transation.GetSnapshotAsync(listDocSnapRef);
 
-                var listDoc = listDocSnap.ConvertTo<ListFD>();
-
-                listDoc.ListItems.Remove(listItemId);
-
-                transation.Update(listDocSnapRef, nameof(ListFD.ListItems), listDoc.ListItems); 
+                transation.Update(listDocSnapRef, nameof(ListFD.ListItems), FieldValue.ArrayRemove(listItemId));
 
                 transation.Delete(listItemDocRef);
-                
+                amountDeleted++;
 
             });
 
-            return 1;
+            return amountDeleted;
 
         }
 
