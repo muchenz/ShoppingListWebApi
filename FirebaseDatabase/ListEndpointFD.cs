@@ -103,6 +103,7 @@ namespace FirebaseDatabase
             return list.ListAggrId == listAggregationId;
         }
 
+        //TODO: avoid limit 500 for transaction
         public async Task<int> DeleteListAsync(int listId, int listAggregationId)
         {
             var amountDeleted = 0;
