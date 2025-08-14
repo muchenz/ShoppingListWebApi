@@ -124,9 +124,6 @@ namespace FirebaseDatabase
                     transation.Delete(_listItemToDeleteRef);
                 }
 
-
-                //transation.Update(listAggrDocRef, nameof(ListAggregatorFD.Lists), listArrgDoc.Lists);
-
                 transation.Delete(listDocRef);
 
             });
