@@ -82,54 +82,75 @@ namespace FirebaseDatabase
 
         public async Task<int> DeleteListAggrAsync(int listAggregationId)
         {
-            int amount = 0;
-            await Db.RunTransactionAsync(async transation =>
+            try
             {
-
-                var snapListAggr = await transation.Database.Collection("listAggregator")
-                    .Document(listAggregationId.ToString()).GetSnapshotAsync();
-
-                if (!snapListAggr.Exists) return;
-
-                var listAggr = snapListAggr.ConvertTo<ListAggregatorFD>();
-
-
-                foreach (var listId in listAggr.Lists)
+                int amount = 0;
+                await Db.RunTransactionAsync(async transation =>
                 {
-                    var snapList = await transation.Database.Collection("list")
-                    .Document(listId.ToString()).GetSnapshotAsync();
+                    var userListAggrRef = _userListAggrCol.WhereEqualTo(nameof(UserListAggregatorFD.ListAggregatorId), listAggregationId);
+                    var userListAggrSanp = await transation.GetSnapshotAsync(userListAggrRef);
 
-                    var list = snapListAggr.ConvertTo<ListFD>();
 
-                    var listItemTask = new List<Task>(); 
-                    foreach (var listItemId in list.ListItems)
+                    var listAggrRef = _listAggrCol.Document(listAggregationId.ToString());
+                    var listAggrSnap = await transation.GetSnapshotAsync(listAggrRef);
+
+                    if (!listAggrSnap.Exists) return;
+
+                    var listAggr = listAggrSnap.ConvertTo<ListAggregatorFD>();
+
+
+                    var allLists = new List<ListFD>();
+
+                    foreach (var listId in listAggr.Lists)
                     {
-                        listItemTask.Add( transation.Database.Collection("listItem")
-                            .Document(listItemId.ToString()).DeleteAsync());
+                        var listRef = _listCol.Document(listId.ToString());
+                        var listSnap = await transation.GetSnapshotAsync(listRef);
+
+                        if (!listSnap.Exists) continue;
+
+                        var list = listSnap.ConvertTo<ListFD>();
+                        allLists.Add(list);
+                    }
+
+
+                    foreach (var list in allLists)
+                    {
+
+                        foreach (var listItemId in list.ListItems)
+                        {
+
+                            var listItemRef = _listItemCol.Document(listItemId.ToString());
+
+                            transation.Delete(listItemRef);
+
+                            amount++;
+                        }
+
+                        transation.Delete(_listCol.Document(list.ListId.ToString()));
                         amount++;
                     }
-                    await Task.WhenAll(listItemTask);
 
-                    await transation.Database.Collection("list").Document(listId.ToString()).DeleteAsync();
+                    transation.Delete(listAggrRef);
                     amount++;
-                }
-
-                await transation.Database.Collection("listAggregator").Document(listAggregationId.ToString()).DeleteAsync();
-                amount++;
-
-                var snapUseListAggr = await transation.Database.Collection("userListAggregator")
-                 .WhereEqualTo(nameof(UserListAggregatorFD.ListAggregatorId), listAggregationId).GetSnapshotAsync();
 
 
-                foreach (var item in snapUseListAggr)
-                {
+                    foreach (var item in userListAggrSanp)
+                    {
 
-                    await transation.Database.Collection("userListAggregator").Document(item.Id).DeleteAsync();
-                    amount++;
-                }
+                        var userListAggrDocRef = _userListAggrCol.Document(item.Id);
+                        transation.Delete(userListAggrDocRef);
+                        amount++;
+                    }
 
-            });
-            return amount;
+                });
+                return amount;
+            }
+            catch (Exception ex)
+            {
+                // Handle exceptions as needed
+                Console.WriteLine($"Error deleting list aggregator: {ex.Message}");
+                return 0;
+            }
         }
 
         public async Task<ListAggregator> EditListAggregatorAsync(ListAggregator listAggregator)
