@@ -85,30 +85,39 @@ namespace FirebaseDatabase
 
         public async Task<int> DeleteListAggrAsync(int listAggregationId)
         {
-            int amount = 0;
-            await Db.RunTransactionAsync(async transation =>
+            try
             {
-                var todeleteRef = _toDelete.Document(listAggregationId.ToString());
-
-                var listAggrRef = _listAggrCol.Document(listAggregationId.ToString());
-                var listAggrSnap = await transation.GetSnapshotAsync(listAggrRef);
-
-                if (!listAggrSnap.Exists) return;
-
-                transation.Update(listAggrRef, nameof(ListAggregatorFD.Deleted), true);
-
-                var toDedelete = new ToDelete
+                int amount = 0;
+                await Db.RunTransactionAsync(async transation =>
                 {
-                    Id = listAggregationId.ToString(),
-                    Type = nameof(ListAggregatorFD),
-                    DeletedAt= DateTime.UtcNow,
-                };
+                    var todeleteRef = _toDelete.Document(listAggregationId.ToString());
 
-                transation.Set(todeleteRef, toDedelete);
-                amount++;
-            });
+                    var listAggrRef = _listAggrCol.Document(listAggregationId.ToString());
+                    var listAggrSnap = await transation.GetSnapshotAsync(listAggrRef);
 
-            return amount;
+                    if (!listAggrSnap.Exists) return;
+
+                    transation.Update(listAggrRef, nameof(ListAggregatorFD.Deleted), true);
+
+                    var toDedelete = new ToDelete
+                    {
+                        Id = listAggregationId.ToString(),
+                        Type = nameof(ListAggregator),
+                        CreatedAt = DateTime.UtcNow,
+                    };
+
+                    transation.Set(todeleteRef, toDedelete);
+                    amount++;
+                });
+
+                return amount;
+            }
+            catch(Exception ex)
+            {
+                // Handle exceptions as needed
+                Console.WriteLine($"Error deleting list aggregator: {ex.Message}");
+                return 0;
+            }
         }
         //TODO: avoid 500 limit
         public async Task<int> DeleteListAggrAsync2(int listAggregationId)

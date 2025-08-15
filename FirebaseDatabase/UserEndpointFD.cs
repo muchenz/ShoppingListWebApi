@@ -348,6 +348,8 @@ namespace FirebaseDatabase
 
 
                 var tempListAggrFD = listAggrSanapTask.ConvertTo<ListAggregatorFD>();
+                if (tempListAggrFD.Deleted) continue;
+
 
                 var tempListAggrDTO = new ListAggregator
                 {

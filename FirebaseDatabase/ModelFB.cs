@@ -167,6 +167,7 @@ namespace FirebaseDatabase
         
     }
 
+    [FirestoreData]
     public class ToDelete
     {
         [FirestoreProperty]
