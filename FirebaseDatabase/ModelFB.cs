@@ -58,7 +58,6 @@ namespace FirebaseDatabase
         [FirestoreProperty]
         public int State { get; set; }
 
-
     }
 
     [FirestoreData]
@@ -80,6 +79,8 @@ namespace FirebaseDatabase
 
         [FirestoreProperty]
         public ICollection<int> Lists { get; set; }
+        [FirestoreProperty]
+        public bool Deleted { get; set; } = false;
 
     }
 
@@ -164,6 +165,18 @@ namespace FirebaseDatabase
         [FirestoreProperty]
         public string? ReplacedByToken { get; set; }
         
+    }
+
+    public class ToDelete
+    {
+        [FirestoreProperty]
+        public string Id { get; set; }
+        [FirestoreProperty]
+        public string Type { get; set; }
+        [FirestoreProperty]
+        public DateTime CreatedAt { get; set; }
+        [FirestoreProperty]
+        public DateTime? DeletedAt { get; set; }
     }
 
     public static class RefreshTokenSessionExtensions

@@ -26,6 +26,7 @@ namespace FirebaseDatabase
         CollectionReference _usersCol;
         CollectionReference _indexesCol;
         CollectionReference _refreshToken;
+        CollectionReference _toDelete;
 
         public UserEndpointFD(IMapper mapper, ILogger<UserEndpointFD> logger)
         {
@@ -42,6 +43,7 @@ namespace FirebaseDatabase
             _usersCol = Db.Collection("users");
             _indexesCol = Db.Collection("indexes");
             _refreshToken = Db.Collection("refreshTokens");
+            _toDelete = Db.Collection("toDelete");
         }
 
         public async Task AddInvitationAsync(string toUserName, int listAggregationId, int permission, string fromSenderName)
@@ -739,7 +741,8 @@ namespace FirebaseDatabase
             await Db.RunTransactionAsync(async transation =>
             {
 
-                var tokensSnap = await transation.Database.Collection("refreshTokens").Document(userId.ToString()).GetSnapshotAsync();
+                var tokensRef = _refreshToken.Document(userId.ToString());
+                var tokensSnap = await transation.GetSnapshotAsync(tokensRef );
 
                 if (!tokensSnap.Exists)
                 {
@@ -774,7 +777,7 @@ namespace FirebaseDatabase
 
                 tokens.Add(refreshTokenSessionNew.ToRefreshTokenFDSession());
 
-                await transation.Database.Collection("refreshTokens").Document(userId.ToString()).SetAsync(new RefreshTokensDataFD { RefreshTokens = tokens });
+                transation.Set(tokensRef,  new RefreshTokensDataFD { RefreshTokens = tokens });
                 isGood = true;
             }, cancellationToken: cancellationToken);
 

@@ -21,6 +21,8 @@ namespace FirebaseDatabase
         CollectionReference _userListAggrCol;
         CollectionReference _usersCol;
         CollectionReference _indexesCol;
+        CollectionReference _toDelete;
+
         private object listItemId;
 
         public ListAggregatorEndpointFD(IMapper mapper)
@@ -37,6 +39,7 @@ namespace FirebaseDatabase
             _userListAggrCol = Db.Collection("userListAggregator");
             _usersCol = Db.Collection("users");
             _indexesCol = Db.Collection("indexes");
+            _toDelete = Db.Collection("toDelete");
 
         }
         public async Task<ListAggregator> AddListAggregatorAsync(ListAggregator listAggregator, int parentId)
@@ -80,8 +83,35 @@ namespace FirebaseDatabase
             throw new NotImplementedException();
         }
 
-        //TODO: avoid 500 limit
         public async Task<int> DeleteListAggrAsync(int listAggregationId)
+        {
+            int amount = 0;
+            await Db.RunTransactionAsync(async transation =>
+            {
+                var todeleteRef = _toDelete.Document(listAggregationId.ToString());
+
+                var listAggrRef = _listAggrCol.Document(listAggregationId.ToString());
+                var listAggrSnap = await transation.GetSnapshotAsync(listAggrRef);
+
+                if (!listAggrSnap.Exists) return;
+
+                transation.Update(listAggrRef, nameof(ListAggregatorFD.Deleted), true);
+
+                var toDedelete = new ToDelete
+                {
+                    Id = listAggregationId.ToString(),
+                    Type = nameof(ListAggregatorFD),
+                    DeletedAt= DateTime.UtcNow,
+                };
+
+                transation.Set(todeleteRef, toDedelete);
+                amount++;
+            });
+
+            return amount;
+        }
+        //TODO: avoid 500 limit
+        public async Task<int> DeleteListAggrAsync2(int listAggregationId)
         {
             try
             {
@@ -137,7 +167,6 @@ namespace FirebaseDatabase
 
                     foreach (var item in userListAggrSanp)
                     {
-
                         var userListAggrDocRef = _userListAggrCol.Document(item.Id);
                         transation.Delete(userListAggrDocRef);
                         amount++;
