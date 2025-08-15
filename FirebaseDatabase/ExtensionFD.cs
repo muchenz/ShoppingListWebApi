@@ -17,6 +17,7 @@ namespace FirebaseDatabase
             services.AddTransient<IListEndpoint, ListEndpointFD>();
 
             services.AddTransient<ITokenEndpoint, UserEndpointFD>();
+            services.AddTransient<ToDeleteEndpoint>();
 
 
         }

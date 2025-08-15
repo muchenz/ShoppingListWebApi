@@ -90,7 +90,7 @@ namespace FirebaseDatabase
                 int amount = 0;
                 await Db.RunTransactionAsync(async transation =>
                 {
-                    var todeleteRef = _toDelete.Document(listAggregationId.ToString());
+                    var todeleteRef = _toDelete.Document(nameof(ListAggregator)+listAggregationId.ToString());
 
                     var listAggrRef = _listAggrCol.Document(listAggregationId.ToString());
                     var listAggrSnap = await transation.GetSnapshotAsync(listAggrRef);
