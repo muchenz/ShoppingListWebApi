@@ -1,8 +1,10 @@
 ﻿using Google.Protobuf;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Shared.DataEndpoints.Abstaractions;
+using ShoppingListWebApi.Data;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -24,6 +26,9 @@ namespace FirebaseDatabase
             services.AddTransient<ToDeleteEndpoint>();
 
             services.AddSingleton<DeleteChannel>();
+
+            services.AddHostedService<ToDeleteService>();
+
 
             using var serviceProvider = services.BuildServiceProvider();
             var configuration = serviceProvider.GetRequiredService<IConfiguration>();

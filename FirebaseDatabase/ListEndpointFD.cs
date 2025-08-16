@@ -172,6 +172,8 @@ namespace FirebaseDatabase
                     amount++;
                 });
 
+                await _deleteChannel.Writer.WriteAsync(new DeleteEvent());
+                
                 return amount;
             }
             catch (Exception ex)
