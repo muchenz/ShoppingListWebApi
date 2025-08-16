@@ -33,11 +33,13 @@ public class ToDeleteService : BackgroundService
                         {
                             if (int.TryParse(toDelete.ItemTodelete.Id, out var id))
 
-                                await _toDeleteEndpoint.DeleteListAggrAsync2(id);
+                                await _toDeleteEndpoint.DeleteListAggrBatchAsync(id);
                         }
                         else if (toDelete.ItemTodelete.Type == nameof(List))
                         {
-                            //TODO: Implement List deletion
+                            if (int.TryParse(toDelete.ItemTodelete.Id, out var id))
+
+                                await _toDeleteEndpoint.DeleteListBatchAsync(id);
                         }
 
                     }

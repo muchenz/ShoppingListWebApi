@@ -46,7 +46,7 @@ public class ToDeleteEndpoint
     }
 
 
-    private async Task<int> DeleteListBatchAsync(int listId)
+    public async Task<int> DeleteListBatchAsync(int listId)
     {
         var totalAmountDeleted = 0;
 
@@ -58,12 +58,11 @@ public class ToDeleteEndpoint
 
         var list = listSnap.ConvertTo<ListFD>();
 
-
         totalAmountDeleted += await DeleteDocumentsBatchAsync(_listItemCol, list.ListItems);
-
 
         await listRef.DeleteAsync();
         totalAmountDeleted++;
+        
         return totalAmountDeleted;
     }
 
@@ -142,7 +141,7 @@ public class ToDeleteEndpoint
 
 
 
-    public async Task<int> DeleteListAggrAsync2(int listAggregationId)
+    public async Task<int> DeleteListAggrBatchAsync(int listAggregationId)
     {
         try
         {
