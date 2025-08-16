@@ -48,6 +48,9 @@ namespace FirebaseDatabase
 public class FirebaseFDOptions
 {
     public bool UseBatchProcessing { get; set; }
+    public bool UseChannel { get; set; }
+    public int PollingDelay { get; set; } = 1000;
+
 }
 
 public sealed class DeleteChannel

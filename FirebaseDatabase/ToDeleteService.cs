@@ -11,11 +11,13 @@ public class ToDeleteService : BackgroundService
 {
     private readonly ToDeleteEndpoint _toDeleteEndpoint;
     private readonly DeleteChannel _deleteChannel;
+    private readonly FirebaseFDOptions _firebaseFDOptions;
 
-    public ToDeleteService(ToDeleteEndpoint toDeleteEndpoint, DeleteChannel deleteChannel)
+    public ToDeleteService(ToDeleteEndpoint toDeleteEndpoint, DeleteChannel deleteChannel, FirebaseFDOptions firebaseFDOptions)
     {
         _toDeleteEndpoint = toDeleteEndpoint;
         _deleteChannel = deleteChannel;
+        _firebaseFDOptions = firebaseFDOptions;
     }
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -23,6 +25,7 @@ public class ToDeleteService : BackgroundService
         while (!stoppingToken.IsCancellationRequested)
         {
 
+            if ()
             await _deleteChannel.Reader.ReadAsync();
 
             var itemsToDelete = await _toDeleteEndpoint.GetToDelete();
@@ -59,8 +62,7 @@ public class ToDeleteService : BackgroundService
                 }
             }
 
-
-           // await Task.Delay(1000);
+                       
         }
 
     }
