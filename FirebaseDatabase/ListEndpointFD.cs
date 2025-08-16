@@ -22,6 +22,7 @@ namespace FirebaseDatabase
         CollectionReference _userListAggrCol;
         CollectionReference _usersCol;
         CollectionReference _indexesCol;
+        CollectionReference _toDelete;
 
         public ListEndpointFD(IMapper mapper)
         {
@@ -37,6 +38,7 @@ namespace FirebaseDatabase
             _userListAggrCol = Db.Collection("userListAggregator");
             _usersCol = Db.Collection("users");
             _indexesCol = Db.Collection("indexes");
+            _toDelete = Db.Collection("toDelete");
 
         }
 
@@ -104,7 +106,7 @@ namespace FirebaseDatabase
         }
 
         //TODO: avoid limit 500 for transaction
-        public async Task<int> DeleteListAsync(int listId, int listAggregationId)
+        public async Task<int> DeleteListAsync2(int listId, int listAggregationId)
         {
             var amountDeleted = 0;
 
@@ -133,6 +135,40 @@ namespace FirebaseDatabase
             });
 
             return amountDeleted;
+        }
+
+
+        public async Task<int> DeleteListAsync(int listId, int listAggregationId)
+        {
+            try
+            {
+                int amount = 0;
+                await Db.RunTransactionAsync(async transation =>
+                {
+                    var todeleteRef = _toDelete.Document(nameof(List) + listId.ToString());
+
+                    var listAggrDocRef = _listAggrCol.Document(listAggregationId.ToString());
+                    transation.Update(listAggrDocRef, nameof(ListAggregatorFD.Lists), FieldValue.ArrayRemove(listId));
+
+                    var toDedelete = new ToDelete
+                    {
+                        Id = listId.ToString(),
+                        Type = nameof(List),
+                        CreatedAt = DateTime.UtcNow,
+                    };
+
+                    transation.Set(todeleteRef, toDedelete);
+                    amount++;
+                });
+
+                return amount;
+            }
+            catch (Exception ex)
+            {
+                // Handle exceptions as needed
+                Console.WriteLine($"Error deleting list aggregator: {ex.Message}");
+                return 0;
+            }
         }
 
         public async Task<List> EditListAsync(List list, int listAggregationId)
