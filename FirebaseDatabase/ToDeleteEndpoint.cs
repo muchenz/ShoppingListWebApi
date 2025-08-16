@@ -63,7 +63,7 @@ public class ToDeleteEndpoint
 
 
         await listRef.DeleteAsync();
-
+        totalAmountDeleted++;
         return totalAmountDeleted;
     }
 
