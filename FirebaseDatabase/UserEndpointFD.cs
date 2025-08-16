@@ -281,7 +281,7 @@ namespace FirebaseDatabase
         {
             var querrySnapshot =
                 await _userListAggrCol.WhereEqualTo(nameof(UserListAggregatorFD.ListAggregatorId), listAggregationId)
-               .WhereEqualTo(nameof(UserListAggregatorFD.PermissionLevel), 1).GetSnapshotAsync();
+               .WhereEqualTo(nameof(UserListAggregatorFD.PermissionLevel), 1).Limit(2).GetSnapshotAsync();
 
             return querrySnapshot.Count;
 

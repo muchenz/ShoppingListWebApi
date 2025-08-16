@@ -27,17 +27,17 @@ public class ToDeleteService : BackgroundService
             {
                 try
                 {
-                    if (toDelete.Item1.DeletedAt == null)
+                    if (toDelete.ItemTodelete.DeletedAt == null)
                     {
                         if (toDelete.ItemTodelete.Type == nameof(ListAggregator))
                         {
-                            if (int.TryParse(toDelete.ItemTodelete.Id, out var id))
+                            if (int.TryParse(toDelete.ItemTodelete.ItemToDeleteId, out var id))
 
                                 await _toDeleteEndpoint.DeleteListAggrBatchAsync(id);
                         }
                         else if (toDelete.ItemTodelete.Type == nameof(List))
                         {
-                            if (int.TryParse(toDelete.ItemTodelete.Id, out var id))
+                            if (int.TryParse(toDelete.ItemTodelete.ItemToDeleteId, out var id))
 
                                 await _toDeleteEndpoint.DeleteListBatchAsync(id);
                         }
@@ -45,13 +45,13 @@ public class ToDeleteService : BackgroundService
                     }
 
 
-                    await _toDeleteEndpoint.Deleted(toDelete.id);
+                    await _toDeleteEndpoint.Deleted(toDelete.ToDeleteRecordId);
 
                 }
                 catch (System.Exception ex)
                 {
                     // Log the exception or handle it as needed
-                    Console.WriteLine($"Error processing ToDelete item with ID {toDelete.id}: {ex.Message}");
+                    Console.WriteLine($"Error processing ToDelete item with ID {toDelete.ToDeleteRecordId}: {ex.Message}");
                 }
             }
 

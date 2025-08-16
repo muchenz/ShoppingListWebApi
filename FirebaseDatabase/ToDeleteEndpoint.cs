@@ -38,7 +38,7 @@ public class ToDeleteEndpoint
 
     }
 
-    public async Task<IEnumerable<(ToDelete ItemTodelete, string id)>> GetToDelete()
+    public async Task<IEnumerable<(ToDelete ItemTodelete, string ToDeleteRecordId)>> GetToDelete()
     {
         var snapToDeleteFD = await _toDelete.WhereEqualTo(nameof(ToDelete.DeletedAt), null).GetSnapshotAsync();
 

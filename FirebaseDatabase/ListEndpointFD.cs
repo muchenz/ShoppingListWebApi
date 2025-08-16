@@ -152,7 +152,7 @@ namespace FirebaseDatabase
 
                     var toDedelete = new ToDelete
                     {
-                        Id = listId.ToString(),
+                        ItemToDeleteId = listId.ToString(),
                         Type = nameof(List),
                         CreatedAt = DateTime.UtcNow,
                     };

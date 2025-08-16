@@ -101,7 +101,7 @@ namespace FirebaseDatabase
 
                     var toDedelete = new ToDelete
                     {
-                        Id = listAggregationId.ToString(),
+                        ItemToDeleteId = listAggregationId.ToString(),
                         Type = nameof(ListAggregator),
                         CreatedAt = DateTime.UtcNow,
                     };

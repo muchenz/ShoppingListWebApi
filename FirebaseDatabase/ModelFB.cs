@@ -171,7 +171,7 @@ namespace FirebaseDatabase
     public class ToDelete
     {
         [FirestoreProperty]
-        public string Id { get; set; }
+        public string ItemToDeleteId { get; set; }
         [FirestoreProperty]
         public string Type { get; set; }
         [FirestoreProperty]
