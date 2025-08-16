@@ -21,12 +21,11 @@ namespace FirebaseDatabase
             services.AddTransient<IListItemEndpoint, ListItemEndpointFD>();
             services.AddTransient<IInvitationEndpoint, InvitationEndpointFD>();
             services.AddTransient<IListEndpoint, ListEndpointFD>();
-
             services.AddTransient<ITokenEndpoint, UserEndpointFD>();
+
+
             services.AddTransient<ToDeleteEndpoint>();
-
             services.AddSingleton<DeleteChannel>();
-
             services.AddHostedService<ToDeleteService>();
 
 
@@ -38,16 +37,20 @@ namespace FirebaseDatabase
             section.Bind(options);
             services.AddSingleton(_ => options);
 
+            if (options.UseBatchProcessing)
+            {
+                services.AddHostedService<ToDeleteService>();
+            }
         }
 
     }
 }
-internal class FirebaseFDOptions
+public class FirebaseFDOptions
 {
     public bool UseBatchProcessing { get; set; }
 }
 
-internal sealed class DeleteChannel
+public sealed class DeleteChannel
 {
     private readonly Channel<DeleteEvent> _messages = Channel.CreateUnbounded<DeleteEvent>();
 
@@ -55,4 +58,4 @@ internal sealed class DeleteChannel
     public ChannelWriter<DeleteEvent> Writer => _messages.Writer;
 }
 
-internal record DeleteEvent();
+public record DeleteEvent();

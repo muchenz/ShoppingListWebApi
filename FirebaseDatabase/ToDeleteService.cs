@@ -10,16 +10,20 @@ namespace ShoppingListWebApi.Data;
 public class ToDeleteService : BackgroundService
 {
     private readonly ToDeleteEndpoint _toDeleteEndpoint;
+    private readonly DeleteChannel _deleteChannel;
 
-    public ToDeleteService(ToDeleteEndpoint toDeleteEndpoint)
+    public ToDeleteService(ToDeleteEndpoint toDeleteEndpoint, DeleteChannel deleteChannel)
     {
         _toDeleteEndpoint = toDeleteEndpoint;
+        _deleteChannel = deleteChannel;
     }
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         while (!stoppingToken.IsCancellationRequested)
         {
+
+            await _deleteChannel.Reader.ReadAsync();
 
             var itemsToDelete = await _toDeleteEndpoint.GetToDelete();
 
@@ -56,7 +60,7 @@ public class ToDeleteService : BackgroundService
             }
 
 
-            await Task.Delay(1000);
+           // await Task.Delay(1000);
         }
 
     }

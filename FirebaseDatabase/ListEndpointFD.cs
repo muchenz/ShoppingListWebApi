@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace FirebaseDatabase
 {
-    internal class ListEndpointFD : IListEndpoint
+    public class ListEndpointFD : IListEndpoint
     {
 
         private readonly IMapper _mapper;
@@ -26,7 +26,7 @@ namespace FirebaseDatabase
         CollectionReference _indexesCol;
         CollectionReference _toDelete;
 
-        internal ListEndpointFD(IMapper mapper, FirebaseFDOptions firebaseFDOptions, DeleteChannel deleteChannel)
+        public ListEndpointFD(IMapper mapper, FirebaseFDOptions firebaseFDOptions, DeleteChannel deleteChannel)
         {
            
             Db = FirestoreDb.Create("testnosqldb1");
