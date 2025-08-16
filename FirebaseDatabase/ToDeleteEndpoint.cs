@@ -58,37 +58,12 @@ public class ToDeleteEndpoint
 
         var list = listSnap.ConvertTo<ListFD>();
 
-        var listDocumentsToDelete = new List<DocumentSnapshot>();
 
-        var chunkedIds = list.ListItems.Chunk(10);
+        totalAmountDeleted += await DeleteDocumentsBatchAsync(_listItemCol, list.ListItems);
 
-        foreach (var chunk in chunkedIds)
-        {
-            var listItemQuery = _listItemCol.WhereIn(FieldPath.DocumentId, chunk.Select(i => i.ToString()));
-            var listItemSnap = await listItemQuery.GetSnapshotAsync();
-            listDocumentsToDelete.AddRange(listItemSnap.Documents);
-        }
-        
-        var batch = Db.StartBatch();
-        var batchCounter = 0;
 
-        foreach( var item in listDocumentsToDelete)
-        {
-            batch.Delete(item.Reference);
-            batchCounter++;
-            totalAmountDeleted++;
-            if (batchCounter == 500)
-            {
-                await batch.CommitAsync();
-                batch = Db.StartBatch();
-                batchCounter = 0;
-            }
-        }
+        await listRef.DeleteAsync();
 
-        if (batchCounter > 0)
-        {
-            await batch.CommitAsync();
-        }
         return totalAmountDeleted;
     }
 
