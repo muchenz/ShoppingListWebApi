@@ -5,6 +5,7 @@
 	  <TargetFramework>net6.0</TargetFramework>
   </PropertyGroup>
 
+	
   <ItemGroup>
     <Folder Include="DataEndpoints\Models\Requests\" />
   </ItemGroup>

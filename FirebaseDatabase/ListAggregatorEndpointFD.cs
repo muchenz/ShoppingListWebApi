@@ -12,6 +12,7 @@ namespace FirebaseDatabase
     public class ListAggregatorEndpointFD : IListAggregatorEndpoint
     {
         private readonly IMapper _mapper;
+        private readonly FirebaseFDOptions _firebaseFDOptions;
         FirestoreDb Db;
 
         CollectionReference _listAggrCol;
@@ -25,13 +26,12 @@ namespace FirebaseDatabase
 
         private object listItemId;
 
-        public ListAggregatorEndpointFD(IMapper mapper)
+        public ListAggregatorEndpointFD(IMapper mapper, FirebaseFDOptions firebaseFDOptions)
         {
 
             Db = FirestoreDb.Create("testnosqldb1");
             _mapper = mapper;
-
-
+            _firebaseFDOptions = firebaseFDOptions;
             _listAggrCol = Db.Collection("listAggregator");
             _listCol = Db.Collection("list");
             _listItemCol = Db.Collection("listItem");
@@ -85,6 +85,16 @@ namespace FirebaseDatabase
 
         public async Task<int> DeleteListAggrAsync(int listAggregationId)
         {
+            if (_firebaseFDOptions.UseBatchProcessing)
+            {
+                return await DeleteListAggrBatchAsync(listAggregationId);
+            }
+
+            return await DeleteListAggrTransationAsync(listAggregationId);
+        }
+
+        public async Task<int> DeleteListAggrBatchAsync(int listAggregationId)
+        {
             try
             {
                 int amount = 0;
@@ -120,7 +130,7 @@ namespace FirebaseDatabase
             }
         }
         //TODO: avoid 500 limit
-        public async Task<int> DeleteListAggrAsync2(int listAggregationId)
+        public async Task<int> DeleteListAggrTransationAsync(int listAggregationId)
         {
             try
             {

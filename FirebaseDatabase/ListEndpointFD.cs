@@ -9,10 +9,12 @@ using System.Threading.Tasks;
 
 namespace FirebaseDatabase
 {
-    public class ListEndpointFD : IListEndpoint
+    internal class ListEndpointFD : IListEndpoint
     {
 
         private readonly IMapper _mapper;
+        private readonly FirebaseFDOptions _firebaseFDOptions;
+        private readonly DeleteChannel _deleteChannel;
         FirestoreDb Db;
 
         CollectionReference _listAggrCol;
@@ -24,13 +26,13 @@ namespace FirebaseDatabase
         CollectionReference _indexesCol;
         CollectionReference _toDelete;
 
-        public ListEndpointFD(IMapper mapper)
+        internal ListEndpointFD(IMapper mapper, FirebaseFDOptions firebaseFDOptions, DeleteChannel deleteChannel)
         {
            
             Db = FirestoreDb.Create("testnosqldb1");
             _mapper = mapper;
-
-
+            _firebaseFDOptions = firebaseFDOptions;
+            _deleteChannel = deleteChannel;
             _listAggrCol = Db.Collection("listAggregator");
             _listCol = Db.Collection("list");
             _listItemCol = Db.Collection("listItem");
@@ -106,7 +108,7 @@ namespace FirebaseDatabase
         }
 
         //TODO: avoid limit 500 for transaction
-        public async Task<int> DeleteListAsync2(int listId, int listAggregationId)
+        public async Task<int> DeleteListTransationAsync(int listId, int listAggregationId)
         {
             var amountDeleted = 0;
 
@@ -137,8 +139,17 @@ namespace FirebaseDatabase
             return amountDeleted;
         }
 
-
         public async Task<int> DeleteListAsync(int listId, int listAggregationId)
+        {
+            if (_firebaseFDOptions.UseBatchProcessing)
+            {
+                return await DeleteListBatchAsync(listId, listAggregationId);
+            }
+
+            return await DeleteListTransationAsync(listId, listAggregationId);
+        }
+
+        public async Task<int> DeleteListBatchAsync(int listId, int listAggregationId)
         {
             try
             {
