@@ -47,7 +47,7 @@ internal class PermissionEndpoint
 
 
     public async Task<MessageAndStatus> InviteUserPermission(int listAggregationId,
-                UserPermissionToListAggregation item, string senderNamde)
+                UserPermissionToListAggregation item, string senderName)
     {
 
         MessageAndStatus messageAndStatus = null;
@@ -79,7 +79,7 @@ internal class PermissionEndpoint
             }
 
 
-
+            await AddInvitationAsync(transation, item.User.EmailAddress, listAggregationId, item.Permission, senderName);
 
         });
 
@@ -127,7 +127,7 @@ internal class PermissionEndpoint
 
         return userListAggrSnap.Documents.Count > 0;
     }
-    public async Task AddInvitationAsync(string toUserName, int listAggregationId, int permission, string fromSenderName)
+    public async Task AddInvitationAsync(Transaction transation, string toUserName, int listAggregationId, int permission, string fromSenderName)
     {
         var invitationFD = new InvitationFD
         {
@@ -137,8 +137,7 @@ internal class PermissionEndpoint
             SenderName = fromSenderName
         };
 
-        await Db.RunTransactionAsync(async transation =>
-        {
+       
 
 
             var indexRef = _indexesCol.Document("indexes");
@@ -155,7 +154,6 @@ internal class PermissionEndpoint
             transation.Update(indexRef, "invitations", indexNew);
 
 
-        });
 
     }
 }
