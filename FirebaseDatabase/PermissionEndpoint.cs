@@ -47,7 +47,7 @@ internal class PermissionEndpoint
 
 
     public async Task<MessageAndStatus> InviteUserPermission(int listAggregationId,
-                UserPermissionToListAggregation item, string signalRId)
+                UserPermissionToListAggregation item, string senderNamde)
     {
 
         MessageAndStatus messageAndStatus = null;
