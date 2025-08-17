@@ -43,6 +43,8 @@ namespace Shared.DataEndpoints.Models
 
         public static MessageAndStatus Ok() =>
            new MessageAndStatus(string.Empty, MessageStaus.OK);
+        public static MessageAndStatus Ok(string msg) =>
+           new MessageAndStatus(msg, MessageStaus.OK);
 
         public static MessageAndStatus Error(string msg) =>
            new MessageAndStatus(msg, MessageStaus.Error);

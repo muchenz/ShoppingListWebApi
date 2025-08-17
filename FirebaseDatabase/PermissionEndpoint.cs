@@ -47,39 +47,83 @@ internal class PermissionEndpoint
 
 
     public async Task<MessageAndStatus> InviteUserPermission(int listAggregationId,
-                UserPermissionToListAggregation item,  string signalRId)
+                UserPermissionToListAggregation item, string signalRId)
     {
-        MessageAndStatusAndData.
+
+        MessageAndStatus messageAndStatus = null;
+
+        await Db.RunTransactionAsync(async transation =>
+        {
+            var user = await GetUserByNameAsync(transation, item.User.EmailAddress);
+
+            if (user == null)
+            {
+                messageAndStatus = MessageAndStatus.NotFound("User not exist.");
+                return;
+            }
+
+            var IsUserInvitatedToListAggregation = await IsUserInvitatedToListAggregationAsync(transation, item.User.EmailAddress, listAggregationId);
+
+            if (IsUserInvitatedToListAggregation)
+            {
+                messageAndStatus = MessageAndStatus.Conflict("Ivitation is on list");
+                return;
+            }
+
+                   var isUserHasListAgregation = await IsUserHasListAggregatorAsync(transation, user.UserId, listAggregationId);
+
+            if (isUserHasListAgregation)
+            {
+                messageAndStatus = MessageAndStatus.Conflict("User already has permission.");
+                return; 
+            }
 
 
-        return MessageAndStatus.
+
+
+        });
+
+
+
+        if (messageAndStatus is null)
+        {
+            return MessageAndStatus.Ok("Ivitation was added.");
+        }
+
+        return messageAndStatus;
     }
 
 
 
 
-    private async Task<User> GetUserByNameAsync(string userName)
+    private async Task<UserFD> GetUserByNameAsync(Transaction transaction, string userName)
     {
-        var snapUserFD = await _usersCol.WhereEqualTo(nameof(UserFD.EmailAddress), userName).GetSnapshotAsync();
+        var userFDQuery = _usersCol.WhereEqualTo(nameof(UserFD.EmailAddress), userName);
+        var userFDSnap = await transaction.GetSnapshotAsync(userFDQuery);
 
-        if (snapUserFD.Count == 0) return null;
+        if (userFDSnap.Count == 0) return null;
 
-        var userFD = snapUserFD.First().ConvertTo<UserFD>();
+        var userFD = userFDSnap.First().ConvertTo<UserFD>();
 
-        return _mapper.Map<User>(userFD);
+        return userFD;
     }
-    private async Task<bool> IsUserInvitatedToListAggregationAsync(string userName, int listAggregationId)
+
+    private async Task<bool> IsUserInvitatedToListAggregationAsync(Transaction transaction,  string userName, int listAggregationId)
     {
-        var userListAggrSnap = await _invitationsCol.WhereEqualTo(nameof(InvitationFD.EmailAddress), userName)
-           .WhereEqualTo(nameof(InvitationFD.ListAggregatorId), listAggregationId).GetSnapshotAsync();
+        var userListAggrRef = _invitationsCol.WhereEqualTo(nameof(InvitationFD.EmailAddress), userName)
+           .WhereEqualTo(nameof(InvitationFD.ListAggregatorId), listAggregationId).Limit(1);
+
+        var userListAggrSnap = await transaction.GetSnapshotAsync(userListAggrRef);
 
         return userListAggrSnap.Documents.Any();
     }
 
-    private async Task<bool> IsUserHasListAggregatorAsync(int userId, int listAggregatorId)
+    private async Task<bool> IsUserHasListAggregatorAsync(Transaction transaction, int userId, int listAggregatorId)
     {
-        var userListAggrSnap = await _userListAggrCol.WhereEqualTo(nameof(UserListAggregatorFD.UserId), userId)
-           .WhereEqualTo(nameof(UserListAggregatorFD.ListAggregatorId), listAggregatorId).GetSnapshotAsync();
+        var userListAggrRef = _userListAggrCol.WhereEqualTo(nameof(UserListAggregatorFD.UserId), userId)
+           .WhereEqualTo(nameof(UserListAggregatorFD.ListAggregatorId), listAggregatorId).Limit(1);
+
+        var userListAggrSnap = await transaction.GetSnapshotAsync(userListAggrRef);
 
         return userListAggrSnap.Documents.Count > 0;
     }
