@@ -27,15 +27,17 @@ public class PermissionsController : ControllerBase
     private readonly IInvitationEndpoint _invitationEndpoint;
     private readonly IUserEndpoint _userEndpoint;
     private readonly IMediator _mediator;
+    private readonly IPermissionEndpoint _permissionEndpoint;
 
     public PermissionsController(IMapper mapper, SignarRService signarRService, ILogger<PermissionsController> logger
-            , IInvitationEndpoint invitationEndpoint, IUserEndpoint userEndpoint, IMediator mediator)
+            , IInvitationEndpoint invitationEndpoint, IUserEndpoint userEndpoint, IMediator mediator, IPermissionEndpoint permissionEndpoint)
     {
         _mapper = mapper;
         _signarRService = signarRService;
         _invitationEndpoint = invitationEndpoint;
         _userEndpoint = userEndpoint;
         _mediator = mediator;
+        _permissionEndpoint = permissionEndpoint;
     }
 
     [HttpPost("InviteUserPermission")]

@@ -8,9 +8,11 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using Shared.DataEndpoints.Abstaractions;
 
 namespace FirebaseDatabase;
-internal class PermissionEndpoint
+
+internal class PermissionEndpoint : IPermissionEndpoint
 {
 
     private readonly IMapper _mapper;
@@ -70,12 +72,12 @@ internal class PermissionEndpoint
                 return;
             }
 
-                   var isUserHasListAgregation = await IsUserHasListAggregatorAsync(transation, user.UserId, listAggregationId);
+            var isUserHasListAgregation = await IsUserHasListAggregatorAsync(transation, user.UserId, listAggregationId);
 
             if (isUserHasListAgregation)
             {
                 messageAndStatus = MessageAndStatus.Conflict("User already has permission.");
-                return; 
+                return;
             }
 
 
@@ -108,7 +110,7 @@ internal class PermissionEndpoint
         return userFD;
     }
 
-    private async Task<bool> IsUserInvitatedToListAggregationAsync(Transaction transaction,  string userName, int listAggregationId)
+    private async Task<bool> IsUserInvitatedToListAggregationAsync(Transaction transaction, string userName, int listAggregationId)
     {
         var userListAggrRef = _invitationsCol.WhereEqualTo(nameof(InvitationFD.EmailAddress), userName)
            .WhereEqualTo(nameof(InvitationFD.ListAggregatorId), listAggregationId).Limit(1);
@@ -127,7 +129,7 @@ internal class PermissionEndpoint
 
         return userListAggrSnap.Documents.Count > 0;
     }
-    public async Task AddInvitationAsync(Transaction transation, string toUserName, int listAggregationId, int permission, string fromSenderName)
+    private async Task AddInvitationAsync(Transaction transation, string toUserName, int listAggregationId, int permission, string fromSenderName)
     {
         var invitationFD = new InvitationFD
         {
@@ -137,21 +139,21 @@ internal class PermissionEndpoint
             SenderName = fromSenderName
         };
 
-       
 
 
-            var indexRef = _indexesCol.Document("indexes");
-            var indesSnap = await transation.GetSnapshotAsync(indexRef);
-            var index = indesSnap.GetValue<long>("invitations");
-            var indexNew = index + 1;
+
+        var indexRef = _indexesCol.Document("indexes");
+        var indesSnap = await transation.GetSnapshotAsync(indexRef);
+        var index = indesSnap.GetValue<long>("invitations");
+        var indexNew = index + 1;
 
 
-            var newDocRef = _invitationsCol.Document((indexNew).ToString());
+        var newDocRef = _invitationsCol.Document((indexNew).ToString());
 
-            invitationFD.InvitationId = (int)indexNew;
-            transation.Set(newDocRef, invitationFD);
+        invitationFD.InvitationId = (int)indexNew;
+        transation.Set(newDocRef, invitationFD);
 
-            transation.Update(indexRef, "invitations", indexNew);
+        transation.Update(indexRef, "invitations", indexNew);
 
 
 
