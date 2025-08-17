@@ -54,15 +54,20 @@ internal class PermissionEndpoint : IPermissionEndpoint
 
         MessageAndStatus messageAndStatus = null;
 
+        User user = null;
+        Invitation invitation = null;
+
+
         await Db.RunTransactionAsync(async transation =>
         {
-            var user = await GetUserByNameAsync(transation, item.User.EmailAddress);
+            var userFD = await GetUserByNameAsync(transation, item.User.EmailAddress);
 
-            if (user == null)
+            if (userFD == null)
             {
                 messageAndStatus = MessageAndStatus.NotFound("User not exist.");
                 return;
             }
+            user = _mapper.Map<User>(userFD);
 
             var IsUserInvitatedToListAggregation = await IsUserInvitatedToListAggregationAsync(transation, item.User.EmailAddress, listAggregationId);
 
@@ -81,7 +86,7 @@ internal class PermissionEndpoint : IPermissionEndpoint
             }
 
 
-            await AddInvitationAsync(transation, item.User.EmailAddress, listAggregationId, item.Permission, senderName);
+            invitation =  await AddInvitationAsync(transation, item.User.EmailAddress, listAggregationId, item.Permission, senderName);
 
         });
 
@@ -89,7 +94,7 @@ internal class PermissionEndpoint : IPermissionEndpoint
 
         if (messageAndStatus is null)
         {
-            return MessageAndStatus.Ok("Ivitation was added.");
+            return MessageAndStatusAndData<(User InvitedUser, Invitation Invitation)>.Ok((user,invitation),"Ivitation was added.");
         }
 
         return messageAndStatus;
@@ -129,7 +134,7 @@ internal class PermissionEndpoint : IPermissionEndpoint
 
         return userListAggrSnap.Documents.Count > 0;
     }
-    private async Task AddInvitationAsync(Transaction transation, string toUserName, int listAggregationId, int permission, string fromSenderName)
+    private async Task<Invitation> AddInvitationAsync(Transaction transation, string toUserName, int listAggregationId, int permission, string fromSenderName)
     {
         var invitationFD = new InvitationFD
         {
@@ -156,7 +161,7 @@ internal class PermissionEndpoint : IPermissionEndpoint
         transation.Update(indexRef, "invitations", indexNew);
 
 
-
+        return _mapper.Map<Invitation>(invitationFD);
     }
 }
 

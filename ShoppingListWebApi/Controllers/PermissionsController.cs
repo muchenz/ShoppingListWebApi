@@ -45,34 +45,55 @@ public class PermissionsController : ControllerBase
     public async Task<ActionResult> InviteUserPermission(int listAggregationId,
             [FromBody] UserPermissionToListAggregation item, [FromHeader] string signalRId)
     {
-
-        var user = await _userEndpoint.GetUserByNameAsync(item.User.EmailAddress);
-
-        if (user == null)
-            return  NotFound (new ProblemDetails { Title="User not exist." });
-
-        var IsUserInvitatedToListAggregation = await _userEndpoint.IsUserInvitatedToListAggregationAsync(item.User.EmailAddress, listAggregationId);
-
-        if (IsUserInvitatedToListAggregation)
-            return Conflict(new ProblemDetails { Title = "Ivitation is on list" });
-
-        //bbbb = _context.UserListAggregators.AsQueryable().Where(a => a.UserId == user.UserId && a.ListAggregatorId == listAggregationId).Any();
-
-        var isUserHasListAgregation = await _userEndpoint.IsUserHasListAggregatorAsync(user.UserId, listAggregationId);
-
-        if (isUserHasListAgregation)
-            return Conflict(new ProblemDetails { Title = "User already has permission." });
-
         var senderName = HttpContext.User.Identity.Name;
 
-        await _userEndpoint.AddInvitationAsync(item.User.EmailAddress, listAggregationId, item.Permission, senderName);
+        var message  = await _permissionEndpoint.InviteUserPermission(listAggregationId, item,  senderName);
 
+        ObjectResult result = message.Status switch
+        {
+            MessageStaus.Conflict => new ConflictObjectResult(message.Message),
+            MessageStaus.OK => new OkObjectResult(message.Message),
+            MessageStaus.NotFound => new NotFoundObjectResult(message.Message),
+            _ => new BadRequestObjectResult("Something wrong happens")
 
-        await _signarRService.SendRefreshMessageToUsersAsync(new List<int> { user.UserId },
-            SiganalREventName.InvitationAreChanged, signalRId: signalRId);
+        };
 
-        return Ok("Ivitation was added.");
+        if (message is MessageAndStatusAndData<(User user, Invitation _)> m and { Status: MessageStaus.OK })
+        {
+
+            await _signarRService.SendRefreshMessageToUsersAsync(new List<int> { m.Data.user.UserId },
+                SiganalREventName.InvitationAreChanged, signalRId: signalRId);
+        }
+
+        return result;
     }
+    //var user = await _userEndpoint.GetUserByNameAsync(item.User.EmailAddress);
+
+    //if (user == null)
+    //    return  NotFound (new ProblemDetails { Title="User not exist." });
+
+    //var IsUserInvitatedToListAggregation = await _userEndpoint.IsUserInvitatedToListAggregationAsync(item.User.EmailAddress, listAggregationId);
+
+    //if (IsUserInvitatedToListAggregation)
+    //    return Conflict(new ProblemDetails { Title = "Ivitation is on list" });
+
+    ////bbbb = _context.UserListAggregators.AsQueryable().Where(a => a.UserId == user.UserId && a.ListAggregatorId == listAggregationId).Any();
+
+    //var isUserHasListAgregation = await _userEndpoint.IsUserHasListAggregatorAsync(user.UserId, listAggregationId);
+
+    //if (isUserHasListAgregation)
+    //    return Conflict(new ProblemDetails { Title = "User already has permission." });
+
+    //var senderName = HttpContext.User.Identity.Name;
+
+    //await _userEndpoint.AddInvitationAsync(item.User.EmailAddress, listAggregationId, item.Permission, senderName);
+
+
+    //await _signarRService.SendRefreshMessageToUsersAsync(new List<int> { user.UserId },
+    //    SiganalREventName.InvitationAreChanged, signalRId: signalRId);
+
+    //return Ok("Ivitation was added.");
+
 
     //[HttpPost("AddUserPermission")]  // not used, 
     //[SecurityLevel(1)]

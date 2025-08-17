@@ -67,8 +67,15 @@ namespace Shared.DataEndpoints.Models
         public static new MessageAndStatusAndData<T> Ok(T data) =>
             new MessageAndStatusAndData<T>(data, string.Empty, MessageStaus.OK);
 
+        public static new MessageAndStatusAndData<T> Ok(T data, string msg) =>
+           new MessageAndStatusAndData<T>(data, msg, MessageStaus.OK);
+
         public static new MessageAndStatusAndData<T> Error(string msg) =>
            new MessageAndStatusAndData<T>(default, msg, MessageStaus.Error);
+        public static new MessageAndStatusAndData<T> Conflict(string msg) =>
+          new MessageAndStatusAndData<T>(default, msg, MessageStaus.Conflict);
+        public static new MessageAndStatusAndData<T> NotFound(string msg) =>
+          new MessageAndStatusAndData<T>(default, msg, MessageStaus.NotFound);
     }
 
     //public class MessageAndStatusAndData
