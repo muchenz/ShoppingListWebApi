@@ -10,6 +10,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Shared.DataEndpoints.Abstaractions;
 
+using InvitationResult = Shared.DataEndpoints.Models.MessageAndStatusAndData<(Shared.DataEndpoints.Models.User, Shared.DataEndpoints.Models.Invitation)>;
+
 namespace FirebaseDatabase;
 
 internal class PermissionEndpoint : IPermissionEndpoint
@@ -48,11 +50,11 @@ internal class PermissionEndpoint : IPermissionEndpoint
     }
 
 
-    public async Task<MessageAndStatus> InviteUserPermission(int listAggregationId,
+    public async Task<MessageAndStatusAndData<(User InvitedUser, Invitation Invitation)>> InviteUserPermission(int listAggregationId,
                 UserPermissionToListAggregation item, string senderName)
     {
 
-        MessageAndStatus messageAndStatus = null;
+        InvitationResult messageAndStatus = null;
 
         User user = null;
         Invitation invitation = null;
@@ -64,7 +66,7 @@ internal class PermissionEndpoint : IPermissionEndpoint
 
             if (userFD == null)
             {
-                messageAndStatus = MessageAndStatus.NotFound("User not exist.");
+                messageAndStatus = InvitationResult.NotFound("User not exist.");
                 return;
             }
             user = _mapper.Map<User>(userFD);
@@ -73,7 +75,7 @@ internal class PermissionEndpoint : IPermissionEndpoint
 
             if (IsUserInvitatedToListAggregation)
             {
-                messageAndStatus = MessageAndStatus.Conflict("Ivitation is on list");
+                messageAndStatus = InvitationResult.Conflict("Ivitation is on list");
                 return;
             }
 
@@ -81,7 +83,7 @@ internal class PermissionEndpoint : IPermissionEndpoint
 
             if (isUserHasListAgregation)
             {
-                messageAndStatus = MessageAndStatus.Conflict("User already has permission.");
+                messageAndStatus = InvitationResult.Conflict("User already has permission.");
                 return;
             }
 
@@ -94,7 +96,7 @@ internal class PermissionEndpoint : IPermissionEndpoint
 
         if (messageAndStatus is null)
         {
-            return MessageAndStatusAndData<(User InvitedUser, Invitation Invitation)>.Ok((user,invitation),"Ivitation was added.");
+            return InvitationResult.Ok((user,invitation),"Ivitation was added.");
         }
 
         return messageAndStatus;
