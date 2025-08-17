@@ -39,7 +39,7 @@ namespace ServiceMediatR.ListCommandAndQueries
 
 
              if (!await _listEndpoint.CheckIntegrityListAsync(request.List.ListId, request.ListAggregationId)) 
-                return MessageAndStatusAndData<List>.Fail("Forbbidden");
+                return MessageAndStatusAndData<List>.Error("Forbbidden");
 
             //_context.ListItems.Remove(_context.ListItems.Single(a => a.ListItemId == ItemId));
 

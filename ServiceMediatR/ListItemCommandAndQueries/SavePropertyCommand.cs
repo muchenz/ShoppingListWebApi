@@ -41,7 +41,7 @@ namespace ServiceMediatR.ListItemCommandAndQueries
         {
 
             if (!await CheckIntegrityListItemAsync(request.Item.ListItemId, request.ListAggregationId))
-                return MessageAndStatusAndData<ListItem>.Fail("Forbbidden");
+                return MessageAndStatusAndData<ListItem>.Error("Forbbidden");
 
             var listItem = await _listItemEndpoint.SavePropertyAsync(request.Item, request.PropertyName, request.ListAggregationId);
 

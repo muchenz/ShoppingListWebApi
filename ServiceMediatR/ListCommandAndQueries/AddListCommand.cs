@@ -53,7 +53,7 @@ namespace ServiceMediatR.ListCommandAndQueries
         {
 
             if (!await _listEndpoint.CheckIntegrityListAggrAsync(request.ParentId, request.ListAggregationId)) 
-                return MessageAndStatusAndData<List>.Fail("Forbbidden.");
+                return MessageAndStatusAndData<List>.Error("Forbbidden.");
 
 
             var res =  await _listEndpoint.AddListAsync(request.ParentId, request.Item, request.ListAggregationId);

@@ -23,33 +23,49 @@ namespace Shared.DataEndpoints.Models
         public const string OK = "OK";
         public const string Error = "ERROR";
         public const string ValidationError = "VALIDATION_ERROR";
+        public const string Conflict = "CONFLICT";
+        public const string NotFound = "NOT_FOUND";
+
 
     }
     public class MessageAndStatus
     {
+        public MessageAndStatus(string message, string status)
+        {
+            Message= message;
+            Status = status;
+        }
+
         public bool IsError => Status != MessageStaus.OK;
         public string Status { get; set; }
         public string Message { get; set; }
         public List<(string,string)> ValidationErrorList { get; set; }
 
+        public static MessageAndStatus Ok() =>
+           new MessageAndStatus(string.Empty, MessageStaus.OK);
+
+        public static MessageAndStatus Error(string msg) =>
+           new MessageAndStatus(msg, MessageStaus.Error);
+        public static MessageAndStatus Conflict(string msg) =>
+           new MessageAndStatus(msg, MessageStaus.Conflict);
+        public static MessageAndStatus NotFound(string msg) =>
+           new MessageAndStatus(msg, MessageStaus.NotFound);
     }
       
 
     public class MessageAndStatusAndData<T> : MessageAndStatus
     {
-        private MessageAndStatusAndData(T data, string msg, string status)
+        private MessageAndStatusAndData(T data, string msg, string status): base(msg, status)
         {
             Data = data;
-            Message = msg;
-            Status = status;
         }
 
         public T Data { get; set; }
 
-        public static MessageAndStatusAndData<T> Ok(T data) =>
+        public static new MessageAndStatusAndData<T> Ok(T data) =>
             new MessageAndStatusAndData<T>(data, string.Empty, MessageStaus.OK);
 
-        public static MessageAndStatusAndData<T> Fail(string msg) =>
+        public static new MessageAndStatusAndData<T> Error(string msg) =>
            new MessageAndStatusAndData<T>(default, msg, MessageStaus.Error);
     }
 

@@ -41,7 +41,7 @@ namespace ServiceMediatR.ListCommandAndQueries
         public async Task<MessageAndStatusAndData<int>> Handle(DeleteListCommand request, CancellationToken cancellationToken)
         {
 
-            if (!await _listEndpoint.CheckIntegrityListAsync(request.ItemId,  request.ListAggregationId)) return MessageAndStatusAndData<int>.Fail("Forbbidden");
+            if (!await _listEndpoint.CheckIntegrityListAsync(request.ItemId,  request.ListAggregationId)) return MessageAndStatusAndData<int>.Error("Forbbidden");
 
 
            var amount = await _listEndpoint.DeleteListAsync(request.ItemId, request.ListAggregationId);

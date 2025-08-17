@@ -60,16 +60,18 @@ namespace FirebaseDatabase
             {
 
 
-                var docRef = transation.Database.Collection("indexes").Document("indexes");
-                var snapDoc = await docRef.GetSnapshotAsync();
+                var indexRef = _indexesCol.Document("indexes");
+                var indesSnap = await transation.GetSnapshotAsync(indexRef);
+                var index = indesSnap.GetValue<long>("invitations");
+                var indexNew= index + 1;
 
-                var index = snapDoc.GetValue<long>("invitations");
 
-                var newDoc = transation.Database.Collection("invitations").Document((index + 1).ToString());
-                invitationFD.InvitationId = (int)index + 1;
-                await newDoc.SetAsync(invitationFD);
+                var newDocRef = _invitationsCol.Document((indexNew).ToString());
 
-                await docRef.UpdateAsync("invitations", index + 1);
+                invitationFD.InvitationId = (int)indexNew;
+                transation.Set(newDocRef, invitationFD);
+
+                transation.Update(indexRef,"invitations", indexNew);
 
 
             });
