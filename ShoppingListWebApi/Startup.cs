@@ -94,7 +94,7 @@ namespace ShoppingListWebApi
             //services.AddEFDatabase();
 
             //---------------------------------------------
-            services.AddFirebasedDatabase();
+            services.AddFirebasedDatabase(Configuration);
 
             //------------------------------------------------
             //services.AddFirebaseCaschedDatabas();

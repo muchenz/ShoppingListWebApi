@@ -1,15 +1,20 @@
 ﻿using AutoMapper;
 using Google.Cloud.Firestore;
+using Microsoft.Extensions.Options;
 using Shared.DataEndpoints.Abstaractions;
 using Shared.DataEndpoints.Models;
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
+
+[assembly: InternalsVisibleTo("FirebaseChachedDatabase")]
+
 namespace FirebaseDatabase
 {
-    public class ListEndpointFD : IListEndpoint
+    internal class ListEndpointFD : IListEndpoint
     {
 
         private readonly IMapper _mapper;
@@ -26,12 +31,12 @@ namespace FirebaseDatabase
         CollectionReference _indexesCol;
         CollectionReference _toDelete;
 
-        public ListEndpointFD(IMapper mapper, FirebaseFDOptions firebaseFDOptions, DeleteChannel deleteChannel)
+        public ListEndpointFD(IMapper mapper, IOptions<FirebaseFDOptions> optionsFire, DeleteChannel deleteChannel)
         {
            
             Db = FirestoreDb.Create("testnosqldb1");
             _mapper = mapper;
-            _firebaseFDOptions = firebaseFDOptions;
+            _firebaseFDOptions = optionsFire.Value;
             _deleteChannel = deleteChannel;
             _listAggrCol = Db.Collection("listAggregator");
             _listCol = Db.Collection("list");

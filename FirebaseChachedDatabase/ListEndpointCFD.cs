@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace FirebaseChachedDatabase
 {
-    public class ListEndpointCFD : IListEndpoint
+    internal class ListEndpointCFD : IListEndpoint
     {
         private readonly ListEndpointFD _listEndpointFD;
         private readonly CacheConveinient _cache;

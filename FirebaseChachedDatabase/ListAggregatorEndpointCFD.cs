@@ -6,11 +6,13 @@ using Shared.DataEndpoints.Abstaractions;
 using Shared.DataEndpoints.Models;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+
 
 namespace FirebaseChachedDatabase
 {
-    public class ListAggregatorEndpointCFD : IListAggregatorEndpoint
+    internal class ListAggregatorEndpointCFD : IListAggregatorEndpoint
     {
         private readonly ListAggregatorEndpointFD _listAggregatorEndpoint;
         private readonly CacheConveinient _cache;

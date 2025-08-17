@@ -1,15 +1,18 @@
 ﻿using AutoMapper;
 using Google.Cloud.Firestore;
+using Microsoft.Extensions.Options;
 using Shared.DataEndpoints.Abstaractions;
 using Shared.DataEndpoints.Models;
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
+[assembly: InternalsVisibleTo("FirebaseChachedDatabase")]
 namespace FirebaseDatabase
 {
-    public class ListAggregatorEndpointFD : IListAggregatorEndpoint
+    internal class ListAggregatorEndpointFD : IListAggregatorEndpoint
     {
         private readonly IMapper _mapper;
         private readonly FirebaseFDOptions _firebaseFDOptions;
@@ -26,12 +29,12 @@ namespace FirebaseDatabase
 
         private object listItemId;
 
-        public ListAggregatorEndpointFD(IMapper mapper, FirebaseFDOptions firebaseFDOptions)
+        public ListAggregatorEndpointFD(IMapper mapper, IOptions<FirebaseFDOptions> optionsFire)
         {
 
             Db = FirestoreDb.Create("testnosqldb1");
             _mapper = mapper;
-            _firebaseFDOptions = firebaseFDOptions;
+            _firebaseFDOptions = optionsFire.Value;
             _listAggrCol = Db.Collection("listAggregator");
             _listCol = Db.Collection("list");
             _listItemCol = Db.Collection("listItem");

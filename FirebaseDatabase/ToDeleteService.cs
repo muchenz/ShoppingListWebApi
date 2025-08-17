@@ -1,5 +1,6 @@
 ﻿using FirebaseDatabase;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using Shared.DataEndpoints.Models;
 using System;
 using System.Threading;
@@ -7,17 +8,17 @@ using System.Threading.Tasks;
 
 namespace ShoppingListWebApi.Data;
 
-public class ToDeleteService : BackgroundService
+internal class ToDeleteService : BackgroundService
 {
     private readonly ToDeleteEndpoint _toDeleteEndpoint;
     private readonly DeleteChannel _deleteChannel;
     private readonly FirebaseFDOptions _firebaseFDOptions;
 
-    public ToDeleteService(ToDeleteEndpoint toDeleteEndpoint, DeleteChannel deleteChannel, FirebaseFDOptions firebaseFDOptions)
+    public ToDeleteService(ToDeleteEndpoint toDeleteEndpoint, DeleteChannel deleteChannel, IOptions<FirebaseFDOptions> optionsFire)
     {
         _toDeleteEndpoint = toDeleteEndpoint;
         _deleteChannel = deleteChannel;
-        _firebaseFDOptions = firebaseFDOptions;
+        _firebaseFDOptions = optionsFire.Value;
     }
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -25,8 +26,14 @@ public class ToDeleteService : BackgroundService
         while (!stoppingToken.IsCancellationRequested)
         {
 
-            if ()
-            await _deleteChannel.Reader.ReadAsync();
+            if (_firebaseFDOptions.UseChannel) {
+                await _deleteChannel.Reader.ReadAsync(stoppingToken);
+            }
+            else
+            {
+                await Task.Delay(_firebaseFDOptions.PollingDelay, stoppingToken);
+            }
+
 
             var itemsToDelete = await _toDeleteEndpoint.GetToDelete();
 

@@ -7,14 +7,16 @@ using Shared.DataEndpoints.Abstaractions;
 using ShoppingListWebApi.Data;
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Channels;
+
 
 namespace FirebaseDatabase
 {
     public static class ExtensionFD
     {
-        public static void AddFirebasedDatabase(this IServiceCollection services)
+        public static void AddFirebasedDatabase(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddTransient<IUserEndpoint, UserEndpointFD>();
             services.AddTransient<IListAggregatorEndpoint, ListAggregatorEndpointFD>();
@@ -26,18 +28,13 @@ namespace FirebaseDatabase
 
             services.AddTransient<ToDeleteEndpoint>();
             services.AddSingleton<DeleteChannel>();
-            services.AddHostedService<ToDeleteService>();
+
+            services.Configure<FirebaseFDOptions>(configuration.GetSection(FirebaseFDOptions.SectionName));
 
 
-            using var serviceProvider = services.BuildServiceProvider();
-            var configuration = serviceProvider.GetRequiredService<IConfiguration>();
-            var section = configuration.GetSection("FirebaseFD");
+            var firebaseOptions = configuration.GetSection(FirebaseFDOptions.SectionName).Get<FirebaseFDOptions>();
 
-            var options = new FirebaseFDOptions();
-            section.Bind(options);
-            services.AddSingleton(_ => options);
-
-            if (options.UseBatchProcessing)
+            if (firebaseOptions.UseBatchProcessing)
             {
                 services.AddHostedService<ToDeleteService>();
             }
@@ -45,15 +42,16 @@ namespace FirebaseDatabase
 
     }
 }
-public class FirebaseFDOptions
+internal class FirebaseFDOptions
 {
-    public bool UseBatchProcessing { get; set; }
-    public bool UseChannel { get; set; }
+    public const string SectionName = "FirebaseFD";
+    public bool UseBatchProcessing { get; set; } = true;
+    public bool UseChannel { get; set; } = true;
     public int PollingDelay { get; set; } = 1000;
 
 }
 
-public sealed class DeleteChannel
+internal sealed class DeleteChannel
 {
     private readonly Channel<DeleteEvent> _messages = Channel.CreateUnbounded<DeleteEvent>();
 
