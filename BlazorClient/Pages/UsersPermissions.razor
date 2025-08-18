@@ -308,6 +308,7 @@
 
     async Task AddToListAggregator() // TODO: probably i dont use it - to remove
     {
+
         var info = await userService.AddUserPermission(addEditUser, chosedListAggrId);
 
         var param = new ModalParameters();
