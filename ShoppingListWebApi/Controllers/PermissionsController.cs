@@ -73,6 +73,12 @@ public class PermissionsController : ControllerBase
     // ratcher for aministrator
     public async Task<ActionResult> AddUserPermission(int listAggregationId, [FromBody] UserPermissionToListAggregation item)
     {
+        var senderId = int.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+        if (await _userEndpoint.IsUserIsAdminOfListAggregatorAsync(senderId, listAggregationId) is not true)
+        {
+            return Problem(title: "User has no permission.", statusCode: 403);
+        }
 
         var user = await _userEndpoint.GetUserByNameAsync(item.User.EmailAddress);
 
@@ -96,6 +102,12 @@ public class PermissionsController : ControllerBase
     public async Task<ActionResult> ChangeUserPermission(int listAggregationId
         , [FromBody] UserPermissionToListAggregation item, [FromHeader] string signalRId)
     {
+        var senderId = int.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+        if (await _userEndpoint.IsUserIsAdminOfListAggregatorAsync(senderId, listAggregationId) is not true)
+        {
+            return Problem(title: "User has no permission.", statusCode: 403);
+        }
 
         var user = await _userEndpoint.GetUserByNameAsync(item.User.EmailAddress);
 
@@ -139,8 +151,13 @@ public class PermissionsController : ControllerBase
     public async Task<ActionResult> DeleteUserPermission(int listAggregationId
         , [FromBody] UserPermissionToListAggregation item, [FromHeader] string signalRId)
     {
+        var senderId = int.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
 
-      
+        if( await _userEndpoint.IsUserIsAdminOfListAggregatorAsync(senderId, listAggregationId) is not true)
+        {
+            return Problem(title:"User has no permission.", statusCode:403);
+        }
+
         var user = await _userEndpoint.GetUserByNameAsync(item.User.EmailAddress);
 
         if (user == null)
