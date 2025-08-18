@@ -47,14 +47,16 @@ public class PermissionsController : ControllerBase
             [FromBody] UserPermissionToListAggregation item, [FromHeader] string signalRId)
     {
         var senderName = HttpContext.User.Identity.Name;
+        var senderId = int.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
 
-        var message  = await _permissionEndpoint.InviteUserPermission(listAggregationId, item,  senderName);
+        var message = await _permissionEndpoint.InviteUserPermission(listAggregationId, item, senderName, senderId);
 
         ObjectResult result = message.Status switch
         {
             MessageStaus.Conflict => new ConflictObjectResult(message.Message),
             MessageStaus.OK => new OkObjectResult(message.Message),
             MessageStaus.NotFound => new NotFoundObjectResult(message.Message),
+            MessageStaus.Forbidden => new ObjectResult(new ProblemDetails { Title = message.Message }) { StatusCode = 403 },
             _ => new BadRequestObjectResult("Something wrong happens")
 
         };
@@ -67,7 +69,7 @@ public class PermissionsController : ControllerBase
 
         return result;
     }
-   
+
     //[HttpPost("AddUserPermission")]  // not used, 
     //[SecurityLevel(1)]
     // ratcher for aministrator
@@ -93,7 +95,7 @@ public class PermissionsController : ControllerBase
 
         await _userEndpoint.AddUserListAggregationAsync(user.UserId, listAggregationId, item.Permission);
 
-        return Ok("User was added." );
+        return Ok("User was added.");
     }
 
 
@@ -138,12 +140,12 @@ public class PermissionsController : ControllerBase
 
         if (!isUserHasListAggregator)
             return NotFound(new ProblemDetails { Title = "User permission not found." });
-        
+
         await _userEndpoint.SetUserPermissionToListAggrAsync(user.UserId, listAggregationId, item.Permission);
 
         await _mediator.Publish(new DataChangedEvent(new int[] { user.UserId }, signalRId));
 
-        return Ok("Permission has changed." );
+        return Ok("Permission has changed.");
     }
 
     [HttpPost("DeleteUserPermission")]
@@ -153,9 +155,9 @@ public class PermissionsController : ControllerBase
     {
         var senderId = int.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
 
-        if( await _userEndpoint.IsUserIsAdminOfListAggregatorAsync(senderId, listAggregationId) is not true)
+        if (await _userEndpoint.IsUserIsAdminOfListAggregatorAsync(senderId, listAggregationId) is not true)
         {
-            return Problem(title:"User has no permission.", statusCode:403);
+            return Problem(title: "User has no permission.", statusCode: 403);
         }
 
         var user = await _userEndpoint.GetUserByNameAsync(item.User.EmailAddress);
@@ -165,7 +167,7 @@ public class PermissionsController : ControllerBase
 
 
         var admins = await _userEndpoint.TryGetTwoAdministratorsOfListAggregationsAsync(listAggregationId);
-        
+
 
         if (admins.Count == 1 && user.UserId == admins.First().UserId)
             return Conflict(new ProblemDetails { Title = "Only one Admin left - not delete." });
@@ -174,13 +176,13 @@ public class PermissionsController : ControllerBase
 
         if (!isUserHasListAggregator)
             return NotFound(new ProblemDetails { Title = "User permission not found." });
-        
+
         await _userEndpoint.DeleteUserListAggrAscync(user.UserId, listAggregationId);
 
 
         await _mediator.Publish(new DataChangedEvent(new int[] { user.UserId }, signalRId));
 
-        return Ok("User permission was deleted." );
+        return Ok("User permission was deleted.");
     }
 
 
@@ -188,7 +190,7 @@ public class PermissionsController : ControllerBase
     [HttpGet("ListAggregationWithUsersPermission")]
     public async Task<List<ListAggregationWithUsersPermission>> GetListAggregationWithUsersPermission()
     {
-        var  userName = User.FindFirstValue(ClaimTypes.Name);
+        var userName = User.FindFirstValue(ClaimTypes.Name);
         var dataTransfer = await _userEndpoint.GetListAggrWithUsersPerm2Async(userName);
 
 
@@ -214,8 +216,8 @@ public class PermissionsController : ControllerBase
 
     [Authorize]
     [SecurityLevel(1)]
-    [HttpGet("ListUsersPermissionByListAggrId")] 
-    public async Task<List<UserPermissionToListAggregation>>ListUsersPermissionByListAggrId(int listAggregationId)
+    [HttpGet("ListUsersPermissionByListAggrId")]
+    public async Task<List<UserPermissionToListAggregation>> ListUsersPermissionByListAggrId(int listAggregationId)
     {
 
         var data = await _userEndpoint.GetListUsersPermissionByListAggrIdAsync(listAggregationId);

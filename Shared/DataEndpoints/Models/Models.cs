@@ -25,6 +25,7 @@ namespace Shared.DataEndpoints.Models
         public const string ValidationError = "VALIDATION_ERROR";
         public const string Conflict = "CONFLICT";
         public const string NotFound = "NOT_FOUND";
+        public const string Forbidden = "FORBIDDEN";
 
 
     }
@@ -52,6 +53,9 @@ namespace Shared.DataEndpoints.Models
            new MessageAndStatus(msg, MessageStaus.Conflict);
         public static MessageAndStatus NotFound(string msg) =>
            new MessageAndStatus(msg, MessageStaus.NotFound);
+
+        public static MessageAndStatus Forbidden(string msg) =>
+          new MessageAndStatus(msg, MessageStaus.Forbidden);
     }
       
 
@@ -76,6 +80,8 @@ namespace Shared.DataEndpoints.Models
           new MessageAndStatusAndData<T>(default, msg, MessageStaus.Conflict);
         public static new MessageAndStatusAndData<T> NotFound(string msg) =>
           new MessageAndStatusAndData<T>(default, msg, MessageStaus.NotFound);
+        public static new MessageAndStatusAndData<T> Forbidden(string msg) =>
+          new MessageAndStatusAndData<T>(default, msg, MessageStaus.Forbidden);
     }
 
     //public class MessageAndStatusAndData

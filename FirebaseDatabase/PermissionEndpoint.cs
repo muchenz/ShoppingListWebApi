@@ -51,7 +51,7 @@ internal class PermissionEndpoint : IPermissionEndpoint
 
 
     public async Task<MessageAndStatusAndData<(User InvitedUser, Invitation Invitation)>> InviteUserPermission(int listAggregationId,
-                UserPermissionToListAggregation item, string senderName)
+                UserPermissionToListAggregation item, string senderName, int senderId)
     {
 
         InvitationResult messageAndStatus = null;
@@ -62,6 +62,12 @@ internal class PermissionEndpoint : IPermissionEndpoint
 
         await Db.RunTransactionAsync(async transation =>
         {
+
+            if (await IsUserIsAdminOfListAggregatorAsync(transation, senderId, listAggregationId))
+            {
+                messageAndStatus = InvitationResult.Forbidden("Sender has no permission.");
+            }
+
             var userFD = await GetUserByNameAsync(transation, item.User.EmailAddress);
 
             if (userFD == null)
@@ -104,7 +110,18 @@ internal class PermissionEndpoint : IPermissionEndpoint
 
 
 
+    public async Task<bool> IsUserIsAdminOfListAggregatorAsync(Transaction transaction, int userId, int listAggregatorId)
+    {
+        var userListAggrQuery = _userListAggrCol.WhereEqualTo(nameof(UserListAggregatorFD.UserId), userId)
+           .WhereEqualTo(nameof(UserListAggregatorFD.ListAggregatorId), listAggregatorId);
 
+        var userListAggrSnap = await transaction.GetSnapshotAsync(userListAggrQuery);
+
+
+        if (userListAggrSnap.Documents.Count == 0) return false;
+
+        return userListAggrSnap.Documents.First().ConvertTo<UserListAggregatorFD>().PermissionLevel == 1;
+    }
     private async Task<UserFD> GetUserByNameAsync(Transaction transaction, string userName)
     {
         var userFDQuery = _usersCol.WhereEqualTo(nameof(UserFD.EmailAddress), userName);
