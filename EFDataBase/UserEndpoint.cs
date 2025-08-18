@@ -83,7 +83,15 @@ namespace EFDataBase
             return _context.UserListAggregators.AsQueryable()
                  .Where(a => a.User.UserId == userId && a.ListAggregatorId == listAggregatorId).AnyAsync();
         }
+        public async Task<bool> IsUserIsAdminOfListAggregatorAsync(int userId, int listAggregatorId)
+        {
+            var users = await _context.UserListAggregators.AsQueryable()
+                 .Where(a => a.User.UserId == userId && a.ListAggregatorId == listAggregatorId).ToListAsync();
 
+            if (users.Count == 0) return false;
+
+            return users.First().PermissionLevel == 1; // 1 is admin
+        }
         public async Task AddUserListAggregationAsync(int userId, int listAggregationId, int permission)
         {
 

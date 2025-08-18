@@ -27,7 +27,7 @@ namespace Shared.DataEndpoints.Abstaractions
         Task<User> GetUserByNameAsync(string userName);
 
         Task<bool> IsUserHasListAggregatorAsync(int userId, int listAggregatorId);
-
+        Task<bool> IsUserIsAdminOfListAggregatorAsync(int userId, int listAggregatorId);
         Task AddUserListAggregationAsync(int userId, int listAggregationId, int permission);
 
         Task<bool> IsUserInvitatedToListAggregationAsync(string userName, int listAggregationId);

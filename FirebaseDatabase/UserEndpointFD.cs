@@ -497,6 +497,15 @@ namespace FirebaseDatabase
 
             return userListAggrSnap.Documents.Count > 0;
         }
+        public async Task<bool> IsUserIsAdminOfListAggregatorAsync(int userId, int listAggregatorId)
+        {
+            var userListAggrSnap = await _userListAggrCol.WhereEqualTo(nameof(UserListAggregatorFD.UserId), userId)
+               .WhereEqualTo(nameof(UserListAggregatorFD.ListAggregatorId), listAggregatorId).GetSnapshotAsync();
+
+            if (userListAggrSnap.Documents.Count == 0) return false;
+
+            return userListAggrSnap.Documents.First().ConvertTo<UserListAggregatorFD>().PermissionLevel == 1;
+        }
 
         public async Task<bool> IsUserInvitatedToListAggregationAsync(string userName, int listAggregationId)
         {

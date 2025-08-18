@@ -313,7 +313,10 @@ namespace FirebaseChachedDatabase
         {
             return _userEndpointFD.IsUserHasListAggregatorAsync(userId, listAggregationId);
         }
-
+        public Task<bool> IsUserIsAdminOfListAggregatorAsync(int userId, int listAggregationId)
+        {
+            return _userEndpointFD.IsUserIsAdminOfListAggregatorAsync(userId, listAggregationId);
+        }
         public Task AddInvitationAsync(string toUserName, int listAggregationId, int permission, string fromSenderName)
         {
             return _userEndpointFD.AddInvitationAsync(toUserName, listAggregationId, permission, fromSenderName);
