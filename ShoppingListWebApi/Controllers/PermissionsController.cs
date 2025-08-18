@@ -103,14 +103,10 @@ public class PermissionsController : ControllerBase
             return NotFound(new ProblemDetails { Title = "User not exist." });
 
 
-        var count = await _userEndpoint.GetNumberOfAdministratorsOfListAggregationsAsync(listAggregationId);
+        var admins = await _userEndpoint.TryGetTwoAdministratorsOfListAggregationsAsync(listAggregationId);
 
-        int lastAdminId = -1;
-        if (count == 1)
-            lastAdminId = await _userEndpoint.GetLastAdminIdAsync(listAggregationId);
-
-        if (count == 1 && user.UserId == lastAdminId)
-            return Conflict(new ProblemDetails { Title = "Only one Admin left - not changed." });
+        if (admins.Count == 1 && user.UserId == admins.First().UserId)
+            return Conflict(new ProblemDetails { Title = "Only one Admin left - not delete." });
 
 
         //var userListAggr = await _context.UserListAggregators.AsQueryable().Where(a => a.User.UserId == item.User.UserId && a.ListAggregatorId == listAggregationId)
@@ -144,19 +140,17 @@ public class PermissionsController : ControllerBase
         , [FromBody] UserPermissionToListAggregation item, [FromHeader] string signalRId)
     {
 
+      
         var user = await _userEndpoint.GetUserByNameAsync(item.User.EmailAddress);
 
         if (user == null)
             return NotFound(new ProblemDetails { Title = "User not exist." });
 
 
-        var count = await _userEndpoint.GetNumberOfAdministratorsOfListAggregationsAsync(listAggregationId);
+        var admins = await _userEndpoint.TryGetTwoAdministratorsOfListAggregationsAsync(listAggregationId);
+        
 
-        int lastAdminId = -1;
-        if (count == 1)
-            lastAdminId = await _userEndpoint.GetLastAdminIdAsync(listAggregationId);
-
-        if (count == 1 && user.UserId == lastAdminId)
+        if (admins.Count == 1 && user.UserId == admins.First().UserId)
             return Conflict(new ProblemDetails { Title = "Only one Admin left - not delete." });
 
         var isUserHasListAggregator = await _userEndpoint.IsUserHasListAggregatorAsync(item.User.UserId, listAggregationId);
@@ -164,7 +158,7 @@ public class PermissionsController : ControllerBase
         if (!isUserHasListAggregator)
             return NotFound(new ProblemDetails { Title = "User permission not found." });
         
-        await _userEndpoint.DeleteUserListAggrAscync(item.User.UserId, listAggregationId);
+        await _userEndpoint.DeleteUserListAggrAscync(user.UserId, listAggregationId);
 
 
         await _mediator.Publish(new DataChangedEvent(new int[] { user.UserId }, signalRId));

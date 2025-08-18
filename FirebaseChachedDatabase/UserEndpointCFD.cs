@@ -272,7 +272,7 @@ namespace FirebaseChachedDatabase
             return _userEndpointFD.GetUserByNameAsync(userName);
         }
 
-        public async Task<bool> IsUserHasListAggregatorAsync(int userId, int listAggregatorId)
+        public async Task<bool> IsUserIsListAggregatorAsync(int userId, int listAggregatorId)
         {
             var result = await _cache.GetOrAddAsync(
                Dictionary.UserId + userId
@@ -309,14 +309,19 @@ namespace FirebaseChachedDatabase
             return _userEndpointFD.IsUserInvitatedToListAggregationAsync(userName, listAggregationId);
         }
 
+        public Task<bool> IsUserHasListAggregatorAsync(int userId, int listAggregationId)
+        {
+            return _userEndpointFD.IsUserHasListAggregatorAsync(userId, listAggregationId);
+        }
+
         public Task AddInvitationAsync(string toUserName, int listAggregationId, int permission, string fromSenderName)
         {
             return _userEndpointFD.AddInvitationAsync(toUserName, listAggregationId, permission, fromSenderName);
         }
 
-        public Task<int> GetNumberOfAdministratorsOfListAggregationsAsync(int listAggregationId)
+        public Task<List<UserListAggregator>> TryGetTwoAdministratorsOfListAggregationsAsync(int listAggregationId)
         {
-            return _userEndpointFD.GetNumberOfAdministratorsOfListAggregationsAsync(listAggregationId);
+            return _userEndpointFD.TryGetTwoAdministratorsOfListAggregationsAsync(listAggregationId);
         }
 
         public Task<int> GetLastAdminIdAsync(int listAggregationId)
@@ -349,7 +354,7 @@ namespace FirebaseChachedDatabase
 
         public async Task DeleteUserListAggrAscync(int userId, int listAggregationId)
         {
-            await _cache.UpdateAsync<List<UserListAggregator>, string>(Dictionary.UserId+ userId,
+            await _cache.UpdateAsync<List<UserListAggregator>, string>(Dictionary.UserId + userId,
                userListAggr =>
                {
                    userListAggr.Remove(
@@ -505,23 +510,23 @@ namespace FirebaseChachedDatabase
 
         public async Task AddRefreshToken(int userId, RefreshTokenSession refreshTokenSession)
         {
-            var tokensSnap = await  _refreshToken.Document(userId.ToString()).GetSnapshotAsync();
-            
-            if (!tokensSnap.Exists) 
+            var tokensSnap = await _refreshToken.Document(userId.ToString()).GetSnapshotAsync();
+
+            if (!tokensSnap.Exists)
             {
                 await _refreshToken.Document(userId.ToString()).SetAsync(
                     new RefreshTokensDataFD { RefreshTokens = new RefreshTokenSessionFD[] { refreshTokenSession.ToRefreshTokenFDSession() }.ToList() });
                 return;
 
             }
-            var tokens =  tokensSnap.ConvertTo<RefreshTokensDataFD>().RefreshTokens;
-            
+            var tokens = tokensSnap.ConvertTo<RefreshTokensDataFD>().RefreshTokens;
+
             tokens.RemoveAll(a => a.ExpiresAt < System.DateTime.Now);
             tokens.RemoveAll(a => a.DeviceInfo == refreshTokenSession.DeviceInfo);
 
 
             tokens.Add(refreshTokenSession.ToRefreshTokenFDSession());
-            await _refreshToken.Document(userId.ToString()).SetAsync(new RefreshTokensDataFD { RefreshTokens= tokens });
+            await _refreshToken.Document(userId.ToString()).SetAsync(new RefreshTokensDataFD { RefreshTokens = tokens });
 
         }
 
@@ -531,13 +536,13 @@ namespace FirebaseChachedDatabase
             var tokensSnap = await _refreshToken.Document(userId.ToString()).GetSnapshotAsync();
 
             if (!tokensSnap.Exists)
-            {                
+            {
                 return new List<RefreshTokenSession>();
 
             }
             var tokens = tokensSnap.ConvertTo<RefreshTokensDataFD>().RefreshTokens;
 
-            return tokens.Select(a=>a.ToRefreshTokenSession()).ToList();
+            return tokens.Select(a => a.ToRefreshTokenSession()).ToList();
         }
         public async Task DeleteRefreshToken(int userId, RefreshTokenSession refreshTokenSession)
         {
@@ -571,16 +576,16 @@ namespace FirebaseChachedDatabase
             var tokenToDelete = tokens.Where(a => a.RefreshToken == oldRefreshTokenSession.RefreshToken).FirstOrDefault();
             if (tokenToDelete is not null)
             {
-                tokens.Remove(tokenToDelete); 
+                tokens.Remove(tokenToDelete);
             }
             tokens.Add(newRefreshTokenSession.ToRefreshTokenFDSession());
 
-            await _refreshToken.Document(userId.ToString()).SetAsync(new RefreshTokensDataFD { RefreshTokens= tokens });
+            await _refreshToken.Document(userId.ToString()).SetAsync(new RefreshTokensDataFD { RefreshTokens = tokens });
 
         }
 
-        public async Task<(string, string)> ReplaceRefreshToken2(int userId, string deviceId, string refreshTokenOld, string accessTokenNew, 
-            string jti, int version,  string refreshTokenNew, CancellationToken cancellationToken)
+        public async Task<(string, string)> ReplaceRefreshToken2(int userId, string deviceId, string refreshTokenOld, string accessTokenNew,
+            string jti, int version, string refreshTokenNew, CancellationToken cancellationToken)
         {
             bool isGood = false;
 
@@ -604,14 +609,14 @@ namespace FirebaseChachedDatabase
 
                 var refreshTokenSessionNew = new RefreshTokenSession
                 {
-                    RefreshToken = refreshTokenNew, 
+                    RefreshToken = refreshTokenNew,
                     AccessTokenJti = jti,
                     UserId = userId.ToString(),
                     Version = version,
                     ExpiresAt = System.DateTime.UtcNow.AddDays(7),
                     CreatedAt = System.DateTime.UtcNow,
                     Id = Guid.NewGuid(),
-                    DeviceInfo= deviceId
+                    DeviceInfo = deviceId
 
                 };
 
@@ -623,7 +628,7 @@ namespace FirebaseChachedDatabase
                 tokens.Add(refreshTokenSessionNew.ToRefreshTokenFDSession());
 
                 await transation.Database.Collection("refreshTokens").Document(userId.ToString()).SetAsync(new RefreshTokensDataFD { RefreshTokens = tokens });
-                isGood= true;
+                isGood = true;
             }, cancellationToken: cancellationToken);
 
             if (isGood)
@@ -643,8 +648,8 @@ namespace FirebaseChachedDatabase
 
             }
             var tokens = tokensSnap.ConvertTo<RefreshTokensDataFD>().RefreshTokens;
-            var tokenToDelete = tokens.Where(a => a.AccessTokenJti ==jti).FirstOrDefault();
-            if (tokenToDelete is  null)
+            var tokenToDelete = tokens.Where(a => a.AccessTokenJti == jti).FirstOrDefault();
+            if (tokenToDelete is null)
             {
                 return;
             }
@@ -664,10 +669,10 @@ namespace FirebaseChachedDatabase
         public class RefreshTokensDataFD
         {
             [FirestoreProperty]
-            public List<RefreshTokenSessionFD> RefreshTokens { get; set; }= new List<RefreshTokenSessionFD>();
+            public List<RefreshTokenSessionFD> RefreshTokens { get; set; } = new List<RefreshTokenSessionFD>();
         }
     }
 
-  
+
 
 }

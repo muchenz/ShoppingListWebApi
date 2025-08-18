@@ -75,7 +75,7 @@ internal class PermissionEndpoint : IPermissionEndpoint
 
             if (IsUserInvitatedToListAggregation)
             {
-                messageAndStatus = InvitationResult.Conflict("Ivitation is on list");
+                messageAndStatus = InvitationResult.Conflict("Ivitation is on list.");
                 return;
             }
 

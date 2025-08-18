@@ -34,7 +34,7 @@ namespace Shared.DataEndpoints.Abstaractions
 
         Task AddInvitationAsync(string toUserName, int listAggregationId, int permission, string fromSenderName);
 
-        Task<int> GetNumberOfAdministratorsOfListAggregationsAsync(int listAggregationId); 
+        Task<List<UserListAggregator>> TryGetTwoAdministratorsOfListAggregationsAsync(int listAggregationId); 
         Task<int> GetLastAdminIdAsync(int listAggregationId);
         Task SetUserPermissionToListAggrAsync(int userId, int listAggregationId, int permission);
         Task DeleteUserListAggrAscync(int userId, int listAggregationId);

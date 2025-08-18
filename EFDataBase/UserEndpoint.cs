@@ -123,9 +123,10 @@ namespace EFDataBase
             await _context.SaveChangesAsync();
         }
 
-        public Task<int> GetNumberOfAdministratorsOfListAggregationsAsync(int listAggregationId)
+        public async Task<List<UserListAggregator>> TryGetTwoAdministratorsOfListAggregationsAsync(int listAggregationId)
         {
-            return _context.UserListAggregators.AsQueryable().Where(a => a.ListAggregatorId == listAggregationId && a.PermissionLevel == 1).CountAsync();
+            return  await _context.UserListAggregators.AsQueryable().Where(a => a.ListAggregatorId == listAggregationId && a.PermissionLevel == 1)
+                .Take(2).Select(a=>_mapper.Map<UserListAggregator>(a)).ToListAsync();
         }
 
         public async Task<int> GetLastAdminIdAsync(int listAggregationId)

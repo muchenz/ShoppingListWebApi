@@ -63,7 +63,7 @@ namespace FirebaseDatabase
                 var indexRef = _indexesCol.Document("indexes");
                 var indesSnap = await transation.GetSnapshotAsync(indexRef);
                 var index = indesSnap.GetValue<long>("invitations");
-                var indexNew= index + 1;
+                var indexNew = index + 1;
 
 
                 var newDocRef = _invitationsCol.Document((indexNew).ToString());
@@ -71,7 +71,7 @@ namespace FirebaseDatabase
                 invitationFD.InvitationId = (int)indexNew;
                 transation.Set(newDocRef, invitationFD);
 
-                transation.Update(indexRef,"invitations", indexNew);
+                transation.Update(indexRef, "invitations", indexNew);
 
 
             });
@@ -279,13 +279,14 @@ namespace FirebaseDatabase
 
         }
 
-        public async Task<int> GetNumberOfAdministratorsOfListAggregationsAsync(int listAggregationId)
+        public async Task<List<UserListAggregator>> TryGetTwoAdministratorsOfListAggregationsAsync(int listAggregationId)
         {
             var querrySnapshot =
                 await _userListAggrCol.WhereEqualTo(nameof(UserListAggregatorFD.ListAggregatorId), listAggregationId)
                .WhereEqualTo(nameof(UserListAggregatorFD.PermissionLevel), 1).Limit(2).GetSnapshotAsync();
 
-            return querrySnapshot.Count;
+            var admins = querrySnapshot.Select(a => a.ConvertTo<UserListAggregatorFD>()).ToList();
+            return _mapper.Map<List<UserListAggregator>>(admins);
 
         }
 
@@ -488,6 +489,7 @@ namespace FirebaseDatabase
             return FindUserByIdAsync(userId);
         }
 
+       
         public async Task<bool> IsUserHasListAggregatorAsync(int userId, int listAggregatorId)
         {
             var userListAggrSnap = await _userListAggrCol.WhereEqualTo(nameof(UserListAggregatorFD.UserId), userId)
@@ -746,7 +748,7 @@ namespace FirebaseDatabase
             {
 
                 var tokensRef = _refreshToken.Document(userId.ToString());
-                var tokensSnap = await transation.GetSnapshotAsync(tokensRef );
+                var tokensSnap = await transation.GetSnapshotAsync(tokensRef);
 
                 if (!tokensSnap.Exists)
                 {
@@ -781,7 +783,7 @@ namespace FirebaseDatabase
 
                 tokens.Add(refreshTokenSessionNew.ToRefreshTokenFDSession());
 
-                transation.Set(tokensRef,  new RefreshTokensDataFD { RefreshTokens = tokens });
+                transation.Set(tokensRef, new RefreshTokensDataFD { RefreshTokens = tokens });
                 isGood = true;
             }, cancellationToken: cancellationToken);
 
