@@ -7,6 +7,10 @@ using System.Threading.Tasks;
 namespace EFDataBase
 {
     // dotnet ef migrations add  Add_Token_ToDelete -p EFDataBase -s ShoppingListWebApi
+    // dotnet ef database update -p EFDataBase -s ShoppingListWebApi
+
+    // 
+    // Database migration 0
 
     public partial class ShopingListDBContext : DbContext
     {
@@ -36,7 +40,7 @@ namespace EFDataBase
             if (!optionsBuilder.IsConfigured)
             {
                 //optionsBuilder.UseSqlite("Name=ShopingListDB3");
-                optionsBuilder.UseSqlite("data source=C:\\Users\\muchenz\\source\\repos\\ShoppingListWebApi\\ShippingListDB_SQLite\\ShippingListDB_SQLite.db");
+                optionsBuilder.UseSqlite("data source=C:\\Users\\muchenz\\source\\repos\\ShoppingListWebApi\\ShippingListDB_SQLite\\ShippingListDB_SQLite2.db");
             }
         
         }
