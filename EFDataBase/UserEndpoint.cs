@@ -421,10 +421,20 @@ namespace EFDataBase
             await _context.SaveChangesAsync();
         }
 
-        public Task<List<RefreshTokenSession>> GetRefreshTokens(int userId)
+        public async Task<List<RefreshTokenSession>> GetRefreshTokens(int userId)
         {
-            throw new NotImplementedException();
+            var refreshTokenSessions = await _context.RefreshTokenSessions.Where(a => a.UserId == userId).ToListAsync();
+
+            if (!refreshTokenSessions.Any())
+            {
+                return new List<RefreshTokenSession>();
+
+            }
+
+
+            return refreshTokenSessions.Select(a=>a.ToRefreshTokenSession()).ToList();
         }
+             
 
         public Task DeleteRefreshToken(int userId, RefreshTokenSession refreshTokenSession)
         {
