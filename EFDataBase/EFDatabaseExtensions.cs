@@ -15,6 +15,8 @@ namespace EFDataBase
             services.AddTransient<IListItemEndpoint, ListItemEndpoint>();
             services.AddTransient<IInvitationEndpoint, InvitationEndpoint>();
             services.AddTransient<IListEndpoint, ListEndpoint>();
+            services.AddTransient<ITokenEndpoint, UserEndpoint>();
+            services.AddTransient<IPermissionEndpoint, PermissionEndpoint>();
 
         }
     }
