@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Shared.DataEndpoints.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -151,4 +152,75 @@ namespace EFDataBase
 
     }
 
+    public class RefreshTokenSessionEntity
+    {
+        public string Id { get; set; }
+        public string RefreshToken { get; set; } = string.Empty;
+        public string AccessTokenJti { get; set; }
+        public int UserId { get; set; } 
+        public int Version { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime ExpiresAt { get; set; }
+        public bool IsRefreshTokenRevoked { get; set; } = false;
+        public string? DeviceInfo { get; set; }
+        public DateTime? RevokedAt { get; set; }
+        public string? ReplacedByToken { get; set; }
+        public UserEntity User { get; set; }
+
+    }
+
+    public class ToDeleteEntity
+    {
+        public int Id { get; set; }
+        public string ItemToDeleteId { get; set; }
+        public string Type { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime? DeletedAt { get; set; }
+    }
+    public static class RefreshTokenSessionExtensions
+    {
+
+        public static RefreshTokenSession ToRefreshTokenSession(this RefreshTokenSessionEntity token)
+        {
+            var session = new RefreshTokenSession()
+            {
+                Id = Guid.Parse(token.Id),
+                RefreshToken = token.RefreshToken,
+                ExpiresAt = token.ExpiresAt,
+                AccessTokenJti = token.AccessTokenJti,
+                UserId = token.UserId.ToString(),
+                Version = token.Version,
+                CreatedAt = token.CreatedAt,
+                DeviceInfo = token.DeviceInfo,
+                IsRefreshTokenRevoked = token.IsRefreshTokenRevoked,
+                ReplacedByToken = token.ReplacedByToken,
+                RevokedAt = token.RevokedAt,
+
+            };
+
+            return session;
+        }
+
+        public static RefreshTokenSessionEntity ToRefreshTokenFDSession(this RefreshTokenSession token)
+        {
+            var session = new RefreshTokenSessionEntity()
+            {
+                Id = token.Id.ToString(),
+                RefreshToken = token.RefreshToken,
+                ExpiresAt = token.ExpiresAt,
+                AccessTokenJti = token.AccessTokenJti,
+                UserId = int.Parse(token.UserId),
+                Version = token.Version,
+                CreatedAt = token.CreatedAt,
+                DeviceInfo = token.DeviceInfo,
+                IsRefreshTokenRevoked = token.IsRefreshTokenRevoked,
+                ReplacedByToken = token.ReplacedByToken,
+                RevokedAt = token.RevokedAt,
+
+            };
+
+            return session;
+        }
+
+    }
 }

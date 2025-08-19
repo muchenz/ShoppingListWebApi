@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 
 namespace EFDataBase
 {
+    // dotnet ef migrations add  Add_Token_ToDelete -p EFDataBase -s ShoppingListWebApi
+
     public partial class ShopingListDBContext : DbContext
     {
         public ShopingListDBContext()
@@ -26,12 +28,15 @@ namespace EFDataBase
         public virtual DbSet<ListItemEntity> ListItems { get; set; }
         public virtual DbSet<InvitationEntity> Invitations { get; set; }
         public virtual DbSet<LogEntity> Logs { get; set; }
+        //public virtual DbSet<TokenItemEntity> Tokens { get; set; }
+        public virtual DbSet<ToDeleteEntity> ToDeletes { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
             {
-                optionsBuilder.UseSqlite("Name=ShopingListDB");
+                //optionsBuilder.UseSqlite("Name=ShopingListDB3");
+                optionsBuilder.UseSqlite("data source=C:\\Users\\muchenz\\source\\repos\\ShoppingListWebApi\\ShippingListDB_SQLite\\ShippingListDB_SQLite.db");
             }
         
         }
@@ -264,6 +269,30 @@ namespace EFDataBase
             //       .WithOne(p => p.Token);
             //});
 
+            modelBuilder.Entity<RefreshTokenSessionEntity>(entity =>
+            {
+                entity.ToTable("RefreshTokenSession");
+
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).ValueGeneratedNever();
+
+
+                entity.HasOne(d => d.User)
+                  .WithMany()
+                  .HasForeignKey(d => d.UserId);
+
+
+            });
+
+            modelBuilder.Entity<ToDeleteEntity>(entity =>
+            {
+                entity.ToTable("ToDelete");
+
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).HasColumnName("Id");
+
+
+            });
         }
     }
 }

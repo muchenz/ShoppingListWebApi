@@ -85,16 +85,16 @@ namespace ShoppingListWebApi
 
 
             //services.AddDistributedMemoryCache();
-
             //-----------------------------------------------
-            //services.AddDbContext<ShopingListDBContext>(options =>
-            //       //options.UseSqlServer(Configuration.GetConnectionString("ShopingListDB2")));
-            //       options.UseSqlite(Configuration.GetConnectionString("ShopingListDB3")));
+            services.AddDbContext<ShopingListDBContext>(options =>
+                   //options.UseSqlServer(Configuration.GetConnectionString("ShopingListDB2")));
+                   options.UseSqlite(Configuration.GetConnectionString("ShopingListDB3")));
+                   //options.UseSqlite("data source=C:\\Users\\muchenz\\source\\repos\\ShoppingListWebApi\\ShippingListDB_SQLite\\ShippingListDB_SQLite.db"));
 
-            //services.AddEFDatabase();
+            services.AddEFDatabase();
 
             //---------------------------------------------
-            services.AddFirebasedDatabase(Configuration);
+            //services.AddFirebasedDatabase(Configuration);
 
             //------------------------------------------------
             //services.AddFirebaseCaschedDatabas();
