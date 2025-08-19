@@ -102,7 +102,7 @@ namespace ShoppingListWebApi
             //services.AddSingleton<IMiniDistributedCache, FirabaseCache>();
             //-----------------------------------------------
 
-            services.AddSingleton<ITokenService, TokenService>();
+            services.AddScoped<ITokenService, TokenService>();
 
 
             services.AddAutoMapper(typeof(MappingProfile));
