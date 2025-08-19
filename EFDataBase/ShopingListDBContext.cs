@@ -28,7 +28,7 @@ namespace EFDataBase
         public virtual DbSet<ListItemEntity> ListItems { get; set; }
         public virtual DbSet<InvitationEntity> Invitations { get; set; }
         public virtual DbSet<LogEntity> Logs { get; set; }
-        //public virtual DbSet<TokenItemEntity> Tokens { get; set; }
+        public virtual DbSet<RefreshTokenSessionEntity> RefreshTokenSessions { get; set; }
         public virtual DbSet<ToDeleteEntity> ToDeletes { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

@@ -201,7 +201,7 @@ namespace EFDataBase
             return session;
         }
 
-        public static RefreshTokenSessionEntity ToRefreshTokenFDSession(this RefreshTokenSession token)
+        public static RefreshTokenSessionEntity ToRefreshTokenSessionEntity(this RefreshTokenSession token)
         {
             var session = new RefreshTokenSessionEntity()
             {

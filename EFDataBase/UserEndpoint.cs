@@ -8,11 +8,12 @@ using System.Linq;
 using System.Net.Http;
 using System.Security;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace EFDataBase
 {
-    public class UserEndpoint : IUserEndpoint
+    public class UserEndpoint : IUserEndpoint, ITokenEndpoint
     {
         private readonly ShopingListDBContext _context;
         private readonly IMapper _mapper;
@@ -398,6 +399,51 @@ namespace EFDataBase
             }
 
             return listUsersPermToListAggr;
+        }
+
+            
+
+        public async Task AddRefreshToken(int userId, RefreshTokenSession refreshTokenSession)
+        {
+            var refreshTokenSessions = await _context.RefreshTokenSessions.Where(a => a.UserId == userId).ToListAsync(); 
+
+            if (!refreshTokenSessions.Any())
+            {
+                _context.Add(refreshTokenSession.ToRefreshTokenSessionEntity());
+                await _context.SaveChangesAsync();
+                return;
+            }
+
+            _context.RemoveRange(refreshTokenSessions.Where(a => a.ExpiresAt < System.DateTime.Now ||
+                                                                 a.DeviceInfo == refreshTokenSession.DeviceInfo));
+
+            _context.Add(refreshTokenSession.ToRefreshTokenSessionEntity());
+            await _context.SaveChangesAsync();
+        }
+
+        public Task<List<RefreshTokenSession>> GetRefreshTokens(int userId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task DeleteRefreshToken(int userId, RefreshTokenSession refreshTokenSession)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task DeleteRefreshTokenByJti(int userId, string jti)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task ReplaceRefreshToken(int userId, RefreshTokenSession oldRefreshTokenSession, RefreshTokenSession newRefreshTokenSession)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<(string, string)> ReplaceRefreshToken2(int userId, string deviceId, string refreshTokenOld, string accessTokenNew, string jti, int version, string refreshTokenNew, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
         }
     }
 }
