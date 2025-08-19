@@ -441,9 +441,15 @@ namespace EFDataBase
             throw new NotImplementedException();
         }
 
-        public Task DeleteRefreshTokenByJti(int userId, string jti)
+       
+        public async Task DeleteRefreshTokenByJti(int userId, string jti)
         {
-            throw new NotImplementedException();
+             var refreshTokenSessionToDelete = await _context.RefreshTokenSessions.AsQueryable()
+                .Where(a => a.UserId == userId && a.AccessTokenJti == jti).FirstOrDefaultAsync();
+
+            _context.Remove(refreshTokenSessionToDelete);
+
+            await _context.SaveChangesAsync();
         }
 
         public Task ReplaceRefreshToken(int userId, RefreshTokenSession oldRefreshTokenSession, RefreshTokenSession newRefreshTokenSession)
@@ -451,9 +457,53 @@ namespace EFDataBase
             throw new NotImplementedException();
         }
 
-        public Task<(string, string)> ReplaceRefreshToken2(int userId, string deviceId, string refreshTokenOld, string accessTokenNew, string jti, int version, string refreshTokenNew, CancellationToken cancellationToken)
+       
+        public async Task<(string, string)> ReplaceRefreshToken2(int userId, string deviceId, string refreshTokenOld, string accessTokenNew, string jti, int version, string refreshTokenNew, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+
+            using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+
+            var refreshTokenSessionToDelete = await _context.RefreshTokenSessions.AsQueryable()
+                .Where(a => a.UserId == userId && a.RefreshToken == refreshTokenOld).FirstOrDefaultAsync();
+
+
+
+            //var refreshTokenSessionToDelete = await _context.RefreshTokenSessions
+            //                         .FromSqlInterpolated($@"
+            //                              SELECT * FROM RefreshTokenSessions WITH (UPDLOCK, ROWLOCK)
+            //                              WHERE UserId = {userId} AND RefreshToken = {refreshTokenOld}")
+            //                         .FirstOrDefaultAsync(cancellationToken);
+
+
+            if (refreshTokenSessionToDelete is null || refreshTokenSessionToDelete.IsRefreshTokenRevoked || refreshTokenSessionToDelete.ExpiresAt < System.DateTime.UtcNow)
+            {
+                return (string.Empty, string.Empty);
+            }
+
+            var refreshTokenSessionNew = new RefreshTokenSession
+            {
+                RefreshToken = refreshTokenNew,
+                AccessTokenJti = jti,
+                UserId = userId.ToString(),
+                Version = version,
+                ExpiresAt = System.DateTime.UtcNow.AddDays(7),
+                CreatedAt = System.DateTime.UtcNow,
+                Id = Guid.NewGuid(),
+                DeviceInfo = deviceId
+
+            };
+
+            if (refreshTokenSessionToDelete is not null)
+            {
+                _context.Remove(refreshTokenSessionToDelete);
+            }
+
+            _context.Add(refreshTokenSessionNew.ToRefreshTokenSessionEntity());
+
+            await _context.SaveChangesAsync();
+            await transaction.CommitAsync(cancellationToken);
+            return (accessTokenNew, refreshTokenNew);
+
         }
     }
 }
