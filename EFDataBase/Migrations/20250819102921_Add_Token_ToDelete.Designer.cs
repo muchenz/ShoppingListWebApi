@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EFDataBase.Migrations
 {
     [DbContext(typeof(ShopingListDBContext))]
-    [Migration("20250819101430_Add_Token_ToDelete")]
+    [Migration("20250819102921_Add_Token_ToDelete")]
     partial class Add_Token_ToDelete
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
