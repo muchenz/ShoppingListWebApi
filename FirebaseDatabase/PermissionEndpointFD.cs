@@ -14,7 +14,7 @@ using InvitationResult = Shared.DataEndpoints.Models.MessageAndStatusAndData<(Sh
 
 namespace FirebaseDatabase;
 
-internal class PermissionEndpoint : IPermissionEndpoint
+internal class PermissionEndpointFD : IPermissionEndpoint
 {
 
     private readonly IMapper _mapper;
@@ -31,7 +31,7 @@ internal class PermissionEndpoint : IPermissionEndpoint
     CollectionReference _refreshToken;
     CollectionReference _toDelete;
 
-    public PermissionEndpoint(IMapper mapper, ILogger<UserEndpointFD> logger)
+    public PermissionEndpointFD(IMapper mapper, ILogger<UserEndpointFD> logger)
     {
         logger.LogInformation($"constructor UserEndpointFD ");
 
