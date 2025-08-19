@@ -1,6 +1,7 @@
 ﻿using Shared.DataEndpoints.Models;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -166,6 +167,9 @@ namespace EFDataBase
         public DateTime? RevokedAt { get; set; }
         public string? ReplacedByToken { get; set; }
         public UserEntity User { get; set; }
+
+        //[Timestamp] //  EF Core for automic concurrency handling
+        //public byte[] RowVersion { get; set; }
 
     }
 
