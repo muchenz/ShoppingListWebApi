@@ -42,7 +42,7 @@ public class PermissionsController : ControllerBase
 
     [HttpPost("InviteUserPermission")]
     [SecurityLevel(1)]
-    //TODO: Ratcher special request than 'UserPermissionToListAggregation' because 'Uder' is almost empty beside 'EmailAddress' 
+    //TODO: Ratcher special request than 'UserPermissionToListAggregation' because 'User' is almost empty beside 'EmailAddress' 
     public async Task<ActionResult> InviteUserPermission(int listAggregationId,
             [FromBody] UserPermissionToListAggregation item, [FromHeader] string signalRId)
     {
