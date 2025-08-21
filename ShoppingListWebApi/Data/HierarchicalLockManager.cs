@@ -273,10 +273,11 @@ public class HierarchicalLockManager
 
     }
 
-
     private class Releaser : IDisposable
     {
         private readonly List<LockInfo> _lockInfos;
+        private bool _disposed = false;
+
         public Releaser(List<LockInfo> lockInfos)
         {
             _lockInfos = lockInfos;
@@ -285,10 +286,15 @@ public class HierarchicalLockManager
 
         public void Dispose()
         {
-            foreach (var lockInfo in _lockInfos)
+            if (!_disposed)
             {
-                lockInfo.Semaphore.Release();
-                lockInfo.LastUsed = DateTime.UtcNow;
+                foreach (var lockInfo in _lockInfos)
+                {
+                    lockInfo.Semaphore.Release();
+                    lockInfo.LastUsed = DateTime.UtcNow;
+                }
+
+                _disposed = true;
             }
         }
     }
