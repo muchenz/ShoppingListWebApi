@@ -150,7 +150,7 @@ public class LockManager
 
 }
 
-public class HierarchicalLockManagerPriorityQueue
+public class LockManagerPriorityQueue
 {
 
     private class LockInfo
@@ -165,7 +165,7 @@ public class HierarchicalLockManagerPriorityQueue
     private readonly TimeSpan _lockTTL = TimeSpan.FromMinutes(1);
     private readonly TimeSpan _cleanupInterval = TimeSpan.FromMinutes(5);
     private readonly SemaphoreSlim _queueLock = new SemaphoreSlim(1, 1);
-    public HierarchicalLockManagerPriorityQueue()
+    public LockManagerPriorityQueue()
     {
         _cleanupInterval = TimeSpan.FromMinutes(5);
 
@@ -230,10 +230,10 @@ public class HierarchicalLockManagerPriorityQueue
 
     public class LockBuilder
     {
-        private readonly HierarchicalLockManagerPriorityQueue _lockManager;
+        private readonly LockManagerPriorityQueue _lockManager;
         private readonly List<string> _keys = new();
 
-        public LockBuilder(HierarchicalLockManagerPriorityQueue lockManager)
+        public LockBuilder(LockManagerPriorityQueue lockManager)
         {
             _lockManager = lockManager;
         }
@@ -279,10 +279,10 @@ public class HierarchicalLockManagerPriorityQueue
     private class Releaser : IAsyncDisposable
     {
         private readonly List<(string key, LockInfo lockInfo)> _lockInfoList;
-        private readonly HierarchicalLockManagerPriorityQueue _lockManager;
+        private readonly LockManagerPriorityQueue _lockManager;
         private bool _disposed = false;
 
-        public Releaser(List<(string key, LockInfo lockInfo)> lockInfoList, HierarchicalLockManagerPriorityQueue lockManager)
+        public Releaser(List<(string key, LockInfo lockInfo)> lockInfoList, LockManagerPriorityQueue lockManager)
         {
             _lockInfoList = lockInfoList;
             _lockManager = lockManager;
