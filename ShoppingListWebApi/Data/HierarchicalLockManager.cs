@@ -148,3 +148,151 @@ public class HierarchicalLockManager
     }
 
 }
+
+public class HierarchicalLockManagerPriorityQueue
+{
+
+    private class LockInfo
+    {
+        public SemaphoreSlim Semaphore { get; } = new SemaphoreSlim(1, 1);
+        public DateTime LastUsed { get; set; } = DateTime.UtcNow;
+    }
+
+    private readonly ConcurrentDictionary<string, LockInfo> _locksDic = new();
+    private readonly PriorityQueue<string, long> _expiryQueue = new();
+    private readonly Timer _cleanupTimer;
+    private readonly TimeSpan _lockTTL = TimeSpan.FromMinutes(1);
+    private readonly TimeSpan _cleanupInterval = TimeSpan.FromMinutes(5);
+    private readonly SemaphoreSlim _queueLock = new SemaphoreSlim(1, 1);
+    public HierarchicalLockManagerPriorityQueue()
+    {
+        _cleanupInterval = TimeSpan.FromMinutes(5);
+
+        _cleanupTimer = new Timer(_ => Cleanup(), null, _cleanupInterval, _cleanupInterval);
+    }
+
+    private readonly SemaphoreSlim _cleanupLock = new SemaphoreSlim(1, 1);
+
+    private void Cleanup()
+    {
+
+        if (!_queueLock.Wait(0))
+        {
+            return;
+        }
+        try
+        {
+            var nowTicks = DateTime.UtcNow.Ticks;
+            var now = DateTime.UtcNow;
+            while (_expiryQueue.TryPeek(out _, out var priorityTicks) && priorityTicks + _lockTTL.Ticks < nowTicks)
+            {
+                if (_expiryQueue.TryDequeue(out var key, out _))
+                {
+
+                    if (_locksDic.TryGetValue(key, out LockInfo lockInfo))
+                    {
+                        if (lockInfo.LastUsed + _lockTTL < now)
+                        {
+                            bool isRemoved = false;
+                            try
+                            {
+                                isRemoved = _locksDic.TryRemove(kvp.Key, out _);
+                                if (isRemoved)
+                                {
+                                    lockInfo.Semaphore.Dispose();
+                                }
+                            }
+                            finally
+                            {
+                                if (!isRemoved)
+                                {
+                                    lockInfo.Semaphore.Release();
+
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        finally
+        {
+            _cleanupLock.Release();
+        }
+    }
+
+    public LockBuilder GetBuilder()
+    {
+        return new LockBuilder(this);
+    }
+
+    public class LockBuilder
+    {
+        private readonly HierarchicalLockManager _lockManager;
+        private readonly List<string> _keys = new();
+
+        public LockBuilder(HierarchicalLockManager lockManager)
+        {
+            _lockManager = lockManager;
+        }
+
+        public LockBuilder AddLockListAggr(int listAggrId)
+        {
+            _keys.Add($"listaggr:{listAggrId}");
+            return this;
+        }
+
+        public LockBuilder AddLockUser(int userId)
+        {
+            _keys.Add($"user:{userId}");
+            return this;
+        }
+
+        public async Task<IDisposable> LockAsync()
+        {
+            var keys = _keys.OrderBy(k => k).ToList();
+
+            var lockInfos = new List<LockInfo>();
+
+            foreach (var key in keys)
+            {
+                var lockInfo = _lockManager._locksDic.GetOrAdd(key, _ => new LockInfo());
+
+                await lockInfo.Semaphore.WaitAsync();
+                lockInfos.Add(lockInfo);
+
+            }
+
+            return new Releaser(lockInfos);
+
+        }
+
+    }
+
+    private class Releaser : IDisposable
+    {
+        private readonly List<LockInfo> _lockInfos;
+        private bool _disposed = false;
+
+        public Releaser(List<LockInfo> lockInfos)
+        {
+            _lockInfos = lockInfos;
+        }
+
+
+        public void Dispose()
+        {
+            if (!_disposed)
+            {
+                foreach (var lockInfo in _lockInfos)
+                {
+                    lockInfo.Semaphore.Release();
+                    lockInfo.LastUsed = DateTime.UtcNow;
+                }
+
+                _disposed = true;
+            }
+        }
+    }
+
+}
