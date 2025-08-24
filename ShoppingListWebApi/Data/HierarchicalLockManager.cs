@@ -250,13 +250,13 @@ public class HierarchicalLockManagerPriorityQueue
             return this;
         }
 
-        public async Task<IDisposable> LockAsync()
+        public async Task<IAsyncDisposable> LockAsync()
         {
             var keys = _keys.OrderBy(k => k).ToList();
 
             var lockInfoList = new List<(string key, LockInfo lockInfo)>();
 
-            _lockManager._queueLock.Wait();
+            await _lockManager._queueLock.WaitAsync();
             foreach (var key in keys)
             {
 
@@ -264,7 +264,7 @@ public class HierarchicalLockManagerPriorityQueue
 
                 await lockInfo.Semaphore.WaitAsync();
                 lockInfoList.Add((key, lockInfo));
-                _lockManager._expiryQueue.Enqueue(key, lockInfo.LastUsed.Ticks);
+                //  _lockManager._expiryQueue.Enqueue(key, lockInfo.LastUsed.Ticks); 
 
 
 
@@ -276,7 +276,7 @@ public class HierarchicalLockManagerPriorityQueue
 
     }
 
-    private class Releaser : IDisposable
+    private class Releaser : IAsyncDisposable
     {
         private readonly List<(string key, LockInfo lockInfo)> _lockInfoList;
         private readonly HierarchicalLockManagerPriorityQueue _lockManager;
@@ -289,20 +289,27 @@ public class HierarchicalLockManagerPriorityQueue
         }
 
 
-        public void Dispose()
+
+        public async ValueTask DisposeAsync()
         {
             if (!_disposed)
-                _lockManager._queueLock.Wait();
             {
-                foreach (var item in _lockInfoList)
+                await _lockManager._queueLock.WaitAsync();
+                try
                 {
-                    item.lockInfo.Semaphore.Release();
-                    item.lockInfo.LastUsed = DateTime.UtcNow;
-                    _lockManager._expiryQueue.Enqueue(item.key, item.lockInfo.LastUsed.Ticks);
+                    foreach (var item in _lockInfoList)
+                    {
+                        item.lockInfo.Semaphore.Release();
+                        item.lockInfo.LastUsed = DateTime.UtcNow;
+                        _lockManager._expiryQueue.Enqueue(item.key, item.lockInfo.LastUsed.Ticks);
+                    }
                 }
-                _lockManager._queueLock.Release();
+                finally
+                {
+                    _lockManager._queueLock.Release();
 
-                _disposed = true;
+                    _disposed = true;
+                }
             }
         }
     }
