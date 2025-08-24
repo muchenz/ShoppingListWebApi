@@ -169,7 +169,7 @@ public class LockManagerPriorityQueue
     {
         _cleanupInterval = TimeSpan.FromMinutes(5);
 
-        _cleanupTimer = new Timer(_ => Cleanup(), null, _cleanupInterval, _cleanupInterval);
+        _cleanupTimer = new Timer(async _ => await Cleanup(), null, _cleanupInterval, _cleanupInterval);
     }
 
     private readonly SemaphoreSlim _cleanupLock = new SemaphoreSlim(1, 1);
