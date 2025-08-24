@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Razor.Language.CodeGeneration;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -173,42 +174,42 @@ public class HierarchicalLockManagerPriorityQueue
 
     private readonly SemaphoreSlim _cleanupLock = new SemaphoreSlim(1, 1);
 
-    private void Cleanup()
+    private async Task Cleanup()
     {
-
-        if (!_queueLock.Wait(0))
+        if (!_cleanupLock.Wait(0))
         {
             return;
         }
+        await _queueLock.WaitAsync();
+
         try
         {
             var nowTicks = DateTime.UtcNow.Ticks;
             var now = DateTime.UtcNow;
             while (_expiryQueue.TryPeek(out _, out var priorityTicks) && priorityTicks + _lockTTL.Ticks < nowTicks)
             {
-                if (_expiryQueue.TryDequeue(out var key, out _))
+
+                if (_expiryQueue.TryDequeue(out var key, out _) &&
+                    _locksDic.TryGetValue(key, out LockInfo lockInfo))
                 {
-
-                    if (_locksDic.TryGetValue(key, out LockInfo lockInfo))
+                    if (lockInfo.LastUsed + _lockTTL < now
+                        && lockInfo.Semaphore.Wait(0))
                     {
-                        if (lockInfo.LastUsed + _lockTTL < now)
+                        bool isRemoved = false;
+                        try
                         {
-                            bool isRemoved = false;
-                            try
+                            isRemoved = _locksDic.TryRemove(key, out _);
+                            if (isRemoved)
                             {
-                                isRemoved = _locksDic.TryRemove(kvp.Key, out _);
-                                if (isRemoved)
-                                {
-                                    lockInfo.Semaphore.Dispose();
-                                }
+                                lockInfo.Semaphore.Dispose();
                             }
-                            finally
+                        }
+                        finally
+                        {
+                            if (!isRemoved)
                             {
-                                if (!isRemoved)
-                                {
-                                    lockInfo.Semaphore.Release();
+                                lockInfo.Semaphore.Release();
 
-                                }
                             }
                         }
                     }
@@ -218,6 +219,7 @@ public class HierarchicalLockManagerPriorityQueue
         finally
         {
             _cleanupLock.Release();
+            _queueLock.Release();
         }
     }
 
@@ -228,10 +230,10 @@ public class HierarchicalLockManagerPriorityQueue
 
     public class LockBuilder
     {
-        private readonly HierarchicalLockManager _lockManager;
+        private readonly HierarchicalLockManagerPriorityQueue _lockManager;
         private readonly List<string> _keys = new();
 
-        public LockBuilder(HierarchicalLockManager lockManager)
+        public LockBuilder(HierarchicalLockManagerPriorityQueue lockManager)
         {
             _lockManager = lockManager;
         }
@@ -252,18 +254,23 @@ public class HierarchicalLockManagerPriorityQueue
         {
             var keys = _keys.OrderBy(k => k).ToList();
 
-            var lockInfos = new List<LockInfo>();
+            var lockInfoList = new List<(string key, LockInfo lockInfo)>();
 
+            _lockManager._queueLock.Wait();
             foreach (var key in keys)
             {
+
                 var lockInfo = _lockManager._locksDic.GetOrAdd(key, _ => new LockInfo());
 
                 await lockInfo.Semaphore.WaitAsync();
-                lockInfos.Add(lockInfo);
+                lockInfoList.Add((key, lockInfo));
+                _lockManager._expiryQueue.Enqueue(key, lockInfo.LastUsed.Ticks);
+
+
 
             }
-
-            return new Releaser(lockInfos);
+            _lockManager._queueLock.Release();
+            return new Releaser(lockInfoList, _lockManager);
 
         }
 
@@ -271,24 +278,29 @@ public class HierarchicalLockManagerPriorityQueue
 
     private class Releaser : IDisposable
     {
-        private readonly List<LockInfo> _lockInfos;
+        private readonly List<(string key, LockInfo lockInfo)> _lockInfoList;
+        private readonly HierarchicalLockManagerPriorityQueue _lockManager;
         private bool _disposed = false;
 
-        public Releaser(List<LockInfo> lockInfos)
+        public Releaser(List<(string key, LockInfo lockInfo)> lockInfoList, HierarchicalLockManagerPriorityQueue lockManager)
         {
-            _lockInfos = lockInfos;
+            _lockInfoList = lockInfoList;
+            _lockManager = lockManager;
         }
 
 
         public void Dispose()
         {
             if (!_disposed)
+                _lockManager._queueLock.Wait();
             {
-                foreach (var lockInfo in _lockInfos)
+                foreach (var item in _lockInfoList)
                 {
-                    lockInfo.Semaphore.Release();
-                    lockInfo.LastUsed = DateTime.UtcNow;
+                    item.lockInfo.Semaphore.Release();
+                    item.lockInfo.LastUsed = DateTime.UtcNow;
+                    _lockManager._expiryQueue.Enqueue(item.key, item.lockInfo.LastUsed.Ticks);
                 }
+                _lockManager._queueLock.Release();
 
                 _disposed = true;
             }
