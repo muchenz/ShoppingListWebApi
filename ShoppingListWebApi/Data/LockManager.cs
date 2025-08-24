@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace ShoppingListWebApi.Data;
 
-public class HierarchicalLockManager
+public class LockManager
 {
 
     private class LockInfo
@@ -23,7 +23,7 @@ public class HierarchicalLockManager
     private readonly TimeSpan _lockTTL = TimeSpan.FromMinutes(1);
     private readonly TimeSpan _cleanupInterval = TimeSpan.FromMinutes(5);
 
-    public HierarchicalLockManager()
+    public LockManager()
     {
         _cleanupInterval = TimeSpan.FromMinutes(5);
 
@@ -81,10 +81,10 @@ public class HierarchicalLockManager
 
     public class LockBuilder
     {
-        private readonly HierarchicalLockManager _lockManager;
+        private readonly LockManager _lockManager;
         private readonly List<string> _keys = new();
 
-        public LockBuilder(HierarchicalLockManager lockManager)
+        public LockBuilder(LockManager lockManager)
         {
             _lockManager = lockManager;
         }

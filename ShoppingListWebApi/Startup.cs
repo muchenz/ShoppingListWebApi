@@ -173,7 +173,7 @@ namespace ShoppingListWebApi
             services.AddSingleton<IAuthorizationPolicyProvider, CustomAuthorizationPolicyProvider>();
             services.AddSingleton<SignarRService>();
             services.AddMediatR(typeof(AddListCommand).Assembly);
-            services.AddSingleton<HierarchicalLockManager>(); 
+            services.AddSingleton<LockManager>(); 
 
             services.AddCors(options =>
             {
