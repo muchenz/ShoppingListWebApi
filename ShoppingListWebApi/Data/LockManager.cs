@@ -436,7 +436,6 @@ public class LockManagerLinkedList
                     _lockManager._lockList.Remove(existingNode);
                     _lockManager._lockList.AddFirst(existingNode);
                     existingNode.Value.LastUsed = DateTime.UtcNow;
-                    //  _lockManager._expiryQueue.Enqueue(key, existingNode.Value.LastUsed.Ticks); 
                     await existingNode.Value.Semaphore.WaitAsync();
                     lockInfoList.Add(existingNode);
                     continue;
@@ -449,9 +448,6 @@ public class LockManagerLinkedList
 
                 await newLockInfo.Semaphore.WaitAsync();
                 lockInfoList.Add(newNode);
-                //  _lockManager._expiryQueue.Enqueue(key, lockInfo.LastUsed.Ticks); 
-
-
 
             }
             _lockManager._queueLock.Release();
