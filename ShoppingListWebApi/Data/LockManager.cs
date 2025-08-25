@@ -332,7 +332,7 @@ public class LockManagerLinkedList
     private readonly Timer _cleanupTimer;
     private readonly TimeSpan _lockTTL = TimeSpan.FromMinutes(1);
     private readonly TimeSpan _cleanupInterval = TimeSpan.FromMinutes(5);
-    private readonly SemaphoreSlim _queueLock = new SemaphoreSlim(1, 1);
+    private readonly SemaphoreSlim _stateLock = new SemaphoreSlim(1, 1);
     public LockManagerLinkedList()
     {
         _cleanupInterval = TimeSpan.FromMinutes(5);
@@ -348,11 +348,10 @@ public class LockManagerLinkedList
         {
             return;
         }
-        await _queueLock.WaitAsync();
+        await _stateLock.WaitAsync();
 
         try
         {
-            var nowTicks = DateTime.UtcNow.Ticks;
             var now = DateTime.UtcNow;
             var node = _lockList.First;
             while ( node!=null)
@@ -391,7 +390,7 @@ public class LockManagerLinkedList
         finally
         {
             _cleanupLock.Release();
-            _queueLock.Release();
+            _stateLock.Release();
         }
     }
 
@@ -431,7 +430,7 @@ public class LockManagerLinkedList
             try
             {
 
-                await _lockManager._queueLock.WaitAsync();
+                await _lockManager._stateLock.WaitAsync();
                 foreach (var key in keys)
                 {
                     var isExisting = _lockManager._nodeDic.TryGetValue(key, out var existingNode);
@@ -456,7 +455,7 @@ public class LockManagerLinkedList
             }
             finally
             {
-                _lockManager._queueLock.Release();
+                _lockManager._stateLock.Release();
 
                 foreach (var node in lockInfoList)
                 {
@@ -488,7 +487,7 @@ public class LockManagerLinkedList
         {
             if (!_disposed)
             {
-                await _lockManager._queueLock.WaitAsync();
+                await _lockManager._stateLock.WaitAsync();
                 try
                 {
                     foreach (var node in _nodeList)
@@ -502,7 +501,7 @@ public class LockManagerLinkedList
                 }
                 finally
                 {
-                    _lockManager._queueLock.Release();
+                    _lockManager._stateLock.Release();
                     _nodeList.ForEach(a=>a.Value.Semaphore.Release());
                     _disposed = true;
                 }
