@@ -355,37 +355,40 @@ public class LockManagerLinkedList
             var nowTicks = DateTime.UtcNow.Ticks;
             var now = DateTime.UtcNow;
             var nodeToDelete = new List<LinkedListNode<LockInfo>>();
-            foreach (var node in _lockList)
+            foreach (var lockInfo in _lockList)
             {
 
-                if (node.LastUsed + _lockTTL < now)
+                if (lockInfo.LastUsed + _lockTTL < now)
                 {
                     break;
                 }
 
-                if (node.Semaphore.Wait(0))
+                if (lockInfo.Semaphore.Wait(0))
                 {
                     bool isRemoved = false;
                     try
                     {
-                        isRemoved = _nodeDic.TryRemove(node.Key, out _);
+                        isRemoved = _nodeDic.TryRemove(lockInfo.Key, out _);
                         if (isRemoved)
                         {
-                            _lockList.Remove(node);
-                            node.Semaphore.Dispose();
+                            if (_nodeDic.TryGetValue(lockInfo.Key, out var node))
+                            {
+                                nodeToDelete.Add(node);
+                            }
+                            lockInfo.Semaphore.Dispose();
                         }
                     }
                     finally
                     {
                         if (!isRemoved)
                         {
-                            node.Semaphore.Release();
+                            lockInfo.Semaphore.Release();
 
                         }
                     }
                 }
             }
-            nodeToDelete.ForEach(a=> _lockList.Remove(a));
+            nodeToDelete.ForEach(a => _lockList.Remove(a));
         }
         finally
         {
@@ -432,9 +435,10 @@ public class LockManagerLinkedList
             {
                 var isExisting = _lockManager._nodeDic.TryGetValue(key, out var existingNode);
 
-                if (isExisting) {          
+                if (isExisting)
+                {
                     _lockManager._lockList.Remove(existingNode);
-                    _lockManager._lockList.AddFirst(existingNode);
+                    _lockManager._lockList.AddLast(existingNode);
                     existingNode.Value.LastUsed = DateTime.UtcNow;
                     await existingNode.Value.Semaphore.WaitAsync();
                     lockInfoList.Add(existingNode);
@@ -443,8 +447,8 @@ public class LockManagerLinkedList
 
                 var newLockInfo = new LockInfo { Key = key };
                 var newNode = new LinkedListNode<LockInfo>(newLockInfo);
-                _lockManager._lockList.AddFirst(newNode);
-                _lockManager._nodeDic.TryAdd (key,newNode);
+                _lockManager._lockList.AddLast(newNode);
+                _lockManager._nodeDic.TryAdd(key, newNode);
 
                 await newLockInfo.Semaphore.WaitAsync();
                 lockInfoList.Add(newNode);
@@ -484,7 +488,7 @@ public class LockManagerLinkedList
                         node.Value.LastUsed = DateTime.UtcNow;
 
                         _lockManager._lockList.Remove(node);
-                        _lockManager._lockList.AddFirst(node);
+                        _lockManager._lockList.AddLast(node);
                     }
                 }
                 finally
