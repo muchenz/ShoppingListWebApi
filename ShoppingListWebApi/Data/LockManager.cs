@@ -315,3 +315,190 @@ public class LockManagerPriorityQueue
     }
 
 }
+
+public class LockManagerLinkedList
+{
+
+    private class LockInfo
+    {
+        public SemaphoreSlim Semaphore { get; } = new SemaphoreSlim(1, 1);
+        public DateTime LastUsed { get; set; } = DateTime.UtcNow;
+
+        public string Key { get; set; } = string.Empty;
+    }
+
+    private readonly ConcurrentDictionary<string, LinkedListNode<LockInfo>> _nodeDic = new();
+    private readonly LinkedList<LockInfo> _lockList = new();
+    private readonly Timer _cleanupTimer;
+    private readonly TimeSpan _lockTTL = TimeSpan.FromMinutes(1);
+    private readonly TimeSpan _cleanupInterval = TimeSpan.FromMinutes(5);
+    private readonly SemaphoreSlim _queueLock = new SemaphoreSlim(1, 1);
+    public LockManagerLinkedList()
+    {
+        _cleanupInterval = TimeSpan.FromMinutes(5);
+
+        _cleanupTimer = new Timer(async _ => await Cleanup(), null, _cleanupInterval, _cleanupInterval);
+    }
+
+    private readonly SemaphoreSlim _cleanupLock = new SemaphoreSlim(1, 1);
+
+    private async Task Cleanup()
+    {
+        if (!_cleanupLock.Wait(0))
+        {
+            return;
+        }
+        await _queueLock.WaitAsync();
+
+        try
+        {
+            var nowTicks = DateTime.UtcNow.Ticks;
+            var now = DateTime.UtcNow;
+            var nodeTodelete = new List<LinkedListNode<LockInfo>>();
+            foreach (var node in _lockList)
+            {
+
+                if (node.LastUsed + _lockTTL < now)
+                {
+                    break;
+                }
+
+                if (node.Semaphore.Wait(0))
+                {
+                    bool isRemoved = false;
+                    try
+                    {
+                        isRemoved = _nodeDic.TryRemove(node.Key, out _);
+                        if (isRemoved)
+                        {
+                            _lockList.Remove(node);
+                            node.Semaphore.Dispose();
+                        }
+                    }
+                    finally
+                    {
+                        if (!isRemoved)
+                        {
+                            node.Semaphore.Release();
+
+                        }
+                    }
+                }
+            }
+            nodeTodelete.ForEach(a=> _lockList.Remove(a));
+        }
+        finally
+        {
+            _cleanupLock.Release();
+            _queueLock.Release();
+        }
+    }
+
+    public LockBuilder GetBuilder()
+    {
+        return new LockBuilder(this);
+    }
+
+    public class LockBuilder
+    {
+        private readonly LockManagerLinkedList _lockManager;
+        private readonly List<string> _keys = new();
+
+        public LockBuilder(LockManagerLinkedList lockManager)
+        {
+            _lockManager = lockManager;
+        }
+
+        public LockBuilder AddLockListAggr(int listAggrId)
+        {
+            _keys.Add($"listaggr:{listAggrId}");
+            return this;
+        }
+
+        public LockBuilder AddLockUser(int userId)
+        {
+            _keys.Add($"user:{userId}");
+            return this;
+        }
+
+        public async Task<IAsyncDisposable> LockAsync()
+        {
+            var keys = _keys.OrderBy(k => k).ToList();
+
+            var lockInfoList = new List<LinkedListNode<LockInfo>>();
+
+            await _lockManager._queueLock.WaitAsync();
+            foreach (var key in keys)
+            {
+                var isExisting = _lockManager._nodeDic.TryGetValue(key, out var existingNode);
+
+                if (isExisting) {          
+                    _lockManager._lockList.Remove(existingNode);
+                    _lockManager._lockList.AddFirst(existingNode);
+                    existingNode.Value.LastUsed = DateTime.UtcNow;
+                    //  _lockManager._expiryQueue.Enqueue(key, existingNode.Value.LastUsed.Ticks); 
+                    await existingNode.Value.Semaphore.WaitAsync();
+                    lockInfoList.Add(existingNode);
+                    continue;
+                }
+
+                var newLockInfo = new LockInfo { Key = key };
+                var newNode = new LinkedListNode<LockInfo>(newLockInfo);
+                _lockManager._lockList.AddFirst(newNode);
+                _lockManager._nodeDic.TryAdd (key,newNode);
+
+                await newLockInfo.Semaphore.WaitAsync();
+                lockInfoList.Add(newNode));
+                //  _lockManager._expiryQueue.Enqueue(key, lockInfo.LastUsed.Ticks); 
+
+
+
+            }
+            _lockManager._queueLock.Release();
+            return new Releaser(lockInfoList, _lockManager);
+
+        }
+
+    }
+
+    private class Releaser : IAsyncDisposable
+    {
+        private readonly List<LinkedListNode<LockInfo>> _nodeList;
+        private readonly LockManagerLinkedList _lockManager;
+        private bool _disposed = false;
+
+        public Releaser(List<LinkedListNode<LockInfo>> nodeList, LockManagerLinkedList lockManager)
+        {
+            _nodeList = nodeList;
+            _lockManager = lockManager;
+        }
+
+
+
+        public async ValueTask DisposeAsync()
+        {
+            if (!_disposed)
+            {
+                await _lockManager._queueLock.WaitAsync();
+                try
+                {
+                    foreach (var node in _nodeList)
+                    {
+                        node.Value.Semaphore.Release();
+                        node.Value.LastUsed = DateTime.UtcNow;
+
+                        _lockManager._lockList.Remove(node);
+                        _lockManager._lockList.AddFirst(node);
+                    }
+                }
+                finally
+                {
+                    _lockManager._queueLock.Release();
+
+                    _disposed = true;
+                }
+            }
+        }
+    }
+
+}
