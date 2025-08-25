@@ -430,31 +430,43 @@ public class LockManagerLinkedList
 
             var lockInfoList = new List<LinkedListNode<LockInfo>>();
 
-            await _lockManager._queueLock.WaitAsync();
-            foreach (var key in keys)
+            try
             {
-                var isExisting = _lockManager._nodeDic.TryGetValue(key, out var existingNode);
 
-                if (isExisting)
+                await _lockManager._queueLock.WaitAsync();
+                foreach (var key in keys)
                 {
-                    _lockManager._lockList.Remove(existingNode);
-                    _lockManager._lockList.AddLast(existingNode);
-                    existingNode.Value.LastUsed = DateTime.UtcNow;
-                    await existingNode.Value.Semaphore.WaitAsync();
-                    lockInfoList.Add(existingNode);
-                    continue;
+                    var isExisting = _lockManager._nodeDic.TryGetValue(key, out var existingNode);
+
+                    if (isExisting)
+                    {
+                        _lockManager._lockList.Remove(existingNode);
+                        _lockManager._lockList.AddLast(existingNode);
+                        existingNode.Value.LastUsed = DateTime.UtcNow;
+                        await existingNode.Value.Semaphore.WaitAsync();
+                        lockInfoList.Add(existingNode);
+                        continue;
+                    }
+
+                    var newLockInfo = new LockInfo { Key = key };
+                    var newNode = new LinkedListNode<LockInfo>(newLockInfo);
+                    _lockManager._lockList.AddLast(newNode);
+                    _lockManager._nodeDic.TryAdd(key, newNode);
+
+                    lockInfoList.Add(newNode);
+
                 }
-
-                var newLockInfo = new LockInfo { Key = key };
-                var newNode = new LinkedListNode<LockInfo>(newLockInfo);
-                _lockManager._lockList.AddLast(newNode);
-                _lockManager._nodeDic.TryAdd(key, newNode);
-
-                await newLockInfo.Semaphore.WaitAsync();
-                lockInfoList.Add(newNode);
-
             }
-            _lockManager._queueLock.Release();
+            finally
+            {
+                _lockManager._queueLock.Release();
+
+                foreach (var node in lockInfoList)
+                {
+                    await node.Value.Semaphore.WaitAsync();
+                }
+            }
+
             return new Releaser(lockInfoList, _lockManager);
 
         }
@@ -484,7 +496,7 @@ public class LockManagerLinkedList
                 {
                     foreach (var node in _nodeList)
                     {
-                        node.Value.Semaphore.Release();
+                        
                         node.Value.LastUsed = DateTime.UtcNow;
 
                         _lockManager._lockList.Remove(node);
@@ -494,7 +506,7 @@ public class LockManagerLinkedList
                 finally
                 {
                     _lockManager._queueLock.Release();
-
+                    _nodeList.ForEach(a=>a.Value.Semaphore.Release());
                     _disposed = true;
                 }
             }
