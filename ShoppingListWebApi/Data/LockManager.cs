@@ -448,7 +448,7 @@ public class LockManagerLinkedList
                 _lockManager._nodeDic.TryAdd (key,newNode);
 
                 await newLockInfo.Semaphore.WaitAsync();
-                lockInfoList.Add(newNode));
+                lockInfoList.Add(newNode);
                 //  _lockManager._expiryQueue.Enqueue(key, lockInfo.LastUsed.Ticks); 
 
 
