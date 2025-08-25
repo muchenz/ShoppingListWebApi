@@ -361,12 +361,17 @@ public class LockManagerLinkedList
                 var currNode = node;
                 node = node.Next;
 
-                if (currNode.Value.LastUsed + _lockTTL >= now && currNode.Value.InUseCount > 0)
+                if (currNode.Value.InUseCount > 0)
+                {
+                     continue;
+                }
+
+                if (currNode.Value.LastUsed + _lockTTL >= now)
                 {
                     break;
                 }
 
-                if (currNode.Value.Semaphore.Wait(0))
+                if (currNode.Value.Semaphore.Wait(0)) //if is inuse probably is not nessesery
                 {
                     bool isRemoved = false;
                     try
