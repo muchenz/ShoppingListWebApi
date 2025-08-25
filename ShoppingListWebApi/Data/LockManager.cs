@@ -361,14 +361,14 @@ public class LockManagerLinkedList
         {
             var now = DateTime.UtcNow;
             var node = _lockList.First;
-            while ( node!=null)
+            while (node != null)
             {
                 var currNode = node;
                 node = node.Next;
 
                 if (currNode.Value.InUseCount > 0)
                 {
-                     continue;
+                    continue;
                 }
 
                 if (currNode.Value.LastUsed + _lockTTL >= now)
@@ -376,27 +376,13 @@ public class LockManagerLinkedList
                     break;
                 }
 
-                if (currNode.Value.Semaphore.Wait(0)) //if is inuse probably is not nessesery
+                
+                if (_nodeDic.TryRemove(currNode.Value.Key, out _))
                 {
-                    bool isRemoved = false;
-                    try
-                    {
-                        isRemoved = _nodeDic.TryRemove(currNode.Value.Key, out _);
-                        if (isRemoved)
-                        {
-                            currNode.Value.Semaphore.Dispose();
-                            _lockList.Remove(currNode);
-                        }
-                    }
-                    finally
-                    {
-                        if (!isRemoved)
-                        {
-                            currNode.Value.Semaphore.Release();
-
-                        }
-                    }
+                    currNode.Value.Semaphore.Dispose();
+                    _lockList.Remove(currNode);
                 }
+
             }
         }
         finally
@@ -459,7 +445,7 @@ public class LockManagerLinkedList
                         continue;
                     }
 
-                    var newLockInfo = new LockInfo { Key = key };
+                    var newLockInfo = new LockInfo { Key = key, InUseCount = 1 };
                     var newNode = new LinkedListNode<LockInfo>(newLockInfo);
                     _lockManager._lockList.AddLast(newNode);
                     _lockManager._nodeDic.TryAdd(key, newNode);
@@ -508,7 +494,7 @@ public class LockManagerLinkedList
                 {
                     foreach (var node in _nodeList)
                     {
-                        
+
                         node.Value.LastUsed = DateTime.UtcNow;
 
                         _lockManager._lockList.Remove(node);
