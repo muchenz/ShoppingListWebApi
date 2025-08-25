@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace ShoppingListWebApi.Data;
 
-public class LockManager
+public class LockManager : IDisposable
 {
 
     private class LockInfo
@@ -48,7 +48,7 @@ public class LockManager
         await _stateLock.WaitAsync();
         try
         {
-            var now = DateTime.UtcNow;
+            now = DateTime.UtcNow;
             foreach (var key in tempKeyList)
             {
                 if (_locksDic.TryGetValue(key, out var lockInfo))
@@ -75,6 +75,47 @@ public class LockManager
     {
         return new LockBuilder(this);
     }
+
+
+
+    private bool _disposed;
+
+    public void Dispose()
+    {
+        if (_disposed)
+            return;
+
+        _disposed = true;
+
+        _cleanupTimer.Change(Timeout.Infinite, Timeout.Infinite);
+        _cleanupTimer.Dispose();
+
+        //_cleanupLock.Wait();
+        //try
+        //{
+        //    _stateLock.Wait();
+        //    try
+        //    {
+        //        foreach (var kvp in _locksDic)
+        //        {
+        //            kvp.Value.Semaphore.Dispose();
+        //        }
+        //        _locksDic.Clear();
+        //    }
+        //    finally
+        //    {
+        //        _stateLock.Release();
+        //    }
+        //}
+        //finally
+        //{
+        //    _cleanupLock.Release();
+        //    _cleanupLock.Dispose();
+        //    _stateLock.Dispose();
+        //}
+    }
+
+
 
     public class LockBuilder
     {
