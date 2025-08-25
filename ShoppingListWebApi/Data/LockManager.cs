@@ -157,6 +157,9 @@ public class LockManagerPriorityQueue
     {
         public SemaphoreSlim Semaphore { get; } = new SemaphoreSlim(1, 1);
         public DateTime LastUsed { get; set; } = DateTime.UtcNow;
+
+        public int InUseCount { get; set; } = 0;
+
     }
 
     private readonly ConcurrentDictionary<string, LockInfo> _locksDic = new();
@@ -193,7 +196,7 @@ public class LockManagerPriorityQueue
                     _locksDic.TryGetValue(key, out LockInfo lockInfo))
                 {
                     if (lockInfo.LastUsed + _lockTTL < now
-                        && lockInfo.Semaphore.Wait(0))
+                        && lockInfo.InUseCount == 0)
                     {
                         bool isRemoved = false;
                         try
@@ -260,11 +263,12 @@ public class LockManagerPriorityQueue
             foreach (var key in keys)
             {
 
-                var lockInfo = _lockManager._locksDic.GetOrAdd(key, _ => new LockInfo());
+                var lockInfo = _lockManager._locksDic.GetOrAdd(key, _ => new LockInfo()); //fresh lockinfo will have lastused now
 
+                lockInfo.InUseCount++;
                 //await lockInfo.Semaphore.WaitAsync();
                 lockInfoList.Add((key, lockInfo));
-                _lockManager._expiryQueue.Enqueue(key, lockInfo.LastUsed.Ticks); 
+                //_lockManager._expiryQueue.Enqueue(key, lockInfo.LastUsed.Ticks); 
 
             }
             _lockManager._queueLock.Release();
@@ -304,6 +308,7 @@ public class LockManagerPriorityQueue
                         item.lockInfo.Semaphore.Release();
                         item.lockInfo.LastUsed = DateTime.UtcNow;
                         _lockManager._expiryQueue.Enqueue(item.key, item.lockInfo.LastUsed.Ticks);
+                        item.lockInfo.InUseCount--;
                     }
                 }
                 finally
