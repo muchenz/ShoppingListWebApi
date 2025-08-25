@@ -354,7 +354,7 @@ public class LockManagerLinkedList
         {
             var nowTicks = DateTime.UtcNow.Ticks;
             var now = DateTime.UtcNow;
-            var nodeTodelete = new List<LinkedListNode<LockInfo>>();
+            var nodeToDelete = new List<LinkedListNode<LockInfo>>();
             foreach (var node in _lockList)
             {
 
@@ -385,7 +385,7 @@ public class LockManagerLinkedList
                     }
                 }
             }
-            nodeTodelete.ForEach(a=> _lockList.Remove(a));
+            nodeToDelete.ForEach(a=> _lockList.Remove(a));
         }
         finally
         {
