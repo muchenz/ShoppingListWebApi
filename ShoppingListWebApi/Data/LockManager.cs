@@ -262,12 +262,17 @@ public class LockManagerPriorityQueue
 
                 var lockInfo = _lockManager._locksDic.GetOrAdd(key, _ => new LockInfo());
 
-                await lockInfo.Semaphore.WaitAsync();
+                //await lockInfo.Semaphore.WaitAsync();
                 lockInfoList.Add((key, lockInfo));
                 //  _lockManager._expiryQueue.Enqueue(key, lockInfo.LastUsed.Ticks); 
 
             }
             _lockManager._queueLock.Release();
+
+            foreach (var item in lockInfoList)
+            {
+                await item.lockInfo.Semaphore.WaitAsync();
+            }
             return new Releaser(lockInfoList, _lockManager);
         }
 
