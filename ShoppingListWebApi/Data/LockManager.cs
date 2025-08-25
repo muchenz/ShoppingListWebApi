@@ -266,12 +266,9 @@ public class LockManagerPriorityQueue
                 lockInfoList.Add((key, lockInfo));
                 //  _lockManager._expiryQueue.Enqueue(key, lockInfo.LastUsed.Ticks); 
 
-
-
             }
             _lockManager._queueLock.Release();
             return new Releaser(lockInfoList, _lockManager);
-
         }
 
     }
@@ -441,7 +438,7 @@ public class LockManagerLinkedList
                         _lockManager._lockList.AddLast(existingNode);
                         existingNode.Value.LastUsed = DateTime.UtcNow;
                         lockInfoList.Add(existingNode);
-                        await existingNode.Value.Semaphore.WaitAsync();
+                        //await existingNode.Value.Semaphore.WaitAsync();
                         continue;
                     }
 
@@ -451,7 +448,7 @@ public class LockManagerLinkedList
                     _lockManager._nodeDic.TryAdd(key, newNode);
 
                     lockInfoList.Add(newNode);
-                    await existingNode.Value.Semaphore.WaitAsync();
+                    //await existingNode.Value.Semaphore.WaitAsync();
 
                 }
             }
@@ -459,10 +456,10 @@ public class LockManagerLinkedList
             {
                 _lockManager._stateLock.Release();
 
-                //foreach (var node in lockInfoList)
-                //{
-                //    await node.Value.Semaphore.WaitAsync();
-                //}
+                foreach (var node in lockInfoList)
+                {
+                    await node.Value.Semaphore.WaitAsync();
+                }
             }
 
             return new Releaser(lockInfoList, _lockManager);
