@@ -198,7 +198,7 @@ public class LockManagerPriorityQueue
                     if (lockInfo.LastUsed + _lockTTL < now
                         && lockInfo.InUseCount == 0)
                     {
-
+ 
                         if (_locksDic.TryRemove(key, out _))
                         {
                             lockInfo.Semaphore.Dispose();
@@ -293,10 +293,10 @@ public class LockManagerPriorityQueue
                 {
                     foreach (var item in _lockInfoList)
                     {
-                        item.lockInfo.Semaphore.Release();
                         item.lockInfo.LastUsed = DateTime.UtcNow;
                         _lockManager._expiryQueue.Enqueue(item.key, item.lockInfo.LastUsed.Ticks);
                         item.lockInfo.InUseCount--;
+                        item.lockInfo.Semaphore.Release();
                     }
                 }
                 finally
@@ -487,8 +487,8 @@ public class LockManagerLinkedList
 
                         _lockManager._lockList.Remove(node);
                         _lockManager._lockList.AddLast(node);
-                        node.Value.Semaphore.Release();
                         node.Value.InUseCount--;
+                        node.Value.Semaphore.Release();
                     }
                 }
                 finally
