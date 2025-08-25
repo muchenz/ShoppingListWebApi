@@ -16,6 +16,7 @@ public class LockManager
     {
         public SemaphoreSlim Semaphore { get; } = new SemaphoreSlim(1, 1);
         public DateTime LastUsed { get; set; } = DateTime.UtcNow;
+        public int InUseCount = 0;
     }
 
     private readonly ConcurrentDictionary<string, LockInfo> _locksDic = new();
@@ -27,42 +28,37 @@ public class LockManager
     {
         _cleanupInterval = TimeSpan.FromMinutes(5);
 
-        _cleanupTimer = new Timer(_ => Cleanup(), null, _cleanupInterval, _cleanupInterval);
+        _cleanupTimer = new Timer(async _ => await Cleanup(), null, _cleanupInterval, _cleanupInterval);
     }
 
     private readonly SemaphoreSlim _cleanupLock = new SemaphoreSlim(1, 1);
+    private readonly SemaphoreSlim _stateLock = new SemaphoreSlim(1, 1);
 
-    private void Cleanup()
+    private async Task Cleanup()
     {
 
         if (!_cleanupLock.Wait(0))
         {
             return;
         }
+
+        var now = DateTime.UtcNow;
+        var tempKeyList = _locksDic.Where(kvp => kvp.Value.LastUsed + _lockTTL < now).Select(a => a.Key).ToList();
+
+        await _stateLock.WaitAsync();
         try
         {
             var now = DateTime.UtcNow;
-            foreach (var kvp in _locksDic)
+            foreach (var key in tempKeyList)
             {
-                var lockInfo = kvp.Value;
-                if (lockInfo.LastUsed + _lockTTL < now &&
-                    lockInfo.Semaphore.Wait(0))
+                if (_locksDic.TryGetValue(key, out var lockInfo))
                 {
-                    bool isRemoved = false;
-                    try
+                    if (lockInfo.LastUsed + _lockTTL < now &&
+                        lockInfo.InUseCount == 0)
                     {
-                        isRemoved = _locksDic.TryRemove(kvp.Key, out _);
-                        if (isRemoved)
+                        if (_locksDic.TryRemove(key, out _))
                         {
                             lockInfo.Semaphore.Dispose();
-                        }
-                    }
-                    finally
-                    {
-                        if (!isRemoved)
-                        {
-                            lockInfo.Semaphore.Release();
-
                         }
                     }
                 }
@@ -70,6 +66,7 @@ public class LockManager
         }
         finally
         {
+            _stateLock.Release();
             _cleanupLock.Release();
         }
     }
@@ -103,53 +100,74 @@ public class LockManager
 
         public async Task<IDisposable> LockAsync()
         {
+
             var keys = _keys.OrderBy(k => k).ToList();
 
             var lockInfos = new List<LockInfo>();
-
-            foreach (var key in keys)
+            try
             {
-                var lockInfo = _lockManager._locksDic.GetOrAdd(key, _ => new LockInfo());
+                await _lockManager._stateLock.WaitAsync();
 
-                await lockInfo.Semaphore.WaitAsync();
-                lockInfos.Add(lockInfo);
+                foreach (var key in keys)
+                {
+                    var lockInfo = _lockManager._locksDic.GetOrAdd(key, _ => new LockInfo());
+                    lockInfo.InUseCount++;
+                    lockInfos.Add(lockInfo);
+                }
+            }
+            finally
+            {
+                _lockManager._stateLock.Release();
+                foreach (var lockInfo in lockInfos)
+                {
+                    await lockInfo.Semaphore.WaitAsync();
+                }
 
             }
-
-            return new Releaser(lockInfos);
+            return new Releaser(_lockManager, lockInfos);
 
         }
 
     }
 
+
     private class Releaser : IDisposable
     {
+        private readonly LockManager _lockManager;
         private readonly List<LockInfo> _lockInfos;
         private bool _disposed = false;
 
-        public Releaser(List<LockInfo> lockInfos)
+        public Releaser(LockManager lockManager, List<LockInfo> lockInfos)
         {
+            _lockManager = lockManager;
             _lockInfos = lockInfos;
         }
 
 
         public void Dispose()
         {
-            if (!_disposed)
-            {
-                foreach (var lockInfo in _lockInfos)
-                {
-                    lockInfo.Semaphore.Release();
-                    lockInfo.LastUsed = DateTime.UtcNow;
-                }
+            if (_disposed) return;
 
+            _lockManager._stateLock.Wait();
+            try
+            {
+                foreach (var info in _lockInfos)
+                {
+                    info.LastUsed = DateTime.UtcNow;
+                    //Interlocked.Decrement(ref info.InUseCount);
+                    info.InUseCount--;
+                    info.Semaphore.Release();
+                }
                 _disposed = true;
+            }
+            finally
+            {
+                _lockManager._stateLock.Release();
+
             }
         }
     }
-
 }
-
 public class LockManagerPriorityQueue
 {
 
@@ -198,7 +216,7 @@ public class LockManagerPriorityQueue
                     if (lockInfo.LastUsed + _lockTTL < now
                         && lockInfo.InUseCount == 0)
                     {
- 
+
                         if (_locksDic.TryRemove(key, out _))
                         {
                             lockInfo.Semaphore.Dispose();
@@ -499,5 +517,4 @@ public class LockManagerLinkedList
             }
         }
     }
-
 }
