@@ -198,22 +198,10 @@ public class LockManagerPriorityQueue
                     if (lockInfo.LastUsed + _lockTTL < now
                         && lockInfo.InUseCount == 0)
                     {
-                        bool isRemoved = false;
-                        try
-                        {
-                            isRemoved = _locksDic.TryRemove(key, out _);
-                            if (isRemoved)
-                            {
-                                lockInfo.Semaphore.Dispose();
-                            }
-                        }
-                        finally
-                        {
-                            if (!isRemoved)
-                            {
-                                lockInfo.Semaphore.Release();
 
-                            }
+                        if (_locksDic.TryRemove(key, out _))
+                        {
+                            lockInfo.Semaphore.Dispose();
                         }
                     }
                 }
@@ -376,7 +364,7 @@ public class LockManagerLinkedList
                     break;
                 }
 
-                
+
                 if (_nodeDic.TryRemove(currNode.Value.Key, out _))
                 {
                     currNode.Value.Semaphore.Dispose();
