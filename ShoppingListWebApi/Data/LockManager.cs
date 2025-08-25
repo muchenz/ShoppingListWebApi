@@ -354,41 +354,39 @@ public class LockManagerLinkedList
         {
             var nowTicks = DateTime.UtcNow.Ticks;
             var now = DateTime.UtcNow;
-            var nodeToDelete = new List<LinkedListNode<LockInfo>>();
-            foreach (var lockInfo in _lockList)
+            var node = _lockList.First;
+            while ( node!=null)
             {
+                var currNode = node;
+                node = node.Next;
 
-                if (lockInfo.LastUsed + _lockTTL < now)
+                if (currNode.Value.LastUsed + _lockTTL >= now)
                 {
                     break;
                 }
 
-                if (lockInfo.Semaphore.Wait(0))
+                if (currNode.Value.Semaphore.Wait(0))
                 {
                     bool isRemoved = false;
                     try
                     {
-                        isRemoved = _nodeDic.TryRemove(lockInfo.Key, out _);
+                        isRemoved = _nodeDic.TryRemove(currNode.Value.Key, out _);
                         if (isRemoved)
                         {
-                            if (_nodeDic.TryGetValue(lockInfo.Key, out var node))
-                            {
-                                nodeToDelete.Add(node);
-                            }
-                            lockInfo.Semaphore.Dispose();
+                            currNode.Value.Semaphore.Dispose();
+                            _lockList.Remove(currNode);
                         }
                     }
                     finally
                     {
                         if (!isRemoved)
                         {
-                            lockInfo.Semaphore.Release();
+                            currNode.Value.Semaphore.Release();
 
                         }
                     }
                 }
             }
-            nodeToDelete.ForEach(a => _lockList.Remove(a));
         }
         finally
         {
@@ -443,7 +441,6 @@ public class LockManagerLinkedList
                         _lockManager._lockList.Remove(existingNode);
                         _lockManager._lockList.AddLast(existingNode);
                         existingNode.Value.LastUsed = DateTime.UtcNow;
-                        await existingNode.Value.Semaphore.WaitAsync();
                         lockInfoList.Add(existingNode);
                         continue;
                     }
