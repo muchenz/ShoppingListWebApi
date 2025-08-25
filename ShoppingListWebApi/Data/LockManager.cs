@@ -264,7 +264,7 @@ public class LockManagerPriorityQueue
 
                 //await lockInfo.Semaphore.WaitAsync();
                 lockInfoList.Add((key, lockInfo));
-                //  _lockManager._expiryQueue.Enqueue(key, lockInfo.LastUsed.Ticks); 
+                _lockManager._expiryQueue.Enqueue(key, lockInfo.LastUsed.Ticks); 
 
             }
             _lockManager._queueLock.Release();
@@ -325,7 +325,7 @@ public class LockManagerLinkedList
     {
         public SemaphoreSlim Semaphore { get; } = new SemaphoreSlim(1, 1);
         public DateTime LastUsed { get; set; } = DateTime.UtcNow;
-
+        public int InUseCount { get; set; } = 0;
         public string Key { get; set; } = string.Empty;
     }
 
@@ -361,7 +361,7 @@ public class LockManagerLinkedList
                 var currNode = node;
                 node = node.Next;
 
-                if (currNode.Value.LastUsed + _lockTTL >= now)
+                if (currNode.Value.LastUsed + _lockTTL >= now && currNode.Value.InUseCount > 0)
                 {
                     break;
                 }
@@ -439,9 +439,11 @@ public class LockManagerLinkedList
 
                     if (isExisting)
                     {
-                        _lockManager._lockList.Remove(existingNode);
-                        _lockManager._lockList.AddLast(existingNode);
-                        existingNode.Value.LastUsed = DateTime.UtcNow;
+                        //_lockManager._lockList.Remove(existingNode);
+                        //_lockManager._lockList.AddLast(existingNode);
+                        //existingNode.Value.LastUsed = DateTime.UtcNow;
+                        existingNode.Value.InUseCount++;
+
                         lockInfoList.Add(existingNode);
                         //await existingNode.Value.Semaphore.WaitAsync();
                         continue;
@@ -502,6 +504,7 @@ public class LockManagerLinkedList
                         _lockManager._lockList.Remove(node);
                         _lockManager._lockList.AddLast(node);
                         node.Value.Semaphore.Release();
+                        node.Value.InUseCount--;
                     }
                 }
                 finally
