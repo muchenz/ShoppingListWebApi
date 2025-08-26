@@ -268,8 +268,8 @@ public class LockManagerPriorityQueue
         }
         finally
         {
-            _cleanupLock.Release();
             _queueLock.Release();
+            _cleanupLock.Release();
         }
     }
 
@@ -537,6 +537,7 @@ public class LockManagerLinkedList
             if (!_disposed)
             {
                 await _lockManager._stateLock.WaitAsync();
+
                 try
                 {
                     foreach (var node in _nodeList)
@@ -552,8 +553,8 @@ public class LockManagerLinkedList
                 }
                 finally
                 {
-                    _lockManager._stateLock.Release();
                     _disposed = true;
+                    _lockManager._stateLock.Release();
                 }
             }
         }
