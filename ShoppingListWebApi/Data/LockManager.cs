@@ -470,7 +470,7 @@ public class LockManagerLinkedList
         {
             var keys = _keys.OrderBy(k => k).ToList();
 
-            var lockInfoList = new List<LinkedListNode<LockInfo>>();
+            var lockInfoNodeList = new List<LinkedListNode<LockInfo>>();
 
             try
             {
@@ -487,7 +487,7 @@ public class LockManagerLinkedList
                         //existingNode.Value.LastUsed = DateTime.UtcNow;
                         existingNode.Value.InUseCount++;
 
-                        lockInfoList.Add(existingNode);
+                        lockInfoNodeList.Add(existingNode);
                         //await existingNode.Value.Semaphore.WaitAsync();
                         continue;
                     }
@@ -497,7 +497,7 @@ public class LockManagerLinkedList
                     _lockManager._lockList.AddLast(newNode);
                     _lockManager._nodeDic.TryAdd(key, newNode);
 
-                    lockInfoList.Add(newNode);
+                    lockInfoNodeList.Add(newNode);
                     //await existingNode.Value.Semaphore.WaitAsync();
 
                 }
@@ -506,13 +506,13 @@ public class LockManagerLinkedList
             {
                 _lockManager._stateLock.Release();
 
-                foreach (var node in lockInfoList)
+                foreach (var node in lockInfoNodeList)
                 {
                     await node.Value.Semaphore.WaitAsync();
                 }
             }
 
-            return new Releaser(lockInfoList, _lockManager);
+            return new Releaser(lockInfoNodeList, _lockManager);
 
         }
 
