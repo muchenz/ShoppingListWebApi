@@ -72,6 +72,7 @@ public class TokenHttpClient
             }
 
             response = await httpClient.SendAsync(requestClone);
+
         }
 
         return response;

@@ -326,7 +326,7 @@ namespace ShoppingListWebApi.Controllers
             {
                 return Ok();
             }
-            return Unauthorized();
+            return Forbid(); // new ObjectResult(new ProblemDetails { Title = message.Message }) { StatusCode = 403 },();
         }
 
         [HttpGet("LogOut")]
