@@ -95,6 +95,7 @@ public class TokenClientService
                 //_stateService.StateInfo.IsTokenRefresing = true;
                 IsTokenRefresing = true; 
                 await RefreshTokensAsync();
+                    throw new UnauthorizedAccessException("Could not refresh token");
             }
         }
         finally
