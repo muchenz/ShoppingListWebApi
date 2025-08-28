@@ -140,10 +140,7 @@ namespace ShoppingListWebApi
                   {
                       if (context.Exception is SecurityTokenExpiredException)
                       {
-                          if (context.Scheme.Name != "NoLifetimeBearer")
-                          {
                               context.Response.Headers.Add("Token-Expired", "true");
-                          }
                       }
                       return Task.CompletedTask;
                   }
@@ -164,7 +161,7 @@ namespace ShoppingListWebApi
               {
                   ValidateIssuer = false,
                   ValidateAudience = false,
-                  ValidateLifetime = false,
+                  ValidateLifetime = true,
                   ValidateIssuerSigningKey = true,
                   IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration.GetSection("Secrets")["JWTSecurityKey"])),
                   ClockSkew = TimeSpan.FromMilliseconds(10)
