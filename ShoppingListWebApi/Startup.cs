@@ -140,8 +140,11 @@ namespace ShoppingListWebApi
                   {
                       if (context.Exception is SecurityTokenExpiredException)
                       {
-                              context.Response.Headers.Add("Token-Expired", "true");
+                          // this is working for every endpoints even if has differet schema like  "NoLifetimeBearer"
+                          // e.g  'GetNewToken'
+                          context.Response.Headers.Add("Token-Expired", "true");
                       }
+                      
                       return Task.CompletedTask;
                   }
               };
