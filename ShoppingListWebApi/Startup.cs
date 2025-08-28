@@ -140,7 +140,10 @@ namespace ShoppingListWebApi
                   {
                       if (context.Exception is SecurityTokenExpiredException)
                       {
-                          context.Response.Headers.Add("Token-Expired", "true");
+                          if (context.Scheme.Name != "NoLifetimeBearer")
+                          {
+                              context.Response.Headers.Add("Token-Expired", "true");
+                          }
                       }
                       return Task.CompletedTask;
                   }
@@ -186,6 +189,7 @@ namespace ShoppingListWebApi
                     //builder.AllowAnyOrigin();
                     builder.AllowAnyHeader();
                     builder.AllowAnyMethod();
+                    builder.WithExposedHeaders("Token-Expired");
                     //builder.AllowCredentials();
 
                 });
