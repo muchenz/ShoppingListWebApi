@@ -138,30 +138,10 @@ public class Startup
           {
               OnAuthenticationFailed = context =>
               {
-                  List<string> schemes = null;
-                  IEnumerable<AuthorizeAttribute> authorizeAttributes = null;
                   //------- avoid returnig "Token-Expired" for other schema is not necessary --- 
-                  try
+                  if (context.GetSchemes().Contains("NoLifetimeBearer"))
                   {
-                       authorizeAttributes = context.HttpContext.GetEndpoint()?
-                                                        .Metadata
-                                                        .GetOrderedMetadata<AuthorizeAttribute>() ?? Enumerable.Empty<AuthorizeAttribute>();
-
-                       schemes = authorizeAttributes
-                          .Select(a => (a.AuthenticationSchemes?
-                                        .Split(',', StringSplitOptions.RemoveEmptyEntries)))
-                          .Where(a => a != null)
-                          .SelectMany(a => a).ToList();
-
-
-                  }
-                  catch (Exception ex)
-                  {
-                      if (schemes.Contains("NoLifetimeBearer"))
-                      {
-                          return Task.CompletedTask;
-                      }
-                      var msg = ex.Message;
+                      return Task.CompletedTask;
                   }
 
                   //-------------
@@ -315,5 +295,32 @@ public class Startup
             endpoints.MapHub<SendRequest>("/chatHub");
         });
 
+    }
+}
+
+public static class AuthenticationFailedContextExtension
+{
+    public static List<string> GetSchemes(this Microsoft.AspNetCore.Authentication.JwtBearer.AuthenticationFailedContext context)
+    {
+        List<string> schemes = null;
+        IEnumerable<AuthorizeAttribute> authorizeAttributes = null;
+        try
+        {
+            authorizeAttributes = context.HttpContext.GetEndpoint()?
+                                             .Metadata
+                                             .GetOrderedMetadata<AuthorizeAttribute>() ?? Enumerable.Empty<AuthorizeAttribute>();
+            schemes = authorizeAttributes
+               .Select(a => (a.AuthenticationSchemes?
+                             .Split(',', StringSplitOptions.RemoveEmptyEntries)))
+               .Where(a => a != null)
+               .SelectMany(a => a).ToList();
+            return schemes;
+
+        }
+        catch (Exception ex)
+        {
+            return new List<string>();
+
+        }
     }
 }
