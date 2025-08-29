@@ -134,7 +134,7 @@ public class TokenService : ITokenService
             new Claim(JwtRegisteredClaimNames.Nbf, new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString()),
             //new Claim(JwtRegisteredClaimNames.Exp, new DateTimeOffset(DateTime.UtcNow.AddDays(1000)).ToUnixTimeSeconds().ToString()),
             new Claim(JwtRegisteredClaimNames.Jti, jti),
-            new Claim(JwtRegisteredClaimNames.Exp, new DateTimeOffset(DateTime.Now.AddSeconds(10)).ToUnixTimeSeconds().ToString()),
+            new Claim(JwtRegisteredClaimNames.Exp, new DateTimeOffset(DateTime.Now.AddSeconds(5)).ToUnixTimeSeconds().ToString()),
             new Claim(ClaimTypes.Version, version==null ? 1.ToString():version.ToString()),
             };
 
