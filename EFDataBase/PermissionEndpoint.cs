@@ -54,7 +54,7 @@ internal class PermissionEndpoint : IPermissionEndpoint
             SenderName = senderName
         };
 
-        return InvitationResult.Ok((user, invitation),"Ivitation was added.");
+        return InvitationResult.Ok((user, invitation));
     }
 
 }
