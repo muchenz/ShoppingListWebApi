@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using InvitationResult = Shared.DataEndpoints.Models.MessageAndStatusAndData<(Shared.DataEndpoints.Models.User, Shared.DataEndpoints.Models.Invitation)>;
+using InvitationResult = Shared.DataEndpoints.Models.Result<(Shared.DataEndpoints.Models.User, Shared.DataEndpoints.Models.Invitation)>;
 
 namespace EFDataBase;
 internal class PermissionEndpoint : IPermissionEndpoint
@@ -23,7 +23,7 @@ internal class PermissionEndpoint : IPermissionEndpoint
         _userEndpoint = userEndpoint;
     }
 
-    public async Task<MessageAndStatusAndData<(User InvitedUser, Invitation Invitation)>> InviteUserPermission(int listAggregationId, UserPermissionToListAggregation item, string senderName, int senderId)
+    public async Task<Result<(User InvitedUser, Invitation Invitation)>> InviteUserPermission(int listAggregationId, UserPermissionToListAggregation item, string senderName, int senderId)
     {
       
         var user = await _userEndpoint.GetUserByNameAsync(item.User.EmailAddress);

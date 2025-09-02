@@ -49,17 +49,17 @@ namespace ServiceMediatR.ListCommandAndQueries
             _listEndpoint = listEndpoint;
         }
 
-        public async Task<MessageAndStatusAndData<List>> Handle(AddListCommand request, CancellationToken cancellationToken)
+        public async Task<Result<List>> Handle(AddListCommand request, CancellationToken cancellationToken)
         {
 
             if (!await _listEndpoint.CheckIntegrityListAggrAsync(request.ParentId, request.ListAggregationId)) 
-                return MessageAndStatusAndData<List>.Error("Forbbidden.");
+                return Result<List>.Error("Forbbidden.");
 
 
             var res =  await _listEndpoint.AddListAsync(request.ParentId, request.Item, request.ListAggregationId);
 
 
-            return MessageAndStatusAndData<List>.Ok(res);
+            return Result<List>.Ok(res);
 
         }       
 

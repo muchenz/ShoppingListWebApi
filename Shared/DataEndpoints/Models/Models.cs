@@ -18,7 +18,7 @@ namespace Shared.DataEndpoints.Models
         public Log Inner { get; set; }
 
     }
-    public class MessageStaus
+    public class ErrorType
     {
         public const string OK = "OK";
         public const string Error = "ERROR";
@@ -29,59 +29,61 @@ namespace Shared.DataEndpoints.Models
 
 
     }
-    public class MessageAndStatus
+
+
+    public class Result
     {
-        public MessageAndStatus(string message, string status)
+        public Result(string message, string status)
         {
             Message= message;
             Status = status;
         }
 
-        public bool IsError => Status != MessageStaus.OK;
+        public bool IsError => Status != ErrorType.OK;
         public string Status { get; set; }
         public string Message { get; set; }
         public List<(string,string)> ValidationErrorList { get; set; }
 
-        public static MessageAndStatus Ok() =>
-           new MessageAndStatus(string.Empty, MessageStaus.OK);
-        public static MessageAndStatus Ok(string msg) =>
-           new MessageAndStatus(msg, MessageStaus.OK);
+        public static Result Ok() =>
+           new Result(string.Empty, ErrorType.OK);
+        public static Result Ok(string msg) =>
+           new Result(msg, ErrorType.OK);
 
-        public static MessageAndStatus Error(string msg) =>
-           new MessageAndStatus(msg, MessageStaus.Error);
-        public static MessageAndStatus Conflict(string msg) =>
-           new MessageAndStatus(msg, MessageStaus.Conflict);
-        public static MessageAndStatus NotFound(string msg) =>
-           new MessageAndStatus(msg, MessageStaus.NotFound);
+        public static Result Error(string msg) =>
+           new Result(msg, ErrorType.Error);
+        public static Result Conflict(string msg) =>
+           new Result(msg, ErrorType.Conflict);
+        public static Result NotFound(string msg) =>
+           new Result(msg, ErrorType.NotFound);
 
-        public static MessageAndStatus Forbidden(string msg) =>
-          new MessageAndStatus(msg, MessageStaus.Forbidden);
+        public static Result Forbidden(string msg) =>
+          new Result(msg, ErrorType.Forbidden);
     }
       
 
-    public class MessageAndStatusAndData<T> : MessageAndStatus
+    public class Result<T> : Result
     {
-        private MessageAndStatusAndData(T data, string msg, string status): base(msg, status)
+        private Result(T data, string msg, string status): base(msg, status)
         {
             Data = data;
         }
 
         public T Data { get; set; }
 
-        public static new MessageAndStatusAndData<T> Ok(T data) =>
-            new MessageAndStatusAndData<T>(data, string.Empty, MessageStaus.OK);
+        public static new Result<T> Ok(T data) =>
+            new Result<T>(data, string.Empty, ErrorType.OK);
 
-        public static new MessageAndStatusAndData<T> Ok(T data, string msg) =>
-           new MessageAndStatusAndData<T>(data, msg, MessageStaus.OK);
+        public static new Result<T> Ok(T data, string msg) =>
+           new Result<T>(data, msg, ErrorType.OK);
 
-        public static new MessageAndStatusAndData<T> Error(string msg) =>
-           new MessageAndStatusAndData<T>(default, msg, MessageStaus.Error);
-        public static new MessageAndStatusAndData<T> Conflict(string msg) =>
-          new MessageAndStatusAndData<T>(default, msg, MessageStaus.Conflict);
-        public static new MessageAndStatusAndData<T> NotFound(string msg) =>
-          new MessageAndStatusAndData<T>(default, msg, MessageStaus.NotFound);
-        public static new MessageAndStatusAndData<T> Forbidden(string msg) =>
-          new MessageAndStatusAndData<T>(default, msg, MessageStaus.Forbidden);
+        public static new Result<T> Error(string msg) =>
+           new Result<T>(default, msg, ErrorType.Error);
+        public static new Result<T> Conflict(string msg) =>
+          new Result<T>(default, msg, ErrorType.Conflict);
+        public static new Result<T> NotFound(string msg) =>
+          new Result<T>(default, msg, ErrorType.NotFound);
+        public static new Result<T> Forbidden(string msg) =>
+          new Result<T>(default, msg, ErrorType.Forbidden);
     }
 
     //public class MessageAndStatusAndData

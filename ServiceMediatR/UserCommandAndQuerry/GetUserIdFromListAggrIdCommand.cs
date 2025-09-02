@@ -34,7 +34,7 @@ namespace ServiceMediatR.UserCommandAndQuerry
         {
             _userEndpoint = userEndpoint;
         }
-        public async Task<MessageAndStatusAndData<IEnumerable<int>>> Handle(GetUserIdFromListAggrIdCommand request, CancellationToken cancellationToken)
+        public async Task<Result<IEnumerable<int>>> Handle(GetUserIdFromListAggrIdCommand request, CancellationToken cancellationToken)
         {
             var userList = await _userEndpoint.GetUserIdsFromListAggrIdAsync(request.ListAggrId);
 
@@ -44,7 +44,7 @@ namespace ServiceMediatR.UserCommandAndQuerry
             //if (userId != null)
              //   userList.Remove(int.Parse(userId));
 
-            return MessageAndStatusAndData<IEnumerable<int>>.Ok(userList.AsEnumerable());
+            return Result<IEnumerable<int>>.Ok(userList.AsEnumerable());
         }
     }
 }

@@ -37,15 +37,15 @@ namespace ServiceMediatR.ListItemCommandAndQueries
             _listItemEndpoint = listItemEndpoint;
         }
 
-        public async Task<MessageAndStatusAndData<ListItem>> Handle(SavePropertyCommand request, CancellationToken cancellationToken)
+        public async Task<Result<ListItem>> Handle(SavePropertyCommand request, CancellationToken cancellationToken)
         {
 
             if (!await CheckIntegrityListItemAsync(request.Item.ListItemId, request.ListAggregationId))
-                return MessageAndStatusAndData<ListItem>.Error("Forbbidden");
+                return Result<ListItem>.Error("Forbbidden");
 
             var listItem = await _listItemEndpoint.SavePropertyAsync(request.Item, request.PropertyName, request.ListAggregationId);
 
-            return MessageAndStatusAndData<ListItem>.Ok(listItem);
+            return Result<ListItem>.Ok(listItem);
         }
 
         Task<bool> CheckIntegrityListItemAsync(int listItemId, int listAggregationId)

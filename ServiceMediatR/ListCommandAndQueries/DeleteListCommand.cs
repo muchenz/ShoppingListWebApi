@@ -38,15 +38,15 @@ namespace ServiceMediatR.ListCommandAndQueries
             _listEndpoint = listEndpoint;
         }
 
-        public async Task<MessageAndStatusAndData<int>> Handle(DeleteListCommand request, CancellationToken cancellationToken)
+        public async Task<Result<int>> Handle(DeleteListCommand request, CancellationToken cancellationToken)
         {
 
-            if (!await _listEndpoint.CheckIntegrityListAsync(request.ItemId,  request.ListAggregationId)) return MessageAndStatusAndData<int>.Error("Forbbidden");
+            if (!await _listEndpoint.CheckIntegrityListAsync(request.ItemId,  request.ListAggregationId)) return Result<int>.Error("Forbbidden");
 
 
            var amount = await _listEndpoint.DeleteListAsync(request.ItemId, request.ListAggregationId);
 
-            return MessageAndStatusAndData<int>.Ok(amount);
+            return Result<int>.Ok(amount);
         }
        
     }

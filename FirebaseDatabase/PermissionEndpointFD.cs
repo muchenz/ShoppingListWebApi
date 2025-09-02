@@ -10,7 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Shared.DataEndpoints.Abstaractions;
 
-using InvitationResult = Shared.DataEndpoints.Models.MessageAndStatusAndData<(Shared.DataEndpoints.Models.User, Shared.DataEndpoints.Models.Invitation)>;
+using InvitationResult = Shared.DataEndpoints.Models.Result<(Shared.DataEndpoints.Models.User, Shared.DataEndpoints.Models.Invitation)>;
 
 namespace FirebaseDatabase;
 
@@ -50,7 +50,7 @@ internal class PermissionEndpointFD : IPermissionEndpoint
     }
 
 
-    public async Task<MessageAndStatusAndData<(User InvitedUser, Invitation Invitation)>> InviteUserPermission(int listAggregationId,
+    public async Task<Result<(User InvitedUser, Invitation Invitation)>> InviteUserPermission(int listAggregationId,
                 UserPermissionToListAggregation item, string senderName, int senderId)
     {
 

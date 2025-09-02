@@ -53,15 +53,15 @@ public class PermissionsController : ControllerBase
 
         ObjectResult result = message.Status switch
         {
-            MessageStaus.Conflict => new ConflictObjectResult(message.Message),
-            MessageStaus.OK => new OkObjectResult(message.Message),
-            MessageStaus.NotFound => new NotFoundObjectResult(message.Message),
-            MessageStaus.Forbidden => new ObjectResult(new ProblemDetails { Title = message.Message }) { StatusCode = 403 },
+            ErrorType.Conflict => new ConflictObjectResult(message.Message),
+            ErrorType.OK => new OkObjectResult(message.Message),
+            ErrorType.NotFound => new NotFoundObjectResult(message.Message),
+            ErrorType.Forbidden => new ObjectResult(new ProblemDetails { Title = message.Message }) { StatusCode = 403 },
             _ => new BadRequestObjectResult("Something wrong happens")
 
         };
 
-        if (message.Status == MessageStaus.OK)
+        if (message.Status == ErrorType.OK)
         {
             await _signarRService.SendRefreshMessageToUsersAsync(new List<int> { message.Data.InvitedUser.UserId },
                 SiganalREventName.InvitationAreChanged, signalRId: signalRId);

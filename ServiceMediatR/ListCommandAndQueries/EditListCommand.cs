@@ -33,19 +33,19 @@ namespace ServiceMediatR.ListCommandAndQueries
         {
             _listEndpoint = listEndpoint;
         }
-        public async Task<MessageAndStatusAndData<List>> Handle(EditListCommand request, CancellationToken cancellationToken)
+        public async Task<Result<List>> Handle(EditListCommand request, CancellationToken cancellationToken)
         {
 
 
 
              if (!await _listEndpoint.CheckIntegrityListAsync(request.List.ListId, request.ListAggregationId)) 
-                return MessageAndStatusAndData<List>.Error("Forbbidden");
+                return Result<List>.Error("Forbbidden");
 
             //_context.ListItems.Remove(_context.ListItems.Single(a => a.ListItemId == ItemId));
 
             var listItem = await _listEndpoint.EditListAsync(request.List, request.ListAggregationId);
 
-            return MessageAndStatusAndData<List>.Ok(listItem);
+            return Result<List>.Ok(listItem);
 
         }
     }
