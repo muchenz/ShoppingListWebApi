@@ -73,9 +73,6 @@ namespace Shared.DataEndpoints.Models
         public static new Result<T> Ok(T data) =>
             new Result<T>(data, string.Empty, ErrorType.OK);
 
-        public static new Result<T> Ok(T data, string msg) =>
-           new Result<T>(data, msg, ErrorType.OK);
-
         public static new Result<T> Error(string msg) =>
            new Result<T>(default, msg, ErrorType.Error);
         public static new Result<T> Conflict(string msg) =>

@@ -102,7 +102,7 @@ internal class PermissionEndpointFD : IPermissionEndpoint
 
         if (messageAndStatus is null)
         {
-            return InvitationResult.Ok((user,invitation),"Ivitation was added.");
+            return InvitationResult.Ok((user,invitation));
         }
 
         return messageAndStatus;
