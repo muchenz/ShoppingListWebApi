@@ -53,7 +53,7 @@ namespace ServiceMediatR.ListCommandAndQueries
         {
 
             if (!await _listEndpoint.CheckIntegrityListAggrAsync(request.ParentId, request.ListAggregationId)) 
-                return Result<List>.Error("Forbbidden.");
+                return Result<List>.Failure(Error.Forbidden("Forbbidden."));
 
 
             var res =  await _listEndpoint.AddListAsync(request.ParentId, request.Item, request.ListAggregationId);

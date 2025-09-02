@@ -51,17 +51,19 @@ public class PermissionsController : ControllerBase
 
         var message = await _permissionEndpoint.InviteUserPermission(listAggregationId, item, senderName, senderId);
 
-        ObjectResult result = message.Status switch
+        var error = message.GetError();
+
+        ObjectResult result = error switch
         {
-            ErrorType.Conflict => new ConflictObjectResult(message.Message),
-            ErrorType.OK => new OkObjectResult(message.Message),
-            ErrorType.NotFound => new NotFoundObjectResult(message.Message),
-            ErrorType.Forbidden => new ObjectResult(new ProblemDetails { Title = message.Message }) { StatusCode = 403 },
+            { ErrorType: ErrorTypes.Conflict }   => new ConflictObjectResult(error.Description),
+            { ErrorType: ErrorTypes.None } => new OkObjectResult(error.Description),
+            { ErrorType: ErrorTypes.NotFound } => new NotFoundObjectResult(error.Description),
+            { ErrorType: ErrorTypes.Forbidden } => new ObjectResult(new ProblemDetails { Title = error.Description }) { StatusCode = 403 },
             _ => new BadRequestObjectResult("Something wrong happens")
 
         };
 
-        if (message.Status == ErrorType.OK)
+        if (error.ErrorType == ErrorTypes.None)
         {
             await _signarRService.SendRefreshMessageToUsersAsync(new List<int> { message.Data.InvitedUser.UserId },
                 SiganalREventName.InvitationAreChanged, signalRId: signalRId);

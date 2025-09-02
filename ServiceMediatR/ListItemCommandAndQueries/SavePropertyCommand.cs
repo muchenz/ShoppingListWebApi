@@ -41,7 +41,9 @@ namespace ServiceMediatR.ListItemCommandAndQueries
         {
 
             if (!await CheckIntegrityListItemAsync(request.Item.ListItemId, request.ListAggregationId))
-                return Result<ListItem>.Error("Forbbidden");
+            {
+                return Result<ListItem>.Failure(Error.Forbidden("Forbbidden"));
+            }
 
             var listItem = await _listItemEndpoint.SavePropertyAsync(request.Item, request.PropertyName, request.ListAggregationId);
 

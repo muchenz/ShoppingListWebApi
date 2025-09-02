@@ -38,8 +38,10 @@ namespace ServiceMediatR.ListCommandAndQueries
 
 
 
-             if (!await _listEndpoint.CheckIntegrityListAsync(request.List.ListId, request.ListAggregationId)) 
-                return Result<List>.Error("Forbbidden");
+            if (!await _listEndpoint.CheckIntegrityListAsync(request.List.ListId, request.ListAggregationId))
+            {
+                return Result<List>.Failure(Error.Forbidden("Forbbidden"));
+            }
 
             //_context.ListItems.Remove(_context.ListItems.Single(a => a.ListItemId == ItemId));
 

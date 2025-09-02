@@ -298,13 +298,14 @@ namespace EFDataBase
 
         public async Task<User> LoginAsync(string userName, string password)
         {
-            var userFD = await _context.Users.AsQueryable().Where(a => a.EmailAddress == userName && a.Password == password
+            var userEntity = await _context.Users.AsQueryable().Where(a => a.EmailAddress == userName && a.Password == password
                                                 && (byte)a.LoginType == 1)
                 .FirstOrDefaultAsync();
 
-            if (userFD == null) return null;
+            if (userEntity == null) return null;
 
-            return _mapper.Map<User>(userFD);
+           
+            return _mapper.Map<User>(userEntity);
         }
 
         public async Task<User> Register(string userName, string password, LoginType loginType)
@@ -312,15 +313,16 @@ namespace EFDataBase
             if (await _context.Users.Where(a => a.EmailAddress == userName).AnyAsync())
                 return null;
 
-            var user = new UserEntity { EmailAddress = userName, Password = password, LoginType = (byte)loginType };
+            var userEntity = new UserEntity { EmailAddress = userName, Password = password, LoginType = (byte)loginType };
 
-            UserRolesEntity userRoles = new UserRolesEntity { User = user, RoleId = 1 };
+            UserRolesEntity userRoles = new UserRolesEntity { User = userEntity, RoleId = 1 };
 
             _context.Add(userRoles);
 
             await _context.SaveChangesAsync();
-
-            return _mapper.Map<User>(user);
+            userEntity.UserRoles = new HashSet<UserRolesEntity>(); // to silence mapper instead null excetopn because Roles
+                                                              // in  UserRolesEntity is null
+            return _mapper.Map<User>(userEntity);
         }
 
         public async Task<List<int>> GetUserIdsFromListAggrIdAsync(int listAggregationId)

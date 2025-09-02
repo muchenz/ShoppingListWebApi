@@ -65,14 +65,14 @@ internal class PermissionEndpointFD : IPermissionEndpoint
 
             if (await IsUserIsAdminOfListAggregatorAsync(transation, senderId, listAggregationId))
             {
-                messageAndStatus = InvitationResult.Forbidden("Sender has no permission.");
+                messageAndStatus = InvitationResult.Failure(Error.Forbidden("Sender has no permission."));
             }
 
             var userFD = await GetUserByNameAsync(transation, item.User.EmailAddress);
 
             if (userFD == null)
             {
-                messageAndStatus = InvitationResult.NotFound("User not exist.");
+                messageAndStatus = InvitationResult.Failure(Error.NotFound("User not exist."));
                 return;
             }
             user = _mapper.Map<User>(userFD);
@@ -81,7 +81,7 @@ internal class PermissionEndpointFD : IPermissionEndpoint
 
             if (IsUserInvitatedToListAggregation)
             {
-                messageAndStatus = InvitationResult.Conflict("Ivitation is on list.");
+                messageAndStatus = InvitationResult.Failure(Error.Conflict("Ivitation is on list."));
                 return;
             }
 
@@ -89,7 +89,7 @@ internal class PermissionEndpointFD : IPermissionEndpoint
 
             if (isUserHasListAgregation)
             {
-                messageAndStatus = InvitationResult.Conflict("User already has permission.");
+                messageAndStatus = InvitationResult.Failure(Error.Conflict("User already has permission."));
                 return;
             }
 

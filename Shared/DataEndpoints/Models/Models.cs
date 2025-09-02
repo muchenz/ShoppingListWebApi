@@ -16,12 +16,46 @@ namespace Shared.DataEndpoints.Models
         public string CreatedDate { get; set; }
         public long? UserId { get; set; }
         public Log Inner { get; set; }
-
+       
     }
-    public class ErrorType
+
+    public record Error
     {
-        public const string OK = "OK";
-        public const string Error = "ERROR";
+        public static readonly Error None = new(string.Empty, string.Empty, ErrorTypes.None);
+        //public static readonly Error NullValue = new("Error.NullValue", "Null value was provided", ErrorType.Failure);
+
+
+        private Error(string code, string description, string errorType)
+        {
+            (Code, Description, ErrorType) = (code, description, errorType);
+        }
+
+        public string Code { get; }
+        public string Description { get; }
+        public string ErrorType { get; }
+
+        //public static implicit operator Result(Error error) => Result.Failure(error);
+
+        public static Error Ok(string code, string description) => new(code, description, ErrorTypes.None);
+        public static Error Unexcepted(string code, string description) => new(code, description, ErrorTypes.Unexcepted);
+        public static Error ValidationError(string code, string description) => new(code, description, ErrorTypes.ValidationError);
+        public static Error Conflict(string code, string description) => new(code, description, ErrorTypes.Conflict);
+        public static Error NotFound(string code, string description) => new(code, description, ErrorTypes.NotFound);
+        public static Error Forbidden(string code, string description) => new(code, description, ErrorTypes.Forbidden);
+
+
+        public static Error Ok(string description) => new(string.Empty, description, ErrorTypes.None);
+        public static Error Unexcepted(string description) => new(string.Empty, description, ErrorTypes.Unexcepted);
+        public static Error ValidationError( string description) => new(string.Empty, description, ErrorTypes.ValidationError);
+        public static Error Conflict( string description) => new(string.Empty, description, ErrorTypes.Conflict);
+        public static Error NotFound(string description) => new(string.Empty, description, ErrorTypes.NotFound);
+        public static Error Forbidden(string description) => new(string.Empty, description, ErrorTypes.Forbidden);
+    }
+
+    public class ErrorTypes
+    {
+        public const string None = "NONE";
+        public const string Unexcepted = "UNEXCEPTED";
         public const string ValidationError = "VALIDATION_ERROR";
         public const string Conflict = "CONFLICT";
         public const string NotFound = "NOT_FOUND";
@@ -33,54 +67,57 @@ namespace Shared.DataEndpoints.Models
 
     public class Result
     {
-        public Result(string message, string status)
+
+        public Error GetError() => _errors.First();
+
+        Error[] _errors;
+        protected Result(bool isErros, Error error)
         {
-            Message= message;
-            Status = status;
+            _isError = isErros;
+            _errors = [error];
+
+        }
+        protected Result(bool isErros, Error[] errors)
+        {
+            _isError = isErros;
+            _errors = errors;
+
         }
 
-        public bool IsError => Status != ErrorType.OK;
-        public string Status { get; set; }
-        public string Message { get; set; }
-        public List<(string,string)> ValidationErrorList { get; set; }
+        private bool _isError = false;
+        public bool IsError => _isError;
+      
 
         public static Result Ok() =>
-           new Result(string.Empty, ErrorType.OK);
-        public static Result Ok(string msg) =>
-           new Result(msg, ErrorType.OK);
-
-        public static Result Error(string msg) =>
-           new Result(msg, ErrorType.Error);
-        public static Result Conflict(string msg) =>
-           new Result(msg, ErrorType.Conflict);
-        public static Result NotFound(string msg) =>
-           new Result(msg, ErrorType.NotFound);
-
-        public static Result Forbidden(string msg) =>
-          new Result(msg, ErrorType.Forbidden);
+           new Result(true, Error.None);
+        
+        public static Result Failure(Error error) =>
+           new Result(false, error);
+        public static Result Failure(Error[] errors) =>
+            new Result(false, errors);
     }
       
 
     public class Result<T> : Result
     {
-        private Result(T data, string msg, string status): base(msg, status)
+        private Result(T data, bool isError, Error error): base(isError, error)
         {
             Data = data;
         }
-
+        private Result(T data, bool isError, Error[] errors) : base(isError, errors)
+        {
+            Data = data;
+        }
         public T Data { get; set; }
 
         public static new Result<T> Ok(T data) =>
-            new Result<T>(data, string.Empty, ErrorType.OK);
+            new Result<T>(data, true, Error.None);
 
-        public static new Result<T> Error(string msg) =>
-           new Result<T>(default, msg, ErrorType.Error);
-        public static new Result<T> Conflict(string msg) =>
-          new Result<T>(default, msg, ErrorType.Conflict);
-        public static new Result<T> NotFound(string msg) =>
-          new Result<T>(default, msg, ErrorType.NotFound);
-        public static new Result<T> Forbidden(string msg) =>
-          new Result<T>(default, msg, ErrorType.Forbidden);
+        public static new Result<T> Failure(Error error) =>
+           new Result<T>(default, false, error);
+        public static new Result<T> Failure(Error[] errors) =>
+          new Result<T>(default, false, errors);
+
     }
 
     //public class MessageAndStatusAndData

@@ -29,19 +29,19 @@ internal class PermissionEndpoint : IPermissionEndpoint
         var user = await _userEndpoint.GetUserByNameAsync(item.User.EmailAddress);
 
         if (user == null)
-            return InvitationResult.NotFound( "User not exist." );
+            return InvitationResult.Failure(Error.NotFound( "User not exist." ));
 
         var IsUserInvitatedToListAggregation = await _userEndpoint.IsUserInvitatedToListAggregationAsync(item.User.EmailAddress, listAggregationId);
 
         if (IsUserInvitatedToListAggregation)
-            return InvitationResult.Conflict("Ivitation is on list" );
+            return InvitationResult.Failure(Error.Conflict("Ivitation is on list" ));
 
         //bbbb = _context.UserListAggregators.AsQueryable().Where(a => a.UserId == user.UserId && a.ListAggregatorId == listAggregationId).Any();
 
         var isUserHasListAgregation = await _userEndpoint.IsUserHasListAggregatorAsync(user.UserId, listAggregationId);
 
         if (isUserHasListAgregation)
-            return InvitationResult.Conflict("User already has permission." );
+            return InvitationResult.Failure(Error.Conflict("User already has permission." ));
 
 
         await _userEndpoint.AddInvitationAsync(item.User.EmailAddress, listAggregationId, item.Permission, senderName);
