@@ -37,7 +37,7 @@ namespace Shared.DataEndpoints.Models
         //public static implicit operator Result(Error error) => Result.Failure(error);
 
         public static Error Ok(string code, string description) => new(code, description, ErrorTypes.None);
-        public static Error Unexcepted(string code, string description) => new(code, description, ErrorTypes.Unexcepted);
+        public static Error Unexpected(string code, string description) => new(code, description, ErrorTypes.Unexpected);
         public static Error ValidationError(string code, string description) => new(code, description, ErrorTypes.ValidationError);
         public static Error Conflict(string code, string description) => new(code, description, ErrorTypes.Conflict);
         public static Error NotFound(string code, string description) => new(code, description, ErrorTypes.NotFound);
@@ -45,7 +45,7 @@ namespace Shared.DataEndpoints.Models
 
 
         public static Error Ok(string description) => new(string.Empty, description, ErrorTypes.None);
-        public static Error Unexcepted(string description) => new(string.Empty, description, ErrorTypes.Unexcepted);
+        public static Error Unexpected(string description) => new(string.Empty, description, ErrorTypes.Unexpected);
         public static Error ValidationError( string description) => new(string.Empty, description, ErrorTypes.ValidationError);
         public static Error Conflict( string description) => new(string.Empty, description, ErrorTypes.Conflict);
         public static Error NotFound(string description) => new(string.Empty, description, ErrorTypes.NotFound);
@@ -55,7 +55,7 @@ namespace Shared.DataEndpoints.Models
     public class ErrorTypes
     {
         public const string None = "NONE";
-        public const string Unexcepted = "UNEXCEPTED";
+        public const string Unexpected = "UNEXCEPTED";
         public const string ValidationError = "VALIDATION_ERROR";
         public const string Conflict = "CONFLICT";
         public const string NotFound = "NOT_FOUND";
