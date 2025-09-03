@@ -69,6 +69,7 @@ namespace Shared.DataEndpoints.Models
     {
 
         public Error GetError() => _errors.First();
+        public Error[] GetErrors() => _errors;
 
         Error[] _errors;
         protected Result(bool isErros, Error error)
@@ -79,6 +80,10 @@ namespace Shared.DataEndpoints.Models
         }
         protected Result(bool isErros, Error[] errors)
         {
+            if (errors == null || errors.Length == 0)
+            {
+                throw new ArgumentException("'Eerrors' must be not empty or null.");
+            }
             _isError = isErros;
             _errors = errors;
 
