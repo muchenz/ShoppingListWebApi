@@ -50,6 +50,7 @@ namespace Shared.DataEndpoints.Models
         public static Error Conflict( string description) => new(string.Empty, description, ErrorTypes.Conflict);
         public static Error NotFound(string description) => new(string.Empty, description, ErrorTypes.NotFound);
         public static Error Forbidden(string description) => new(string.Empty, description, ErrorTypes.Forbidden);
+        public static Error Unauthorized(string description) => new(string.Empty, description, ErrorTypes.Unauthorized);
     }
 
     public class ErrorTypes
@@ -60,6 +61,7 @@ namespace Shared.DataEndpoints.Models
         public const string Conflict = "CONFLICT";
         public const string NotFound = "NOT_FOUND";
         public const string Forbidden = "FORBIDDEN";
+        public const string Unauthorized = "UNAUTHORIZED";
 
 
     }

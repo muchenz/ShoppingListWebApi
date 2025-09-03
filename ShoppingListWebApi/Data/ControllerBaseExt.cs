@@ -35,11 +35,16 @@ public static class ControllerBaseExt
         //    _ => new BadRequestObjectResult("Something wrong happens")
 
         //};
-        ObjectResult objectResult = controller.Problem(title: error.Description, statusCode: GetHttpCode(error));
         
-        return objectResult;
+        return ReturnResultError(controller, error);
     }
 
+    public static ActionResult ReturnResultError(this ControllerBase controller, Error error)
+    {
+        ObjectResult objectResult = controller.Problem(title: error.Description, statusCode: GetHttpCode(error));
+
+        return objectResult;
+    }
     private static ActionResult ValidationErrors(ControllerBase controller, Error[] errors)
     {
         
@@ -65,6 +70,7 @@ public static class ControllerBaseExt
             ErrorTypes.NotFound => StatusCodes.Status404NotFound,
             ErrorTypes.Forbidden => StatusCodes.Status403Forbidden,
             ErrorTypes.ValidationError => StatusCodes.Status400BadRequest,
+            ErrorTypes.Unauthorized => StatusCodes.Status401Unauthorized,
             _ => 500
         };
     }
