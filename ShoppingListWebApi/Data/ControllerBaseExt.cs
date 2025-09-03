@@ -71,6 +71,7 @@ public static class ControllerBaseExt
             ErrorTypes.Forbidden => StatusCodes.Status403Forbidden,
             ErrorTypes.ValidationError => StatusCodes.Status400BadRequest,
             ErrorTypes.Unauthorized => StatusCodes.Status401Unauthorized,
+            ErrorTypes.Unexpected => StatusCodes.Status500InternalServerError,
             _ => 500
         };
     }
