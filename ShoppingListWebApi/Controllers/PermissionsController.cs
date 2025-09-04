@@ -20,7 +20,7 @@ using System.Xml.Linq;
 namespace ShoppingListWebApi.Controllers;
 [Route("api/[controller]")]
 [ApiController]
-public class PermissionsController : ControllerBase
+public class PermissionsController : ApiControllerBase// ControllerBase
 {
     private readonly IMapper _mapper;
     private readonly SignarRService _signarRService;
@@ -51,25 +51,28 @@ public class PermissionsController : ControllerBase
 
         var message = await _permissionEndpoint.InviteUserPermission(listAggregationId, item, senderName, senderId);
 
-        var error = message.GetError();
-
-        ObjectResult result = error switch
+        if (message.IsError)
         {
-            { ErrorType: ErrorTypes.Conflict }   => new ConflictObjectResult(error.Description),
-            { ErrorType: ErrorTypes.None } => new OkObjectResult(error.Description),
-            { ErrorType: ErrorTypes.NotFound } => new NotFoundObjectResult(error.Description),
-            { ErrorType: ErrorTypes.Forbidden } => new ObjectResult(new ProblemDetails { Title = error.Description }) { StatusCode = 403 },
-            _ => new BadRequestObjectResult("Something wrong happens")
-
-        };
-
-        if (error.ErrorType == ErrorTypes.None)
-        {
-            await _signarRService.SendRefreshMessageToUsersAsync(new List<int> { message.Data.InvitedUser.UserId },
-                SiganalREventName.InvitationAreChanged, signalRId: signalRId);
+            return ReturnResultError(message);
         }
 
-        return result;
+        //ObjectResult result = error switch
+        //{
+        //    { ErrorType: ErrorTypes.Conflict }   => new ConflictObjectResult(error.Description),
+        //    { ErrorType: ErrorTypes.None } => new OkObjectResult(error.Description),
+        //    { ErrorType: ErrorTypes.NotFound } => new NotFoundObjectResult(error.Description),
+        //    { ErrorType: ErrorTypes.Forbidden } => new ObjectResult(new ProblemDetails { Title = error.Description }) { StatusCode = 403 },
+        //    _ => new BadRequestObjectResult("Something wrong happens")
+
+        //};
+
+        //if (error.ErrorType == ErrorTypes.None)
+        //{
+            await _signarRService.SendRefreshMessageToUsersAsync(new List<int> { message.Data.InvitedUser.UserId },
+                SiganalREventName.InvitationAreChanged, signalRId: signalRId);
+        //}
+
+        return Ok(message.Data);
     }
 
     //[HttpPost("AddUserPermission")]  // not used, 
