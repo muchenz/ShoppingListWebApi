@@ -93,15 +93,16 @@ namespace Shared.DataEndpoints.Models
 
         private bool _isError = false;
         public bool IsError => _isError;
-      
+        public bool IsSuccess => !_isError;
+
 
         public static Result Ok() =>
-           new Result(true, Error.None);
+           new Result(false, Error.None);
         
         public static Result Failure(Error error) =>
-           new Result(false, error);
+           new Result(true, error);
         public static Result Failure(Error[] errors) =>
-            new Result(false, errors);
+            new Result(true, errors);
     }
       
 
@@ -118,12 +119,12 @@ namespace Shared.DataEndpoints.Models
         public T Data { get; set; }
 
         public static new Result<T> Ok(T data) =>
-            new Result<T>(data, true, Error.None);
+            new Result<T>(data, false, Error.None);
 
         public static new Result<T> Failure(Error error) =>
-           new Result<T>(default, false, error);
+           new Result<T>(default, true, error);
         public static new Result<T> Failure(Error[] errors) =>
-          new Result<T>(default, false, errors);
+          new Result<T>(default, true, errors);
 
     }
 
