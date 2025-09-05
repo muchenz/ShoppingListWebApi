@@ -72,7 +72,7 @@
     private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
     int userId;
-   
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -83,15 +83,29 @@
         {
             var authProvider = await authenticationStateProvider.GetAuthenticationStateAsync();
 
-            
+
 
             var sUserId = authProvider.User.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier).FirstOrDefault()?.Value;
             if (sUserId != null)
             {
-                userId = int.Parse(sUserId);
-                SignalRInit();
+                //userId = int.Parse(sUserId);
                 NuberOfInvitations = (await userService.GetInvitationsListAsync()).Count;
             }
+         SignalRInit();
+
+         authenticationStateProvider.AuthenticationStateChanged += async task =>
+         {
+             var authState = await task;
+             var user = authState.User;
+
+             if (user.Identity?.IsAuthenticated == true)
+             {
+                 SignalRInit();
+                 return;
+             }
+             SignalRToDispose?.Dispose();
+         };
+
 
 
         }

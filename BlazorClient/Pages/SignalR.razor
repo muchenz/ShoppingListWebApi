@@ -52,7 +52,10 @@
         var isAuth = authState.User.Identity?.IsAuthenticated ?? false;
 
         if (!signalRService.IsConnected && isAuth)
+        {
             await signalRService.StartConnectionAsync();
+            _signalRStarted = true;
+        }
     }
 
 

@@ -16,7 +16,7 @@ namespace BlazorClient.Data
 {
     public class SignalRHandlers
     {
-
+        // function is twice rejestered, investigate later maybe this is problem sometimes
         public static async Task SignalRInvitationInitAsync(
             UserService userService,
              Action<List<Invitation>> SetInvitation,
