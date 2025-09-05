@@ -48,22 +48,30 @@ namespace FirebaseDatabase
 
         public async Task AddInvitationAsync(string toUserName, int listAggregationId, int permission, string fromSenderName)
         {
-            var invitationFD = new InvitationFD
-            {
-                EmailAddress = toUserName,
-                ListAggregatorId = listAggregationId,
-                PermissionLevel = permission,
-                SenderName = fromSenderName
-            };
+          
 
             await Db.RunTransactionAsync(async transation =>
             {
 
+                var userFDRef = _usersCol.WhereEqualTo(nameof(UserFD.EmailAddress), toUserName);
+                var userFDSnap = await transation.GetSnapshotAsync(userFDRef);
+                var userFD = userFDSnap.First().ConvertTo<UserFD>();
 
                 var indexRef = _indexesCol.Document("indexes");
                 var indesSnap = await transation.GetSnapshotAsync(indexRef);
                 var index = indesSnap.GetValue<long>("invitations");
                 var indexNew = index + 1;
+
+
+                var invitationFD = new InvitationFD
+                {
+                    EmailAddress = toUserName,
+                    UserId = userFD.UserId,
+                    ListAggregatorId = listAggregationId,
+                    PermissionLevel = permission,
+                    SenderName = fromSenderName
+                };
+
 
 
                 var newDocRef = _invitationsCol.Document((indexNew).ToString());

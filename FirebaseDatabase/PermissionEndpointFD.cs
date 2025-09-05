@@ -63,9 +63,10 @@ internal class PermissionEndpointFD : IPermissionEndpoint
         await Db.RunTransactionAsync(async transation =>
         {
 
-            if (await IsUserIsAdminOfListAggregatorAsync(transation, senderId, listAggregationId))
+            if (!await IsUserIsAdminOfListAggregatorAsync(transation, senderId, listAggregationId))
             {
                 messageAndStatus = InvitationResult.Failure(Error.Forbidden("Sender has no permission."));
+                return;
             }
 
             var userFD = await GetUserByNameAsync(transation, item.User.EmailAddress);
@@ -94,7 +95,7 @@ internal class PermissionEndpointFD : IPermissionEndpoint
             }
 
 
-            invitation =  await AddInvitationAsync(transation, item.User.EmailAddress, listAggregationId, item.Permission, senderName);
+            invitation =  await AddInvitationAsync(transation, userFD, listAggregationId, item.Permission, senderName);
 
         });
 
@@ -119,6 +120,8 @@ internal class PermissionEndpointFD : IPermissionEndpoint
 
 
         if (userListAggrSnap.Documents.Count == 0) return false;
+
+        var userListAggr = userListAggrSnap.Documents.First().ConvertTo<UserListAggregatorFD>();
 
         return userListAggrSnap.Documents.First().ConvertTo<UserListAggregatorFD>().PermissionLevel == 1;
     }
@@ -153,11 +156,12 @@ internal class PermissionEndpointFD : IPermissionEndpoint
 
         return userListAggrSnap.Documents.Count > 0;
     }
-    private async Task<Invitation> AddInvitationAsync(Transaction transation, string toUserName, int listAggregationId, int permission, string fromSenderName)
+    private async Task<Invitation> AddInvitationAsync(Transaction transation, UserFD userFD, int listAggregationId, int permission, string fromSenderName)
     {
         var invitationFD = new InvitationFD
         {
-            EmailAddress = toUserName,
+            EmailAddress = userFD.EmailAddress,
+            UserId = userFD.UserId,
             ListAggregatorId = listAggregationId,
             PermissionLevel = permission,
             SenderName = fromSenderName

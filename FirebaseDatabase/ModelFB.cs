@@ -130,6 +130,8 @@ namespace FirebaseDatabase
         [FirestoreProperty]
         public int InvitationId { get; set; }
         [FirestoreProperty]
+        public int UserId { get; set; }
+        [FirestoreProperty]
         public string EmailAddress { get; set; }
         [FirestoreProperty]
         public int PermissionLevel { get; set; }
