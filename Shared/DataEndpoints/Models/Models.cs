@@ -141,6 +141,7 @@ namespace Shared.DataEndpoints.Models
     {
         public int InvitationId { get; set; }
         public string EmailAddress { get; set; }
+        public int UserId { get; set; }
         public int PermissionLevel { get; set; }
         public int ListAggregatorId { get; set; }
         public string ListAggregatorName { get; set; }
