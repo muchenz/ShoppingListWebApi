@@ -119,9 +119,12 @@ namespace EFDataBase
         public async Task AddInvitationAsync(string toUserName, int listAggregationId, int permission, string fromSenderName)
         {
 
+            var userEntity = await _context.Users.Where(a => a.EmailAddress == toUserName).FirstOrDefaultAsync();
+
             var invitationEntity = new InvitationEntity
             {
                 EmailAddress = toUserName,
+                UserId = userEntity.UserId,
                 ListAggregatorId = listAggregationId,
                 PermissionLevel = permission,
                 SenderName = fromSenderName

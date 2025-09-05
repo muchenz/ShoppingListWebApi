@@ -110,6 +110,8 @@ namespace EFDataBase
 
                     entity.HasIndex(a => a.EmailAddress).IsUnique();
 
+                    entity.Property(e => e.UserId).HasColumnName("UserId");
+
                     entity.Property(e => e.EmailAddress)
                    .HasColumnName("EmailAddress")
                    .HasMaxLength(100)
