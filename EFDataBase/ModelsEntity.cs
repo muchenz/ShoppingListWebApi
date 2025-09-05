@@ -24,6 +24,7 @@ namespace EFDataBase
     public class InvitationEntity
     {
         public int InvitationId { get; set; }
+        public int UserId { get; set; }
         public string EmailAddress { get; set; }
         public int PermissionLevel { get; set; }
         public int ListAggregatorId { get; set; }
