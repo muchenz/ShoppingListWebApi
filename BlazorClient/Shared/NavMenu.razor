@@ -73,7 +73,6 @@
 
     int userId;
 
-
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
@@ -91,20 +90,26 @@
                 //userId = int.Parse(sUserId);
                 NuberOfInvitations = (await userService.GetInvitationsListAsync()).Count;
             }
-         SignalRInit();
+            SignalRInit();
 
-         authenticationStateProvider.AuthenticationStateChanged += async task =>
-         {
-             var authState = await task;
-             var user = authState.User;
+            authenticationStateProvider.AuthenticationStateChanged += async task =>
+            {
+                var authState = await task;
+                var user = authState.User;
 
-             if (user.Identity?.IsAuthenticated == true)
-             {
-                 SignalRInit();
-                 return;
-             }
-             SignalRToDispose?.Dispose();
-         };
+                if (user.Identity?.IsAuthenticated == true && SignalRToDispose != null)
+                {
+                    return;
+                }
+
+                if (user.Identity?.IsAuthenticated == true && SignalRToDispose == null)
+                {
+                    SignalRInit();
+                    return;
+                }
+                SignalRToDispose?.Dispose();
+                SignalRToDispose = null;
+            };
 
 
 
@@ -126,9 +131,9 @@
 
     void SignalRInit()
     {
-        signalRService.JoinToHub(()=>
+        signalRService.JoinToHub(() =>
         SignalRToDispose = signalRService.RegisterInvitationAreChanedHandlers
-        ( async () =>
+        (async () =>
            await SignalRHandlers.SignalRInvitationInitAsync(
         userService,
         (_) => { },
@@ -139,9 +144,9 @@
     }
 
 
-   
 
-    IDisposable SignalRToDispose;
+
+    IDisposable SignalRToDispose = null;
 
     public void Dispose()
     {
