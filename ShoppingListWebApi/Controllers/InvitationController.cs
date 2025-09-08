@@ -40,11 +40,11 @@ namespace ShoppingListWebApi.Controllers
         [Authorize]
         public async Task<List<Invitation>> GetInvitationsList()
         {
-            var userName = User.Claims.Where(a => a.Type == ClaimTypes.Name).FirstOrDefault().Value;
+            var userId = User.Claims.Where(a => a.Type == ClaimTypes.NameIdentifier).FirstOrDefault().Value;
 
             //TODO: 'userName' should be get from context
 
-            var invitationsList = await _invitationEndpoint.GetInvitationsListAsync(userName);
+            var invitationsList = await _invitationEndpoint.GetInvitationsListAsync(int.Parse(userId));
 
             return invitationsList;
         }
