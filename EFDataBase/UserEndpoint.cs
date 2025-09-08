@@ -129,7 +129,6 @@ namespace EFDataBase
                 SenderName = fromSenderName
             };
 
-
             _context.Add(invitationEntity);
             await _context.SaveChangesAsync();
         }

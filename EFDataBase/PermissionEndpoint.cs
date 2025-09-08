@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using Shared.DataEndpoints.Abstaractions;
 using Shared.DataEndpoints.Models;
 using System;
@@ -25,27 +26,33 @@ internal class PermissionEndpoint : IPermissionEndpoint
 
     public async Task<Result<(User InvitedUser, Invitation Invitation)>> InviteUserPermission(int listAggregationId, UserPermissionToListAggregation item, string senderName, int senderId)
     {
-      
+
         var user = await _userEndpoint.GetUserByNameAsync(item.User.EmailAddress);
 
         if (user == null)
-            return InvitationResult.Failure(Error.NotFound( "User not exist." ));
+            return InvitationResult.Failure(Error.NotFound("User not exist."));
 
         var IsUserInvitatedToListAggregation = await _userEndpoint.IsUserInvitatedToListAggregationAsync(user.UserId, listAggregationId);
 
         if (IsUserInvitatedToListAggregation)
-            return InvitationResult.Failure(Error.Conflict("Ivitation is on list" ));
+            return InvitationResult.Failure(Error.Conflict("Ivitation is on list"));
 
         //bbbb = _context.UserListAggregators.AsQueryable().Where(a => a.UserId == user.UserId && a.ListAggregatorId == listAggregationId).Any();
 
         var isUserHasListAgregation = await _userEndpoint.IsUserHasListAggregatorAsync(user.UserId, listAggregationId);
 
         if (isUserHasListAgregation)
-            return InvitationResult.Failure(Error.Conflict("User already has permission." ));
+            return InvitationResult.Failure(Error.Conflict("User already has permission."));
 
+        try
+        {
+            await _userEndpoint.AddInvitationAsync(item.User.EmailAddress, listAggregationId, item.Permission, senderName);
 
-        await _userEndpoint.AddInvitationAsync(item.User.EmailAddress, listAggregationId, item.Permission, senderName);
-
+        }
+        catch (DbUpdateException ex)
+        {
+            return InvitationResult.Failure(Error.Unexpected("Failed to add invitation. Refresh data and try again."));
+        }
         var invitation = new Invitation
         {
             EmailAddress = user.EmailAddress,

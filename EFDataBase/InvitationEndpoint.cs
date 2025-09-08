@@ -26,30 +26,62 @@ namespace EFDataBase
         public async Task<List<Invitation>> GetInvitationsListAsync(int userId)
         {
 
-            var list_Invi_Aggr = from invi in _context.Invitations
-                                 where invi.UserId == userId
+            // ------------- old wersion 
+            //var list_Invi_Aggr = from invi in _context.Invitations
+            //                     where invi.EmailAddress == userName
+            //                     join aggr in _context.ListAggregators on invi.ListAggregatorId equals aggr.ListAggregatorId into invi_aggr
+            //                     from aggrOrNull in invi_aggr.DefaultIfEmpty()
+            //                     select new { Invitation = invi, ListAggr = aggrOrNull };
+
+
+            //var list_Invi_Aggr = await _context.Invitations
+            //                 .Where(i => i.UserId == userId)
+            //                 .Include(i => i.ListAggregator)
+            //                 .Include(i => i.User)
+            //                 .ToListAsync();
+
+
+            //----------- tiks because EF not support two left join in one query
+
+            var invistations = _context.Invitations.AsQueryable().Where(a => a.UserId == userId).AsEnumerable();
+
+            var list_Invi_Aggr = from invi in invistations
                                  join aggr in _context.ListAggregators on invi.ListAggregatorId equals aggr.ListAggregatorId into invi_aggr
                                  join usser in _context.Users on invi.UserId equals usser.UserId into invi_usser
                                  from aggrOrNull in invi_aggr.DefaultIfEmpty()
                                  from usseOrNull in invi_usser.DefaultIfEmpty()
                                  select new { Invitation = invi, ListAggr = aggrOrNull, Usser = usseOrNull };
+            // ---------------------
+
+
+            //----------- this not work  because EF not support two left join in one query
+
+            //var list_Invi_Aggr = from invi in _context.Invitations
+            //                     where invi.UserId == userId
+            //                     join aggr in _context.ListAggregators on invi.ListAggregatorId equals aggr.ListAggregatorId into invi_aggr
+            //                     join usser in _context.Users on invi.UserId equals usser.UserId into invi_usser
+            //                     from aggrOrNull in invi_aggr.DefaultIfEmpty()
+            //                     from usseOrNull in invi_usser.DefaultIfEmpty()
+            //                     select new { Invitation = invi, ListAggr = aggrOrNull, Usser = usseOrNull };
+            // ---------------------
 
 
             //  List<InvitationEntity> toDeleteEntity = new List<InvitationEntity>();
 
 
-            foreach (var item in list_Invi_Aggr)
-            {
-                if (item.ListAggr == null || item.Usser == null)
-                {
-                    _context.Remove(item.Invitation);
-                    //toDeleteEntity.Add(item.Invitation);
-                }
-            }
+            //foreach (var item in list_Invi_Aggr)
+            //{
+            //    if (item.ListAggr == null || item.Usser == null)
+            //    {
+            //        _context.Remove(item.Invitation);
+            //        //toDeleteEntity.Add(item.Invitation);
+            //    }
+            //}
 
-            await _context.SaveChangesAsync();
+            //await _context.SaveChangesAsync();
 
-            var listInviAggr = await list_Invi_Aggr.ToListAsync();
+
+            var listInviAggr = list_Invi_Aggr;
 
             var invitationsList = listInviAggr.Select(a =>
             {
