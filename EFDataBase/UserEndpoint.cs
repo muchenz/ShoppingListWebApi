@@ -109,10 +109,10 @@ namespace EFDataBase
             await _context.SaveChangesAsync();
         }
 
-        public Task<bool> IsUserInvitatedToListAggregationAsync(string userName, int listAggregationId)
+        public Task<bool> IsUserInvitatedToListAggregationAsync(int userId, int listAggregationId)
         {
             return _context.Invitations.AsQueryable()
-                .Where(a => a.EmailAddress == userName && a.ListAggregatorId == listAggregationId).AnyAsync();
+                .Where(a => a.UserId == userId && a.ListAggregatorId == listAggregationId).AnyAsync();
 
         }
 
@@ -123,7 +123,6 @@ namespace EFDataBase
 
             var invitationEntity = new InvitationEntity
             {
-                EmailAddress = toUserName,
                 UserId = userEntity.UserId,
                 ListAggregatorId = listAggregationId,
                 PermissionLevel = permission,
