@@ -31,7 +31,7 @@ internal class PermissionEndpoint : IPermissionEndpoint
         if (user == null)
             return InvitationResult.Failure(Error.NotFound( "User not exist." ));
 
-        var IsUserInvitatedToListAggregation = await _userEndpoint.IsUserInvitatedToListAggregationAsync(item.User.EmailAddress, listAggregationId);
+        var IsUserInvitatedToListAggregation = await _userEndpoint.IsUserInvitatedToListAggregationAsync(user.UserId, listAggregationId);
 
         if (IsUserInvitatedToListAggregation)
             return InvitationResult.Failure(Error.Conflict("Ivitation is on list" ));
