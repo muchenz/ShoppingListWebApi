@@ -8,7 +8,7 @@ namespace Shared.DataEndpoints.Abstaractions
 {
     public interface IInvitationEndpoint
     {
-        Task<List<Invitation>> GetInvitationsListAsync(string userName);
+        Task<List<Invitation>> GetInvitationsListAsync(int userId);
         Task RejectInvitaionAsync(Invitation invitation);
         Task AcceptInvitationAsync(Invitation invitation, int userId);
     }

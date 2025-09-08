@@ -23,14 +23,16 @@ namespace EFDataBase
 
       
 
-        public async Task<List<Invitation>> GetInvitationsListAsync(string userName)
+        public async Task<List<Invitation>> GetInvitationsListAsync(int userId)
         {
 
             var list_Invi_Aggr = from invi in _context.Invitations
-                                 where invi.EmailAddress == userName
+                                 where invi.UserId == userId
                                  join aggr in _context.ListAggregators on invi.ListAggregatorId equals aggr.ListAggregatorId into invi_aggr
+                                 join usser in _context.Users on invi.UserId equals usser.UserId into invi_usser
                                  from aggrOrNull in invi_aggr.DefaultIfEmpty()
-                                 select new { Invitation = invi, ListAggr = aggrOrNull };
+                                 from usseOrNull in invi_usser.DefaultIfEmpty()
+                                 select new { Invitation = invi, ListAggr = aggrOrNull, Usser = usseOrNull };
 
 
             //  List<InvitationEntity> toDeleteEntity = new List<InvitationEntity>();
@@ -38,7 +40,7 @@ namespace EFDataBase
 
             foreach (var item in list_Invi_Aggr)
             {
-                if (item.ListAggr == null)
+                if (item.ListAggr == null || item.Usser == null)
                 {
                     _context.Remove(item.Invitation);
                     //toDeleteEntity.Add(item.Invitation);
