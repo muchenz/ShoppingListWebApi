@@ -48,7 +48,7 @@ internal class PermissionEndpoint : IPermissionEndpoint
 
         var invitation = new Invitation
         {
-            EmailAddress = item.User.EmailAddress,
+            EmailAddress = user.EmailAddress,
             UserId = user.UserId,
             ListAggregatorId = listAggregationId,
             PermissionLevel = item.Permission,
