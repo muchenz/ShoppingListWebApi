@@ -108,14 +108,20 @@ namespace EFDataBase
                 {
                     entity.HasKey(e => e.InvitationId);
 
-                    entity.HasIndex(a => a.EmailAddress).IsUnique();
+                   // entity.HasIndex(a => a.EmailAddress).IsUnique();
+                   // entity.Property(e => e.EmailAddress)
+                   //.HasColumnName("EmailAddress")
+                   //.HasMaxLength(100)
+                   //.IsRequired();
 
-                    entity.Property(e => e.UserId).HasColumnName("UserId");
 
-                    entity.Property(e => e.EmailAddress)
-                   .HasColumnName("EmailAddress")
-                   .HasMaxLength(100)
-                   .IsRequired();
+                    entity.HasOne(d => d.ListAggregator)
+                        .WithMany()
+                        .HasForeignKey(d => d.ListAggregatorId);
+
+                    entity.HasOne(d => d.User)
+                        .WithMany()
+                        .HasForeignKey(d => d.UserId);
 
                     entity.Property(e => e.PermissionLevel)
                     .HasColumnName("PermissionLevel")
