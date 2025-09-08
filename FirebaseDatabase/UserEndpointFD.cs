@@ -515,9 +515,9 @@ namespace FirebaseDatabase
             return userListAggrSnap.Documents.First().ConvertTo<UserListAggregatorFD>().PermissionLevel == 1;
         }
 
-        public async Task<bool> IsUserInvitatedToListAggregationAsync(string userName, int listAggregationId)
+        public async Task<bool> IsUserInvitatedToListAggregationAsync(int userId, int listAggregationId)
         {
-            var userListAggrSnap = await _invitationsCol.WhereEqualTo(nameof(InvitationFD.EmailAddress), userName)
+            var userListAggrSnap = await _invitationsCol.WhereEqualTo(nameof(InvitationFD.UserId), userId)
                .WhereEqualTo(nameof(InvitationFD.ListAggregatorId), listAggregationId).GetSnapshotAsync();
 
             return userListAggrSnap.Documents.Any();
