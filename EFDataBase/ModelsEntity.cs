@@ -23,12 +23,19 @@ namespace EFDataBase
     }
     public class InvitationEntity
     {
+        public InvitationEntity()
+        {
+            UserListAggregators= new HashSet<UserListAggregatorEntity>();
+            Users = new HashSet<UserRolesEntity>();
+        }
         public int InvitationId { get; set; }
         public int UserId { get; set; }
-        public string EmailAddress { get; set; }
         public int PermissionLevel { get; set; }
         public int ListAggregatorId { get; set; }
         public string SenderName { get; set; }
+        public virtual ICollection<UserListAggregatorEntity> UserListAggregators { get; set; }
+
+        public virtual ICollection<UserRolesEntity> Users { get; set; }
 
     }
 
