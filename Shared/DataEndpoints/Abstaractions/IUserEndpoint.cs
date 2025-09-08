@@ -30,7 +30,7 @@ namespace Shared.DataEndpoints.Abstaractions
         Task<bool> IsUserIsAdminOfListAggregatorAsync(int userId, int listAggregatorId);
         Task AddUserListAggregationAsync(int userId, int listAggregationId, int permission);
 
-        Task<bool> IsUserInvitatedToListAggregationAsync(string userName, int listAggregationId);
+        Task<bool> IsUserInvitatedToListAggregationAsync(int userId, int listAggregationId);
 
         Task AddInvitationAsync(string toUserName, int listAggregationId, int permission, string fromSenderName);
 
