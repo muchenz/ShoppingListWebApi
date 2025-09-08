@@ -55,9 +55,9 @@ namespace FirebaseChachedDatabase
 
         }
 
-        public Task<List<Invitation>> GetInvitationsListAsync(string userName)
+        public Task<List<Invitation>> GetInvitationsListAsync(int userId)
         {
-            return _invitation.GetInvitationsListAsync(userName);
+            return _invitation.GetInvitationsListAsync(userId);
         }
 
         public Task RejectInvitaionAsync(Invitation invitation)

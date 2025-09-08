@@ -43,9 +43,9 @@ namespace FirebaseDatabase
 
 
 
-        public async Task<List<Invitation>> GetInvitationsListAsync(string userName)
+        public async Task<List<Invitation>> GetInvitationsListAsync(int userId)
         {
-            var querryInvitationSnap = await _invitationsCol.WhereEqualTo(nameof(InvitationFD.EmailAddress), userName)
+            var querryInvitationSnap = await _invitationsCol.WhereEqualTo(nameof(InvitationFD.Id), userId)
                 .GetSnapshotAsync();
 
             List<InvitationFD> listInvFD = querryInvitationSnap.Documents.Select(a => a.ConvertTo<InvitationFD>()).ToList();
