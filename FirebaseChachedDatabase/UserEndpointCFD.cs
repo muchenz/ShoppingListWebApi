@@ -304,9 +304,9 @@ namespace FirebaseChachedDatabase
             await _userEndpointFD.AddUserListAggregationAsync(userId, listAggregationId, permission);
         }
 
-        public Task<bool> IsUserInvitatedToListAggregationAsync(string userName, int listAggregationId)
+        public Task<bool> IsUserInvitatedToListAggregationAsync(int userId, int listAggregationId)
         {
-            return _userEndpointFD.IsUserInvitatedToListAggregationAsync(userName, listAggregationId);
+            return _userEndpointFD.IsUserInvitatedToListAggregationAsync(userId, listAggregationId);
         }
 
         public Task<bool> IsUserHasListAggregatorAsync(int userId, int listAggregationId)
