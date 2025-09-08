@@ -28,9 +28,9 @@ namespace EFDataBase
         public int PermissionLevel { get; set; }
         public int ListAggregatorId { get; set; }
         public string SenderName { get; set; }
-        public virtual ListAggregator ListAggregator { get; set; }
+        public virtual ListAggregatorEntity ListAggregator { get; set; }
 
-        public virtual User User { get; set; }
+        public virtual UserEntity User { get; set; }
 
     }
 
