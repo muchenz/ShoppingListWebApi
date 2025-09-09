@@ -123,6 +123,9 @@ namespace EFDataBase
                         .WithMany()
                         .HasForeignKey(d => d.UserId);
 
+                    entity.HasIndex(e => new { e.UserId, e.ListAggregatorId })
+                        .IsUnique();
+
                     entity.Property(e => e.PermissionLevel)
                     .HasColumnName("PermissionLevel")
                     .IsRequired();
