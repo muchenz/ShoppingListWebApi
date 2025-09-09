@@ -3,6 +3,7 @@ using System;
 using EFDataBase;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EFDataBase.Migrations
 {
     [DbContext(typeof(ShopingListDBContext))]
-    partial class ShopingListDBContextModelSnapshot : ModelSnapshot
+    [Migration("20250909091952_Add_Index_To_InvitaionEntity")]
+    partial class Add_Index_To_InvitaionEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "6.0.4");
