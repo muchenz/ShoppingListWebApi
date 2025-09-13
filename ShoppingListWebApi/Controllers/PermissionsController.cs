@@ -57,21 +57,9 @@ public class PermissionsController : ApiControllerBase// ControllerBase
             return ReturnResultError(message);
         }
 
-        //ObjectResult result = error switch
-        //{
-        //    { ErrorType: ErrorTypes.Conflict }   => new ConflictObjectResult(error.Description),
-        //    { ErrorType: ErrorTypes.None } => new OkObjectResult(error.Description),
-        //    { ErrorType: ErrorTypes.NotFound } => new NotFoundObjectResult(error.Description),
-        //    { ErrorType: ErrorTypes.Forbidden } => new ObjectResult(new ProblemDetails { Title = error.Description }) { StatusCode = 403 },
-        //    _ => new BadRequestObjectResult("Something wrong happens")
+        await _signarRService.SendRefreshMessageToUsersAsync(new List<int> { message.Data.InvitedUser.UserId },
+    SiganalREventName.InvitationAreChanged, signalRId: signalRId);
 
-        //};
-
-        //if (error.ErrorType == ErrorTypes.None)
-        //{
-            await _signarRService.SendRefreshMessageToUsersAsync(new List<int> { message.Data.InvitedUser.UserId },
-                SiganalREventName.InvitationAreChanged, signalRId: signalRId);
-        //}
 
         return Ok(message.Data);
     }

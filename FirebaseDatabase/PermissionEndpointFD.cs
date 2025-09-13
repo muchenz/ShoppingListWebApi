@@ -1,15 +1,16 @@
 ﻿using AutoMapper;
+using EFDataBase;
 using Google.Cloud.Firestore;
 using Microsoft.Extensions.Logging;
+using Shared.DataEndpoints.Abstaractions;
 using Shared.DataEndpoints.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
-using Shared.DataEndpoints.Abstaractions;
-
 using InvitationResult = Shared.DataEndpoints.Models.Result<(Shared.DataEndpoints.Models.User, Shared.DataEndpoints.Models.Invitation)>;
 
 namespace FirebaseDatabase;
@@ -156,6 +157,32 @@ internal class PermissionEndpointFD : IPermissionEndpoint
 
         return userListAggrSnap.Documents.Count > 0;
     }
+
+    public async Task<List<UserListAggregator>> TryGetTwoAdministratorsOfListAggregationsAsync(Transaction transaction, 
+        int listAggregationId)
+    {
+        var querryRef = _userListAggrCol.WhereEqualTo(nameof(UserListAggregatorFD.ListAggregatorId), listAggregationId)
+           .WhereEqualTo(nameof(UserListAggregatorFD.PermissionLevel), 1).Limit(2);
+
+        var querrySnapshot = await transaction.GetSnapshotAsync(querryRef);
+
+        var admins = querrySnapshot.Select(a => a.ConvertTo<UserListAggregatorFD>()).ToList();
+        return _mapper.Map<List<UserListAggregator>>(admins);
+
+    }
+
+    public async Task SetUserPermissionToListAggrAsync(Transaction transation,  int userId, int listAggregationId, int permission)
+    {
+
+        var userListAggrRef = _userListAggrCol.WhereEqualTo(nameof(UserListAggregatorFD.UserId), userId)
+           .WhereEqualTo(nameof(UserListAggregatorFD.ListAggregatorId), listAggregationId).Limit(1);
+
+        var userListAggrSnap = await transation.GetSnapshotAsync(userListAggrRef);
+
+
+        transation.Update(userListAggrSnap.First().Reference, nameof(UserListAggregatorFD.PermissionLevel), permission);
+    }
+
     private async Task<Invitation> AddInvitationAsync(Transaction transation, UserFD userFD, int listAggregationId, int permission, string fromSenderName)
     {
         var invitationFD = new InvitationFD
@@ -186,7 +213,116 @@ internal class PermissionEndpointFD : IPermissionEndpoint
 
         return _mapper.Map<Invitation>(invitationFD);
     }
-}
+
+
+    public async Task<Result> ChangeUserPermission(int listAggregationId,
+               UserPermissionToListAggregation item, int senderId)
+    {
+
+
+        InvitationResult messageAndStatus = null;
+
+        User user = null;
+
+
+        await Db.RunTransactionAsync(async transation =>
+        {
+
+            if (!await IsUserIsAdminOfListAggregatorAsync(transation, senderId, listAggregationId))
+            {
+                messageAndStatus = InvitationResult.Failure(Error.Forbidden("Sender has no permission."));
+                return;
+            }
+
+            var userFD = await GetUserByNameAsync(transation, item.User.EmailAddress);
+
+            if (userFD == null)
+            {
+                messageAndStatus = InvitationResult.Failure(Error.NotFound("User not exist."));
+                return;
+            }
+
+            var admins = await TryGetTwoAdministratorsOfListAggregationsAsync(transation, listAggregationId);
+
+            if (admins.Count == 1 && user.UserId == admins.First().UserId)
+            {
+                messageAndStatus= InvitationResult.Failure(Error.Conflict("Only one Admin left - not delete." ));
+                return;
+            }
+
+            var isUserHasListAgregation = await IsUserHasListAggregatorAsync(transation, user.UserId, listAggregationId);
+
+            if (isUserHasListAgregation)
+            {
+                messageAndStatus = InvitationResult.Failure(Error.Conflict("User permission not found."));
+                return;
+            }
+
+            await SetUserPermissionToListAggrAsync(transation, user.UserId, listAggregationId, item.Permission);
+
+
+        });
+
+
+        if (messageAndStatus is null)
+        {
+            return InvitationResult.Ok();
+        }
+
+        return messageAndStatus;
+    }
+
+        //[HttpPost("ChangeUserPermission")]
+        //[SecurityLevel(1)]
+        //public async Task<ActionResult> ChangeUserPermission(int listAggregationId
+        //    , [FromBody] UserPermissionToListAggregation item, [FromHeader] string signalRId)
+        //{
+        //    var senderId = int.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+        //    if (await _userEndpoint.IsUserIsAdminOfListAggregatorAsync(senderId, listAggregationId) is not true)
+        //    {
+        //        return Problem(title: "User has no permission.", statusCode: 403);
+        //    }
+
+        //    var user = await _userEndpoint.GetUserByNameAsync(item.User.EmailAddress);
+
+        //    if (user == null)
+        //        return NotFound(new ProblemDetails { Title = "User not exist." });
+
+
+        //    var admins = await _userEndpoint.TryGetTwoAdministratorsOfListAggregationsAsync(listAggregationId);
+
+        //    if (admins.Count == 1 && user.UserId == admins.First().UserId)
+        //        return Conflict(new ProblemDetails { Title = "Only one Admin left - not delete." });
+
+
+        //    //var userListAggr = await _context.UserListAggregators.AsQueryable().Where(a => a.User.UserId == item.User.UserId && a.ListAggregatorId == listAggregationId)
+        //    //    .FirstOrDefaultAsync();
+
+        //    //if (userListAggr == null)
+        //    //    return new MessageAndStatus { Status = "ERROR", Message = "User permission not found." };
+        //    //else
+        //    //    userListAggr.PermissionLevel = item.Permission;
+
+
+        //    ////  _context.Update(userListAggr);
+        //    //await _context.SaveChangesAsync();
+
+        //    bool isUserHasListAggregator = await _userEndpoint.IsUserHasListAggregatorAsync(user.UserId, listAggregationId);
+
+
+        //    if (!isUserHasListAggregator)
+        //        return NotFound(new ProblemDetails { Title = "User permission not found." });
+
+        //    await _userEndpoint.SetUserPermissionToListAggrAsync(user.UserId, listAggregationId, item.Permission);
+
+        //    await _mediator.Publish(new DataChangedEvent(new int[] { user.UserId }, signalRId));
+
+        //    return Ok("Permission has changed.");
+        //}
+
+
+    }
 
 
 //public async Task<ActionResult> InviteUserPermission(int listAggregationId,
