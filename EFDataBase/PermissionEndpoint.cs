@@ -24,10 +24,10 @@ internal class PermissionEndpoint : IPermissionEndpoint
         _userEndpoint = userEndpoint;
     }
 
-    public async Task<Result<(User InvitedUser, Invitation Invitation)>> InviteUserPermission(int listAggregationId, UserPermissionToListAggregation item, string senderName, int senderId)
+    public async Task<Result<(User InvitedUser, Invitation Invitation)>> InviteUserPermission(int listAggregationId, int permissionLvl, string userName, string senderName, int senderId)
     {
 
-        var user = await _userEndpoint.GetUserByNameAsync(item.User.EmailAddress);
+        var user = await _userEndpoint.GetUserByNameAsync(userName);
 
         if (user == null)
             return InvitationResult.Failure(Error.NotFound("User not exist."));
@@ -46,7 +46,7 @@ internal class PermissionEndpoint : IPermissionEndpoint
 
         try
         {
-            await _userEndpoint.AddInvitationAsync(item.User.EmailAddress, listAggregationId, item.Permission, senderName);
+            await _userEndpoint.AddInvitationAsync(userName, listAggregationId, permissionLvl, senderName);
 
         }
         catch (DbUpdateException ex)
@@ -58,7 +58,7 @@ internal class PermissionEndpoint : IPermissionEndpoint
             EmailAddress = user.EmailAddress,
             UserId = user.UserId,
             ListAggregatorId = listAggregationId,
-            PermissionLevel = item.Permission,
+            PermissionLevel = permissionLvl,
             SenderName = senderName
         };
 

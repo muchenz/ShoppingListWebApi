@@ -51,7 +51,7 @@ internal class PermissionEndpointFD : IPermissionEndpoint
 
 
     public async Task<Result<(User InvitedUser, Invitation Invitation)>> InviteUserPermission(int listAggregationId,
-                UserPermissionToListAggregation item, string senderName, int senderId)
+                int permissionLvl, string userName, string senderName, int senderId)
     {
 
         InvitationResult messageAndStatus = null;
@@ -69,7 +69,7 @@ internal class PermissionEndpointFD : IPermissionEndpoint
                 return;
             }
 
-            var userFD = await GetUserByNameAsync(transation, item.User.EmailAddress);
+            var userFD = await GetUserByNameAsync(transation, userName);
 
             if (userFD == null)
             {
@@ -78,7 +78,7 @@ internal class PermissionEndpointFD : IPermissionEndpoint
             }
             user = _mapper.Map<User>(userFD);
 
-            var IsUserInvitatedToListAggregation = await IsUserInvitatedToListAggregationAsync(transation, item.User.EmailAddress, listAggregationId);
+            var IsUserInvitatedToListAggregation = await IsUserInvitatedToListAggregationAsync(transation, userName, listAggregationId);
 
             if (IsUserInvitatedToListAggregation)
             {
@@ -95,7 +95,7 @@ internal class PermissionEndpointFD : IPermissionEndpoint
             }
 
 
-            invitation =  await AddInvitationAsync(transation, userFD, listAggregationId, item.Permission, senderName);
+            invitation =  await AddInvitationAsync(transation, userFD, listAggregationId, permissionLvl, senderName);
 
         });
 

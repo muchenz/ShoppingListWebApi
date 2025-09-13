@@ -5,5 +5,5 @@ namespace Shared.DataEndpoints.Abstaractions;
 public interface IPermissionEndpoint
 {
     Task<Result<(User InvitedUser, Invitation Invitation)>> 
-            InviteUserPermission(int listAggregationId, UserPermissionToListAggregation item, string senderName, int senderId);
+            InviteUserPermission(int listAggregationId, int permissionLvl, string userName, string senderName, int senderId);
 }

@@ -10,6 +10,7 @@ using Shared.DataEndpoints.Abstaractions;
 using Shared.DataEndpoints.Models;
 using ShoppingListWebApi.Auth.Api;
 using ShoppingListWebApi.Data;
+using ShoppingListWebApi.Models.Requests;
 using SignalRService;
 using System.Collections.Generic;
 using System.Linq;
@@ -44,12 +45,12 @@ public class PermissionsController : ApiControllerBase// ControllerBase
     [SecurityLevel(1)]
     //TODO: Ratcher special request than 'UserPermissionToListAggregation' because 'User' is almost empty beside 'EmailAddress' 
     public async Task<ActionResult> InviteUserPermission(int listAggregationId,
-            [FromBody] UserPermissionToListAggregation item, [FromHeader] string signalRId)
+            [FromBody] InviteUserRequest item, [FromHeader] string signalRId)
     {
         var senderName = HttpContext.User.Identity.Name;
         var senderId = int.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
 
-        var message = await _permissionEndpoint.InviteUserPermission(listAggregationId, item, senderName, senderId);
+        var message = await _permissionEndpoint.InviteUserPermission(listAggregationId, item.Permission, item.UserName, senderName, senderId);
 
         if (message.IsError)
         {
