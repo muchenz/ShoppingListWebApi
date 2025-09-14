@@ -64,20 +64,19 @@ internal class PermissionEndpointFD : IPermissionEndpoint
         await Db.RunTransactionAsync(async transation =>
         {
 
-            if (!await IsUserIsAdminOfListAggregatorAsync(transation, senderId, listAggregationId))
-            {
-                messageAndStatus = InvitationResult.Failure(Error.Forbidden("Sender has no permission."));
-                return;
-            }
+            //if (!await IsUserIsAdminOfListAggregatorAsync(transation, senderId, listAggregationId))
+            //{
+            //    messageAndStatus = InvitationResult.Failure(Error.Forbidden("Sender has no permission."));
+            //    return;
+            //}
 
-            var userFD = await GetUserByNameAsync(transation, userName);
+            user = await GetUserByNameAsync(transation, userName);
 
-            if (userFD == null)
+            if (user == null)
             {
                 messageAndStatus = InvitationResult.Failure(Error.NotFound("User not exist."));
                 return;
             }
-            user = _mapper.Map<User>(userFD);
 
             var IsUserInvitatedToListAggregation = await IsUserInvitatedToListAggregationAsync(transation, userName, listAggregationId);
 
@@ -96,7 +95,7 @@ internal class PermissionEndpointFD : IPermissionEndpoint
             }
 
 
-            invitation =  await AddInvitationAsync(transation, userFD, listAggregationId, permissionLvl, senderName);
+            invitation =  await AddInvitationAsync(transation, user, listAggregationId, permissionLvl, senderName);
 
         });
 
@@ -112,21 +111,21 @@ internal class PermissionEndpointFD : IPermissionEndpoint
 
 
 
-    public async Task<bool> IsUserIsAdminOfListAggregatorAsync(Transaction transaction, int userId, int listAggregatorId)
-    {
-        var userListAggrQuery = _userListAggrCol.WhereEqualTo(nameof(UserListAggregatorFD.UserId), userId)
-           .WhereEqualTo(nameof(UserListAggregatorFD.ListAggregatorId), listAggregatorId);
+    //public async Task<bool> IsUserIsAdminOfListAggregatorAsync(Transaction transaction, int userId, int listAggregatorId)
+    //{
+    //    var userListAggrQuery = _userListAggrCol.WhereEqualTo(nameof(UserListAggregatorFD.UserId), userId)
+    //       .WhereEqualTo(nameof(UserListAggregatorFD.ListAggregatorId), listAggregatorId);
 
-        var userListAggrSnap = await transaction.GetSnapshotAsync(userListAggrQuery);
+    //    var userListAggrSnap = await transaction.GetSnapshotAsync(userListAggrQuery);
 
 
-        if (userListAggrSnap.Documents.Count == 0) return false;
+    //    if (userListAggrSnap.Documents.Count == 0) return false;
 
-        var userListAggr = userListAggrSnap.Documents.First().ConvertTo<UserListAggregatorFD>();
+    //    var userListAggr = userListAggrSnap.Documents.First().ConvertTo<UserListAggregatorFD>();
 
-        return userListAggrSnap.Documents.First().ConvertTo<UserListAggregatorFD>().PermissionLevel == 1;
-    }
-    private async Task<UserFD> GetUserByNameAsync(Transaction transaction, string userName)
+    //    return userListAggrSnap.Documents.First().ConvertTo<UserListAggregatorFD>().PermissionLevel == 1;
+    //}
+    private async Task<User> GetUserByNameAsync(Transaction transaction, string userName)
     {
         var userFDQuery = _usersCol.WhereEqualTo(nameof(UserFD.EmailAddress), userName);
         var userFDSnap = await transaction.GetSnapshotAsync(userFDQuery);
@@ -134,8 +133,8 @@ internal class PermissionEndpointFD : IPermissionEndpoint
         if (userFDSnap.Count == 0) return null;
 
         var userFD = userFDSnap.First().ConvertTo<UserFD>();
-
-        return userFD;
+        var userTemp = _mapper.Map<User>(userFD);
+        return userTemp;
     }
 
     private async Task<bool> IsUserInvitatedToListAggregationAsync(Transaction transaction, string userName, int listAggregationId)
@@ -183,18 +182,19 @@ internal class PermissionEndpointFD : IPermissionEndpoint
         transation.Update(userListAggrSnap.First().Reference, nameof(UserListAggregatorFD.PermissionLevel), permission);
     }
 
-    private async Task<Invitation> AddInvitationAsync(Transaction transation, UserFD userFD, int listAggregationId, int permission, string fromSenderName)
+    private async Task<Invitation> AddInvitationAsync(Transaction transation, User user, int listAggregationId, int permission, string fromSenderName)
     {
         var invitationFD = new InvitationFD
         {
-            EmailAddress = userFD.EmailAddress,
-            UserId = userFD.UserId,
+            EmailAddress = user.EmailAddress,
+            UserId = user.UserId,
             ListAggregatorId = listAggregationId,
             PermissionLevel = permission,
             SenderName = fromSenderName
         };
 
-
+        var listAggRef= _listAggrCol.Document(listAggregationId.ToString());
+        var listAggSnap =  await transation.GetSnapshotAsync(listAggRef);
 
 
         var indexRef = _indexesCol.Document("indexes");
@@ -210,9 +210,12 @@ internal class PermissionEndpointFD : IPermissionEndpoint
 
         transation.Update(indexRef, "invitations", indexNew);
 
+        var invMapped = _mapper.Map<Invitation>(invitationFD);
+        invMapped.ListAggregatorName = listAggSnap.ConvertTo<ListAggregatorFD>().ListAggregatorName;
 
-        return _mapper.Map<Invitation>(invitationFD);
+        return invMapped;
     }
+    
 
 
     public async Task<Result> ChangeUserPermission(int listAggregationId,
@@ -222,21 +225,19 @@ internal class PermissionEndpointFD : IPermissionEndpoint
 
         InvitationResult messageAndStatus = null;
 
-        User user = null;
-
 
         await Db.RunTransactionAsync(async transation =>
         {
 
-            if (!await IsUserIsAdminOfListAggregatorAsync(transation, senderId, listAggregationId))
-            {
-                messageAndStatus = InvitationResult.Failure(Error.Forbidden("Sender has no permission."));
-                return;
-            }
+            //if (!await IsUserIsAdminOfListAggregatorAsync(transation, senderId, listAggregationId))
+            //{
+            //    messageAndStatus = InvitationResult.Failure(Error.Forbidden("Sender has no permission."));
+            //    return;
+            //}
 
-            var userFD = await GetUserByNameAsync(transation, item.User.EmailAddress);
+            var user = await GetUserByNameAsync(transation, item.User.EmailAddress);
 
-            if (userFD == null)
+            if (user == null)
             {
                 messageAndStatus = InvitationResult.Failure(Error.NotFound("User not exist."));
                 return;
@@ -252,7 +253,7 @@ internal class PermissionEndpointFD : IPermissionEndpoint
 
             var isUserHasListAgregation = await IsUserHasListAggregatorAsync(transation, user.UserId, listAggregationId);
 
-            if (isUserHasListAgregation)
+            if (!isUserHasListAgregation)
             {
                 messageAndStatus = InvitationResult.Failure(Error.Conflict("User permission not found."));
                 return;

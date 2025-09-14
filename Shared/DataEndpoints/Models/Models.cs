@@ -36,7 +36,6 @@ namespace Shared.DataEndpoints.Models
 
         //public static implicit operator Result(Error error) => Result.Failure(error);
 
-        public static Error Ok(string code, string description) => new(code, description, ErrorTypes.None);
         public static Error Unexpected(string code, string description) => new(code, description, ErrorTypes.Unexpected);
         public static Error ValidationError(string code, string description) => new(code, description, ErrorTypes.ValidationError);
         public static Error Conflict(string code, string description) => new(code, description, ErrorTypes.Conflict);
@@ -44,7 +43,6 @@ namespace Shared.DataEndpoints.Models
         public static Error Forbidden(string code, string description) => new(code, description, ErrorTypes.Forbidden);
 
 
-        public static Error Ok(string description) => new(string.Empty, description, ErrorTypes.None);
         public static Error Unexpected(string description) => new(string.Empty, description, ErrorTypes.Unexpected);
         public static Error ValidationError( string description) => new(string.Empty, description, ErrorTypes.ValidationError);
         public static Error Conflict( string description) => new(string.Empty, description, ErrorTypes.Conflict);

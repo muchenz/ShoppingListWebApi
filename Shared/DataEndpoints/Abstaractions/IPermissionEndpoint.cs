@@ -6,4 +6,7 @@ public interface IPermissionEndpoint
 {
     Task<Result<(User InvitedUser, Invitation Invitation)>> 
             InviteUserPermission(int listAggregationId, int permissionLvl, string userName, string senderName, int senderId);
+
+    Task<Result> ChangeUserPermission(int listAggregationId
+        , UserPermissionToListAggregation item, int senderId);
 }

@@ -100,46 +100,18 @@ public class PermissionsController : ApiControllerBase// ControllerBase
     {
         var senderId = int.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
 
-        if (await _userEndpoint.IsUserIsAdminOfListAggregatorAsync(senderId, listAggregationId) is not true)
+        var message = await _permissionEndpoint.ChangeUserPermission(listAggregationId, item, senderId);
+
+        if (message.IsError)
         {
-            return Problem(title: "User has no permission.", statusCode: 403);
+            return ReturnResultError(message);
         }
 
-        var user = await _userEndpoint.GetUserByNameAsync(item.User.EmailAddress);
-
-        if (user == null)
-            return NotFound(new ProblemDetails { Title = "User not exist." });
+        await _signarRService.SendRefreshMessageToUsersAsync(new List<int> { item.User.UserId },
+    SiganalREventName.DataAreChanged, signalRId: signalRId);
 
 
-        var admins = await _userEndpoint.TryGetTwoAdministratorsOfListAggregationsAsync(listAggregationId);
-
-        if (admins.Count == 1 && user.UserId == admins.First().UserId)
-            return Conflict(new ProblemDetails { Title = "Only one Admin left - not delete." });
-
-
-        //var userListAggr = await _context.UserListAggregators.AsQueryable().Where(a => a.User.UserId == item.User.UserId && a.ListAggregatorId == listAggregationId)
-        //    .FirstOrDefaultAsync();
-
-        //if (userListAggr == null)
-        //    return new MessageAndStatus { Status = "ERROR", Message = "User permission not found." };
-        //else
-        //    userListAggr.PermissionLevel = item.Permission;
-
-
-        ////  _context.Update(userListAggr);
-        //await _context.SaveChangesAsync();
-
-        bool isUserHasListAggregator = await _userEndpoint.IsUserHasListAggregatorAsync(user.UserId, listAggregationId);
-
-
-        if (!isUserHasListAggregator)
-            return NotFound(new ProblemDetails { Title = "User permission not found." });
-
-        await _userEndpoint.SetUserPermissionToListAggrAsync(user.UserId, listAggregationId, item.Permission);
-
-        await _mediator.Publish(new DataChangedEvent(new int[] { user.UserId }, signalRId));
-
-        return Ok("Permission has changed.");
+        return Ok();
     }
 
     [HttpPost("DeleteUserPermission")]

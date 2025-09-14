@@ -5,6 +5,8 @@ using Shared.DataEndpoints.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using InvitationResult = Shared.DataEndpoints.Models.Result<(Shared.DataEndpoints.Models.User, Shared.DataEndpoints.Models.Invitation)>;
@@ -65,4 +67,44 @@ internal class PermissionEndpoint : IPermissionEndpoint
         return InvitationResult.Ok((user, invitation));
     }
 
+    public async Task<Result> ChangeUserPermission(int listAggregationId
+        , UserPermissionToListAggregation item, int senderId)
+    {
+
+        //if (await _userEndpoint.IsUserIsAdminOfListAggregatorAsync(senderId, listAggregationId) is not true)
+        //{
+        //    return Problem(title: "User has no permission.", statusCode: 403);
+        //}
+
+        var user = await _userEndpoint.GetUserByNameAsync(item.User.EmailAddress);
+
+        if (user == null)
+            return InvitationResult.Failure(Error.NotFound("User not exist." ));
+
+
+        var admins = await _userEndpoint.TryGetTwoAdministratorsOfListAggregationsAsync(listAggregationId);
+
+        if (admins.Count == 1 && user.UserId == admins.First().UserId)
+            return InvitationResult.Failure(Error.Conflict("Only one Admin left - not delete." ));
+
+              
+
+        bool isUserHasListAggregator = await _userEndpoint.IsUserHasListAggregatorAsync(user.UserId, listAggregationId);
+
+
+        if (!isUserHasListAggregator)
+            return InvitationResult.Failure(Error.NotFound("User permission not found." ));
+        
+        try
+        {
+            await _userEndpoint.SetUserPermissionToListAggrAsync(user.UserId, listAggregationId, item.Permission);
+
+        }
+        catch (DbUpdateException ex)
+        {
+            return InvitationResult.Failure(Error.Unexpected("Failed to change permission. Refresh data and try again."));
+        }
+
+        return InvitationResult.Ok();
+    }
 }

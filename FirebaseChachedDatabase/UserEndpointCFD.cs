@@ -549,13 +549,7 @@ namespace FirebaseChachedDatabase
         //    [FirestoreProperty]
         //    public string TokensSerializedString { get; set; }
         //}
-        [FirestoreData]
-
-        public class RefreshTokensDataFD
-        {
-            [FirestoreProperty]
-            public List<RefreshTokenSessionFD> RefreshTokens { get; set; } = new List<RefreshTokenSessionFD>();
-        }
+       
     }
 
 
