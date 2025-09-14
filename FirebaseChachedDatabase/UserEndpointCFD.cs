@@ -534,18 +534,9 @@ namespace FirebaseChachedDatabase
         }
 
 
-        public async Task<List<RefreshTokenSession>> GetRefreshTokens(int userId)
+        public  Task<List<RefreshTokenSession>> GetRefreshTokens(int userId)
         {
-            var tokensSnap = await _refreshToken.Document(userId.ToString()).GetSnapshotAsync();
-
-            if (!tokensSnap.Exists)
-            {
-                return new List<RefreshTokenSession>();
-
-            }
-            var tokens = tokensSnap.ConvertTo<RefreshTokensDataFD>().RefreshTokens;
-
-            return tokens.Select(a => a.ToRefreshTokenSession()).ToList();
+            return _userEndpointFD.GetRefreshTokens(userId);
         }
         public  Task DeleteRefreshToken(int userId, RefreshTokenSession refreshTokenSession)
         {
