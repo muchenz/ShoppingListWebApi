@@ -547,23 +547,9 @@ namespace FirebaseChachedDatabase
 
             return tokens.Select(a => a.ToRefreshTokenSession()).ToList();
         }
-        public async Task DeleteRefreshToken(int userId, RefreshTokenSession refreshTokenSession)
+        public  Task DeleteRefreshToken(int userId, RefreshTokenSession refreshTokenSession)
         {
-            var tokensSnap = await _refreshToken.Document(userId.ToString()).GetSnapshotAsync();
-
-            if (!tokensSnap.Exists)
-            {
-                return;
-
-            }
-            var tokens = tokensSnap.ConvertTo<RefreshTokensDataFD>().RefreshTokens;
-            var tokenToDelete = tokens.Where(a => a.RefreshToken == refreshTokenSession.RefreshToken).FirstOrDefault();
-            if (tokenToDelete is null)
-            {
-                return;
-            }
-            tokens.Remove(tokenToDelete);
-            await _refreshToken.Document(userId.ToString()).SetAsync(new RefreshTokensDataFD { RefreshTokens = tokens });
+           return _userEndpointFD.DeleteRefreshToken( userId, refreshTokenSession);
 
         }
         public  Task ReplaceRefreshToken(int userId, RefreshTokenSession oldRefreshTokenSession, RefreshTokenSession newRefreshTokenSession)
