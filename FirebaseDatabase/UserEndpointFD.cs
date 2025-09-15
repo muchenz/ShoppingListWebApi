@@ -831,12 +831,7 @@ namespace FirebaseDatabase
             await _refreshToken.Document(userId.ToString()).SetAsync(new RefreshTokensDataFD { RefreshTokens = tokens });
 
         }
-        //[FirestoreData]
-        //public class RefreshTokensData
-        //{
-        //    [FirestoreProperty]
-        //    public string TokensSerializedString { get; set; }
-        //}
+       
         [FirestoreData]
 
         public class RefreshTokensDataFD
