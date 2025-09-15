@@ -543,12 +543,7 @@ namespace FirebaseChachedDatabase
             return _userEndpointFD.DeleteRefreshTokenByJti(userId, jti);
          
         }
-        //[FirestoreData]
-        //public class RefreshTokensData
-        //{
-        //    [FirestoreProperty]
-        //    public string TokensSerializedString { get; set; }
-        //}
+      
        
     }
 
