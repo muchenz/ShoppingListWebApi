@@ -166,15 +166,6 @@ namespace ShoppingListWebApi.Controllers
             }
             else
             {
-                //HttpContext.Response.Cookies.Append("refreshToken", "ala", new CookieOptions
-                //{
-                //    HttpOnly = true,
-                //    Secure = true,
-                //    SameSite = SameSiteMode.None,
-                //    Domain= "localhost",
-                //    Expires = DateTimeOffset.UtcNow.AddDays(30)
-                //});
-
                 if (user.LoginType == 2) // 2 ==>> LoginType.Facebook
                 {
                     var (accessToken, refreshToken) = await GenerateToken2(user.UserId, deviceId); //TODO
@@ -205,14 +196,14 @@ namespace ShoppingListWebApi.Controllers
 
             var (accessToken, refreshToken) = await GenerateToken2(user.UserId, login.DeviceId);
 
-            //HttpContext.Response.Cookies.Append("refreshToken", "ala22", new CookieOptions
-            //{
-            //    HttpOnly = true,
-            //    Secure = true,
-            //    SameSite = SameSiteMode.None,
-            //    Domain = "localhost",
-            //    Expires = DateTimeOffset.UtcNow.AddDays(30)
-            //});
+            HttpContext.Response.Cookies.Append("refreshToken", "ala22", new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+               // Domain = "localhost",
+                Expires = DateTimeOffset.UtcNow.AddDays(30)
+            });
             return new UserNameAndTokensResponse
             {
                 UserName = login.UserName,
