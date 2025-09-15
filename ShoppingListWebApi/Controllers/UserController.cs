@@ -166,6 +166,15 @@ namespace ShoppingListWebApi.Controllers
             }
             else
             {
+                //HttpContext.Response.Cookies.Append("refreshToken", "ala", new CookieOptions
+                //{
+                //    HttpOnly = true,
+                //    Secure = true,
+                //    SameSite = SameSiteMode.None,
+                //    Domain= "localhost",
+                //    Expires = DateTimeOffset.UtcNow.AddDays(30)
+                //});
+
                 if (user.LoginType == 2) // 2 ==>> LoginType.Facebook
                 {
                     var (accessToken, refreshToken) = await GenerateToken2(user.UserId, deviceId); //TODO
@@ -195,6 +204,15 @@ namespace ShoppingListWebApi.Controllers
             }
 
             var (accessToken, refreshToken) = await GenerateToken2(user.UserId, login.DeviceId);
+
+            //HttpContext.Response.Cookies.Append("refreshToken", "ala22", new CookieOptions
+            //{
+            //    HttpOnly = true,
+            //    Secure = true,
+            //    SameSite = SameSiteMode.None,
+            //    Domain = "localhost",
+            //    Expires = DateTimeOffset.UtcNow.AddDays(30)
+            //});
             return new UserNameAndTokensResponse
             {
                 UserName = login.UserName,
@@ -264,8 +282,15 @@ namespace ShoppingListWebApi.Controllers
             var version = int.Parse(User.FindFirstValue(ClaimTypes.Version));
             try
             {
-                var refreshToken = HttpContext.Request.Headers["refresh_token"];
-                var deviceId = HttpContext.Request.Headers["deviceid"];
+                var refreshToken = HttpContext.Request.Headers["refresh_token"].ToString();
+                var deviceId = HttpContext.Request.Headers["deviceid"].ToString();
+
+                //var lenght = deviceId.Length;
+
+                //if (deviceId.Length == 36)
+                //{
+
+                //}
 
                 // var (newAccessToken, newrefreshToken) = await _tokenService.RefreshTokensAsync(id, refreshToken);
                 var (newAccessToken, newrefreshToken) = await _tokenService.RefreshTokensAsync2(id, deviceId, refreshToken, version, cancellationToken);
