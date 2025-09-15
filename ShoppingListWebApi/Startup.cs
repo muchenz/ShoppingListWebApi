@@ -196,7 +196,7 @@ public class Startup
                 builder.AllowAnyHeader();
                 builder.AllowAnyMethod();
                 builder.WithExposedHeaders("Token-Expired");
-                //builder.AllowCredentials();
+                builder.AllowCredentials(); //for cookie
 
             });
         });
