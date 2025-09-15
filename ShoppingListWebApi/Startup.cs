@@ -189,7 +189,7 @@ public class Startup
             options.AddPolicy("ALL", builder =>
             {
                 builder.WithOrigins("https://localhost:44379", "https://localhost:5003"
-                    , "https://localhost:5023"
+                    , "https://localhost:5023", "https://localhost:5031"
                     , "https://shoppinglist2.mcfly.ga", "https://shoppinglist.mcfly.ga"
                     , "http://localhost:52735");
                 //builder.AllowAnyOrigin();
