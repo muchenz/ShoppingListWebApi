@@ -1,8 +1,10 @@
-﻿using BlazorClient.Models.Response;
+﻿using BlazorClient.Models;
+using BlazorClient.Models.Response;
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
+using Microsoft.JSInterop;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Concurrent;
@@ -12,6 +14,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,16 +28,18 @@ public class TokenClientService
     private readonly ILocalStorageService _localStorage;
     private readonly IConfiguration _configuration;
     private readonly StateService _stateService;
-
+    private readonly IJSRuntime _jsRuntime;
     public CancellationTokenSource _cts = new();
 
-    public TokenClientService(IHttpClientFactory httpClientFactory, ILocalStorageService localStorage, IConfiguration configuration, StateService stateService
+    public TokenClientService(IHttpClientFactory httpClientFactory, ILocalStorageService localStorage, IConfiguration configuration,
+        StateService stateService, IJSRuntime jsRuntime
         )
     {
         _httpClientFactory = httpClientFactory;
         _localStorage = localStorage;
         _configuration = configuration;
         _stateService = stateService;
+        _jsRuntime = jsRuntime;
     }
     private readonly Guid _instanceId = Guid.NewGuid();
 
@@ -57,30 +62,28 @@ public class TokenClientService
         var httpClient = _httpClientFactory.CreateClient("api");
         //var httpClient = _httpClient;
 
-        var requestMessage = new HttpRequestMessage(HttpMethod.Get, "User/GetNewToken");
+        var deviceid  = await _localStorage.GetItemAsync<string>("gid");
+        UserNameAndTokensResponse tokensResponse = null;
+        try
+        {
+            tokensResponse = await _jsRuntime.InvokeAsync<UserNameAndTokensResponse>(
+          "refreshTokenWithBrowser",
+          accessToken,
+          deviceid);
 
-        requestMessage.Headers.Authorization
-                    = new System.Net.Http.Headers.AuthenticationHeaderValue("bearer", accessToken);
-        requestMessage.Headers.Add("refresh_token", refreshToken);
-        requestMessage.Headers.Add("deviceid", await _localStorage.GetItemAsync<string>("gid"));
-
-        HttpResponseMessage response = null;
-        response = await httpClient.SendAsync(requestMessage, _cts.Token);
-
-        if (!response.IsSuccessStatusCode)
+        }
+        catch (JSException ex)
         {
             return false;
         }
 
 
-        var tokensResponse = await response.Content.ReadFromJsonAsync<UserNameAndTokensResponse>();
-
-        await SetTokens(tokensResponse.Token, tokensResponse.RefreshToken);
+        await SetTokens(tokensResponse.Token, string.Empty);
         return true;
     }
 
     SemaphoreSlim semSlim = new SemaphoreSlim(1);
-    public bool IsTokenRefresing { get ; set;} =false;
+    public bool IsTokenRefresing { get; set; } = false;
     public async Task CheckAndSetNewTokens()
     {
         if (!IsTokenExpired())
@@ -93,8 +96,8 @@ public class TokenClientService
             if (IsTokenExpired())
             {
                 //_stateService.StateInfo.IsTokenRefresing = true;
-                IsTokenRefresing = true; 
-                if ( await RefreshTokensAsync() == false)
+                IsTokenRefresing = true;
+                if (await RefreshTokensAsync() == false)
                 {
                     throw new UnauthorizedAccessException("Could not refresh token");
                 }
