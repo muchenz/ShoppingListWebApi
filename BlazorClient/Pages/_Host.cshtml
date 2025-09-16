@@ -181,6 +181,32 @@
                 throw error;
             }
         }
+
+        async function refreshTokenWithBrowser(accessToken, deviceId) {
+            try {
+                const addr = '@configuration.GetSection("AppSettings")["ShoppingWebAPIBaseAddress"]';
+                const response = await fetch(`${addr}User/GetNewToken`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'deviceid': `${deviceId}`,
+                        'Authorization': `Bearer ${accessToken}`
+                    },
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    return data;
+                } else {
+                    throw new Error('Refresh token failed');
+                }
+            } catch (error) {
+                console.error('Refresh token error:', error);
+                throw error;
+            }
+        }
+
     </script>
 
 </body>
