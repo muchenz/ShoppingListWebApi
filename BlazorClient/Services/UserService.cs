@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
+using Microsoft.JSInterop;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -17,7 +18,6 @@ using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-
 namespace BlazorClient.Services
 {
     public class UserService
@@ -27,15 +27,17 @@ namespace BlazorClient.Services
         private readonly ILocalStorageService _localStorage;
         private readonly StateService _userInfoService;
         private readonly TokenHttpClient _tokenHttpClient;
+        private readonly IJSRuntime _jsRuntime;
 
         public UserService(HttpClient httpClient, IConfiguration configuration, ILocalStorageService localStorage
-            , StateService userInfoService, TokenHttpClient tokenHttpClient)
+            , StateService userInfoService, TokenHttpClient tokenHttpClient, IJSRuntime jsRuntime)
         {
             _httpClient = httpClient;
             _configuration = configuration;
             _localStorage = localStorage;
             _userInfoService = userInfoService;
             _tokenHttpClient = tokenHttpClient;
+            _jsRuntime = jsRuntime;
             _httpClient.BaseAddress = new Uri(_configuration.GetSection("AppSettings")["ShoppingWebAPIBaseAddress"]);
             _httpClient.DefaultRequestHeaders.Add("User-Agent", "BlazorServer");
 
@@ -133,19 +135,24 @@ namespace BlazorClient.Services
             };
 
 
-            var response = await _httpClient.SendAsync(requestMessage);
-
-            if (!response.IsSuccessStatusCode)
+            //var response = await _httpClient.SendAsync(requestMessage);
+            UserNameAndTokensResponse response = null;
+            try
+            {
+                response = await _jsRuntime.InvokeAsync<UserNameAndTokensResponse>(
+              "loginWithBrowser",
+              userName,
+              password,
+              gid
+          );
+            }
+            catch (JSException ex)
             {
                 return MessageAndStatusAndData<UserNameAndTokensResponse>.Fail("Invalid username or password.");
             }
 
-            var content = await response.Content.ReadAsStringAsync();
 
-            var tokenAndUsername = JsonConvert.DeserializeObject<UserNameAndTokensResponse>(content);
-
-
-            return MessageAndStatusAndData<UserNameAndTokensResponse>.Ok(tokenAndUsername);
+            return MessageAndStatusAndData<UserNameAndTokensResponse>.Ok(response);
 
         }
 
@@ -400,7 +407,7 @@ namespace BlazorClient.Services
             HttpResponseMessage response = null;
             try
             {
-                 response = await _httpClient.SendAsync(requestMessage);
+                response = await _httpClient.SendAsync(requestMessage);
             }
             catch (Exception ex)
             {

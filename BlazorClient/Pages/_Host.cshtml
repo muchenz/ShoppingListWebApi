@@ -1,6 +1,8 @@
 ﻿@page "/"
 @namespace BlazorClient.Pages
+@using Microsoft.Extensions.Configuration
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@inject IConfiguration configuration
 @{
     Layout = null;
 }
@@ -150,5 +152,36 @@
         }
 
     </script>
+
+    <script>
+        async function loginWithBrowser(userName, password, deviceId) {
+            try {
+                const addr = '@configuration.GetSection("AppSettings")["ShoppingWebAPIBaseAddress"]';
+                const response = await fetch(`${addr}User/Login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userName: userName,
+                        password: password,
+                        deviceId: deviceId
+                    }),
+                    credentials: 'include' 
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    return data;
+                } else {
+                    throw new Error('Login failed');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                throw error;
+            }
+        }
+    </script>
+
 </body>
 </html>
