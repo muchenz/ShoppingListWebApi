@@ -196,7 +196,7 @@ namespace ShoppingListWebApi.Controllers
 
             var (accessToken, refreshToken) = await GenerateToken2(user.UserId, login.DeviceId);
 
-            HttpContext.Response.Cookies.Append("refreshToken", "ala22", new CookieOptions
+            HttpContext.Response.Cookies.Append("refreshToken", refreshToken, new CookieOptions
             {
                 HttpOnly = true,
                 Secure = true,
@@ -274,6 +274,13 @@ namespace ShoppingListWebApi.Controllers
             try
             {
                 var refreshToken = HttpContext.Request.Headers["refresh_token"].ToString();
+
+                if(HttpContext.Request.Cookies.TryGetValue("refreshToken", out var refreshTokenFromCookie))
+                { 
+                    refreshToken = refreshTokenFromCookie;
+                }
+                ;
+
                 var deviceId = HttpContext.Request.Headers["deviceid"].ToString();
 
                 //var lenght = deviceId.Length;
@@ -291,6 +298,14 @@ namespace ShoppingListWebApi.Controllers
                     return Unauthorized(new ProblemDetails { Title = "Invalid token." });
 
                 }
+                HttpContext.Response.Cookies.Append("refreshToken", newrefreshToken, new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.None,
+                    // Domain = "localhost",
+                    Expires = DateTimeOffset.UtcNow.AddDays(30)
+                });
 
                 return new UserNameAndTokensResponse
                 {
