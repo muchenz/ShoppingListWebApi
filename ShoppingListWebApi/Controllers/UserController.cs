@@ -166,7 +166,7 @@ namespace ShoppingListWebApi.Controllers
 
                 AddRefreshToken(refreshToken);
                 string id = Guid.NewGuid().ToString();
-                _memoryCache.Set(id,refreshToken,TimeSpan.FromSeconds(10) );
+                _memoryCache.Set(id,refreshToken,TimeSpan.FromSeconds(30) );
                 return Redirect($"{returnUrl}/#/?id={id}");
 
             }
@@ -180,7 +180,7 @@ namespace ShoppingListWebApi.Controllers
 
                     AddRefreshToken(refreshToken);
                     string id = Guid.NewGuid().ToString();
-                    _memoryCache.Set(id, refreshToken, TimeSpan.FromSeconds(10));
+                    _memoryCache.Set(id, refreshToken, TimeSpan.FromSeconds(30));
                     return Redirect($"{returnUrl}/#/?id={id}&sss=(rrr)");
                 }
 
@@ -189,7 +189,16 @@ namespace ShoppingListWebApi.Controllers
             return Redirect($"{returnUrl}?error=Email already exist");
 
         }
+        [HttpPost("GetAccessToken")]
+        public ActionResult<GetAccessTokenResponse> GetAccessToken(string id)
+        {
+            if(_memoryCache.TryGetValue(id, out string accessToken))
+            {
+                return  new GetAccessTokenResponse { AccessToken = accessToken };
+            }
 
+            return NotFound(new ProblemDetails { Title = "Token not found." } );
+        }
         private void AddRefreshToken(string refreshToken)
         {
             HttpContext.Response.Cookies.Append("refreshToken", refreshToken, new CookieOptions
