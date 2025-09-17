@@ -237,7 +237,6 @@
             StateHasChanged();
         }
 
-        Modal.OnClose -= ModalQuestion;
     }
 
     int permissionWantToChange;
@@ -259,18 +258,18 @@
             paramQ.Add("Warning", true);
 
 
-            Modal.OnClose += ModalQuestion;
+            //Modal.OnClose += ModalQuestion;
 
 
-            Modal.Show<ModalInfoQuestion>("Warning!", paramQ);
-
+            var modalReference =   Modal.Show<ModalInfoQuestion>("Warning!", paramQ);
+            ModalQuestion(await modalReference.Result);
             return;
         }
 
 
 
         var info = await userService.ChangeUserPermission(item, chosedListAggrId);
-        
+
         string message = info.Message;
 
         var param = new ModalParameters();
@@ -401,8 +400,7 @@
         param.Add("Name", item.User.EmailAddress);
 
 
-        Modal.OnClose += ModalDelelete;
-
+        ModalReference modalReference = null;
 
         if (item.User.EmailAddress == user.User.Identity.Name)
         {
@@ -411,13 +409,15 @@
             paramQ.Add("Line2", "Are you sure?");
             paramQ.Add("Warning", true);
 
-            Modal.Show<ModalInfoQuestion>("Warning!", paramQ);
+            modalReference=Modal.Show<ModalInfoQuestion>("Warning!", paramQ);
         }
         else
         {
-            Modal.Show<ModalDelete>("Delete", param);
+            modalReference=Modal.Show<ModalDelete>("Delete", param);
 
         }
+
+        ModalDelelete(await modalReference.Result);
 
     }
 
@@ -438,7 +438,6 @@
             Modal.Show<ModalInfo>("Information", param);
 
         }
-        Modal.OnClose -= ModalDelelete;
     }
 
 
