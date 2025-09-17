@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
@@ -53,10 +54,11 @@ namespace ShoppingListWebApi.Controllers
         private readonly ITokenEndpoint _tokenEndpoint;
         private readonly ILogger<UserController> _logger;
         private readonly ITokenService _tokenService;
+        private readonly IMemoryCache _memoryCache;
 
         public UserController(IMapper mapper, IConfiguration configuration, IMediator mediator
             , SignarRService signarRService, IUserEndpoint userEndpoint, ITokenEndpoint tokenEndpoint, ILogger<UserController> logger
-            , ITokenService tokenService)
+            , ITokenService tokenService, IMemoryCache memoryCache)
         {
             _mapper = mapper;
             _configuration = configuration;
@@ -66,6 +68,7 @@ namespace ShoppingListWebApi.Controllers
             _tokenEndpoint = tokenEndpoint;
             _logger = logger;
             _tokenService = tokenService;
+            _memoryCache = memoryCache;
         }
 
 
@@ -162,8 +165,9 @@ namespace ShoppingListWebApi.Controllers
                 var (accessToken, refreshToken) = await GenerateToken2(user.UserId, deviceId);
 
                 AddRefreshToken(refreshToken);
-
-                return Redirect($"{returnUrl}/#/?token={accessToken}");
+                string id = Guid.NewGuid().ToString();
+                _memoryCache.Set(id,refreshToken,TimeSpan.FromSeconds(10) );
+                return Redirect($"{returnUrl}/#/?id={id}");
 
             }
             else
@@ -175,7 +179,9 @@ namespace ShoppingListWebApi.Controllers
                     var (accessToken, refreshToken) = await GenerateToken2(user.UserId, deviceId); //TODO
 
                     AddRefreshToken(refreshToken);
-                    return Redirect($"{returnUrl}/#/?token={accessToken}&sss=(rrr)");
+                    string id = Guid.NewGuid().ToString();
+                    _memoryCache.Set(id, refreshToken, TimeSpan.FromSeconds(10));
+                    return Redirect($"{returnUrl}/#/?id={id}&sss=(rrr)");
                 }
 
             }
