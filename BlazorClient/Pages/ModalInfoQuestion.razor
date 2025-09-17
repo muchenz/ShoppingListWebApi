@@ -1,5 +1,4 @@
-﻿@inject IModalService ModalService
-
+﻿
 <div class="simple-form">
 
     <div class="form-control form-group @_warningStyle mb-5">
@@ -17,22 +16,16 @@
 
 @code {
 
-    [CascadingParameter] ModalParameters Parameters { get; set; }
+    [CascadingParameter] BlazoredModalInstance BlazoredModalInstance { get; set; }
 
-    string Line1 { get; set; }
-    string Line2 { get; set; }
-    bool Warning { get; set; }
+    [Parameter]
+    public string Line1 { get; set; }
+    [Parameter]
+    public string Line2 { get; set; }
+    [Parameter]
+    public bool Warning { get; set; }
 
 
-    protected override void OnInitialized()
-    {
-
-
-        Line1 = Parameters.Get<string>("Line1");
-        Line2 = Parameters.Get<string>("Line2");
-        Warning = Parameters.TryGet<bool>("Warning");
-
-    }
 
     string _warningStyle
     {
@@ -55,12 +48,12 @@
     void OK()
     {
 
-        ModalService.Close(ModalResult.Ok<bool>(true));
+        BlazoredModalInstance.Close(ModalResult.Ok<bool>(true));
     }
 
     void Cancel()
     {
-        ModalService.Cancel();
+        BlazoredModalInstance.Cancel();
     }
 
 }
