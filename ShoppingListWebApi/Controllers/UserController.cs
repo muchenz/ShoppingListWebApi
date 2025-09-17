@@ -55,8 +55,8 @@ namespace ShoppingListWebApi.Controllers
         private readonly ITokenService _tokenService;
 
         public UserController(IMapper mapper, IConfiguration configuration, IMediator mediator
-            , SignarRService signarRService, IUserEndpoint userEndpoint, ITokenEndpoint tokenEndpoint,  ILogger<UserController> logger
-            , ITokenService tokenService )
+            , SignarRService signarRService, IUserEndpoint userEndpoint, ITokenEndpoint tokenEndpoint, ILogger<UserController> logger
+            , ITokenService tokenService)
         {
             _mapper = mapper;
             _configuration = configuration;
@@ -112,10 +112,10 @@ namespace ShoppingListWebApi.Controllers
             {
 
                 user = await _userEndpoint.Register(meResponse.email, string.Empty, LoginType.Facebook);
-                var (accessToken, refreshToken) = await GenerateToken2(user.UserId, deviceId); 
+                var (accessToken, refreshToken) = await GenerateToken2(user.UserId, deviceId);
 
 
-                return new UserNameAndTokensResponse { Token = accessToken, RefreshToken=refreshToken, UserName = user.EmailAddress };
+                return new UserNameAndTokensResponse { Token = accessToken, RefreshToken = refreshToken, UserName = user.EmailAddress };
 
 
             }
@@ -127,7 +127,7 @@ namespace ShoppingListWebApi.Controllers
 
                     return Ok(
 
-                        new UserNameAndTokensResponse { Token = accessToken, RefreshToken=refreshToken, UserName = user.EmailAddress }
+                        new UserNameAndTokensResponse { Token = accessToken, RefreshToken = refreshToken, UserName = user.EmailAddress }
                         );
                 }
 
@@ -159,23 +159,41 @@ namespace ShoppingListWebApi.Controllers
             {
 
                 user = await _userEndpoint.Register(meResponse.email, string.Empty, LoginType.Facebook);
-                var (accessToken, refreshToken) = await GenerateToken2(user.UserId, deviceId); 
+                var (accessToken, refreshToken) = await GenerateToken2(user.UserId, deviceId);
 
-                return Redirect($"{returnUrl}/#/?token={accessToken}&refresh_token={refreshToken}");
+                AddRefreshToken(refreshToken);
+
+                return Redirect($"{returnUrl}/#/?token={accessToken}");
 
             }
             else
             {
+               
+
                 if (user.LoginType == 2) // 2 ==>> LoginType.Facebook
                 {
                     var (accessToken, refreshToken) = await GenerateToken2(user.UserId, deviceId); //TODO
-                    return Redirect($"{returnUrl}/#/?token={accessToken}&refresh_token={refreshToken}&sss=(rrr)");
+
+                    AddRefreshToken(refreshToken);
+                    return Redirect($"{returnUrl}/#/?token={accessToken}&sss=(rrr)");
                 }
 
             }
 
             return Redirect($"{returnUrl}?error=Email already exist");
 
+        }
+
+        private void AddRefreshToken(string refreshToken)
+        {
+            HttpContext.Response.Cookies.Append("refreshToken", refreshToken, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Lax,
+                // Domain = "localhost",
+                Expires = DateTimeOffset.UtcNow.AddDays(30)
+            });
         }
 
         [HttpPost("Login")]
@@ -201,7 +219,7 @@ namespace ShoppingListWebApi.Controllers
                 HttpOnly = true,
                 Secure = true,
                 SameSite = SameSiteMode.None,
-               // Domain = "localhost",
+                // Domain = "localhost",
                 Expires = DateTimeOffset.UtcNow.AddDays(30)
             });
             return new UserNameAndTokensResponse
@@ -212,7 +230,7 @@ namespace ShoppingListWebApi.Controllers
             };
         }
 
-       
+
 
         [HttpPost("Register")]
         public async Task<ActionResult<string>> Register(RegistrationRequest request)
@@ -248,7 +266,7 @@ namespace ShoppingListWebApi.Controllers
         [Authorize]
         //[Authorize(Roles ="User")]
         public async Task<ActionResult<User>> GetUserDataTree()
-        {   
+        {
             var name = User.FindFirstValue(ClaimTypes.Name);
 
             var userTemp = await _userEndpoint.GetTreeAsync(name);
@@ -275,11 +293,12 @@ namespace ShoppingListWebApi.Controllers
             {
                 var refreshToken = HttpContext.Request.Headers["refresh_token"].ToString();
 
-                if(HttpContext.Request.Cookies.TryGetValue("refreshToken", out var refreshTokenFromCookie))
-                { 
+                var isCookie = false;
+                if (HttpContext.Request.Cookies.TryGetValue("refreshToken", out var refreshTokenFromCookie))
+                {
                     refreshToken = refreshTokenFromCookie;
+                    isCookie = true;
                 }
-                ;
 
                 var deviceId = HttpContext.Request.Headers["deviceid"].ToString();
 
@@ -298,24 +317,28 @@ namespace ShoppingListWebApi.Controllers
                     return Unauthorized(new ProblemDetails { Title = "Invalid token." });
 
                 }
-                HttpContext.Response.Cookies.Append("refreshToken", newrefreshToken, new CookieOptions
-                {
-                    HttpOnly = true,
-                    Secure = true,
-                    SameSite = SameSiteMode.None,
-                    // Domain = "localhost",
-                    Expires = DateTimeOffset.UtcNow.AddDays(30)
-                });
 
+                if (isCookie)
+                {
+                    HttpContext.Response.Cookies.Append("refreshToken", newrefreshToken, new CookieOptions
+                    {
+                        HttpOnly = true,
+                        Secure = true,
+                        SameSite = SameSiteMode.None,
+                        // Domain = "localhost",
+                        Expires = DateTimeOffset.UtcNow.AddDays(30)
+                    });
+                }
                 return new UserNameAndTokensResponse
                 {
                     UserName = userName,
                     Token = newAccessToken,
-                    RefreshToken = newrefreshToken
-                }; ;
+                    RefreshToken = isCookie ? string.Empty : newrefreshToken
+                }; 
             }
-            finally { 
-                sem.Release(); 
+            finally
+            {
+                sem.Release();
             }
 
 
@@ -353,7 +376,7 @@ namespace ShoppingListWebApi.Controllers
         {
             var id = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
             var jti = User.FindFirstValue(JwtRegisteredClaimNames.Jti);
-            if ( await _tokenService.VerifyAcceessRefreshTokens(id, jti, request))
+            if (await _tokenService.VerifyAcceessRefreshTokens(id, jti, request))
             {
                 return Ok();
             }
@@ -362,7 +385,7 @@ namespace ShoppingListWebApi.Controllers
 
         [HttpGet("LogOut")]
         [Authorize]
-        public async  Task<ActionResult> LogOut()
+        public async Task<ActionResult> LogOut()
         {
             var jti = User.FindFirstValue(JwtRegisteredClaimNames.Jti);
             var id = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
