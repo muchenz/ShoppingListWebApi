@@ -177,6 +177,7 @@ public class Startup
 
           };
       }); ;
+        services.AddMemoryCache();
         services.AddHttpContextAccessor();
         services.AddScoped<IAuthorizationHandler, CustomRequirePermissionLevelHandler>();
         services.AddSingleton<IAuthorizationPolicyProvider, CustomAuthorizationPolicyProvider>();

@@ -166,7 +166,7 @@ namespace ShoppingListWebApi.Controllers
 
                 AddRefreshToken(refreshToken);
                 string id = Guid.NewGuid().ToString();
-                _memoryCache.Set(id,refreshToken,TimeSpan.FromSeconds(30) );
+                _memoryCache.Set(id,accessToken,TimeSpan.FromSeconds(60) );
                 return Redirect($"{returnUrl}/#/?id={id}");
 
             }
@@ -180,7 +180,7 @@ namespace ShoppingListWebApi.Controllers
 
                     AddRefreshToken(refreshToken);
                     string id = Guid.NewGuid().ToString();
-                    _memoryCache.Set(id, refreshToken, TimeSpan.FromSeconds(30));
+                    _memoryCache.Set(id, accessToken, TimeSpan.FromSeconds(60));
                     return Redirect($"{returnUrl}/#/?id={id}&sss=(rrr)");
                 }
 
@@ -189,12 +189,12 @@ namespace ShoppingListWebApi.Controllers
             return Redirect($"{returnUrl}?error=Email already exist");
 
         }
-        [HttpPost("GetAccessToken")]
-        public ActionResult<GetAccessTokenResponse> GetAccessToken(string id)
+        [HttpGet("GetAccessToken")]
+        public async Task<ActionResult<GetAccessTokenResponse>> GetAccessToken(string id)
         {
             if(_memoryCache.TryGetValue(id, out string accessToken))
             {
-                return  new GetAccessTokenResponse { AccessToken = accessToken };
+                return  await Task.FromResult(new GetAccessTokenResponse { AccessToken = accessToken });
             }
 
             return NotFound(new ProblemDetails { Title = "Token not found." } );
