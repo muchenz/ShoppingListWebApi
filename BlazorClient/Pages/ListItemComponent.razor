@@ -152,11 +152,10 @@ else
         param.Add("FullInfo", true);
 
 
-        Modal.OnClose += ModalDelelete;
+        var modalReference = Modal.Show<ModalDelete>("Delete", param);
 
 
-        Modal.Show<ModalDelete>("Delete", param);
-
+        ModalDelelete(await modalReference.Result);
 
     }
 
@@ -168,7 +167,6 @@ else
             await DeleteItemEvent.InvokeAsync(item);
 
         }
-        Modal.OnClose -= ModalDelelete;
     }
 
     async Task SaveItem(IModelItemView item) => await SaveItemEvent.InvokeAsync(item);
