@@ -164,7 +164,7 @@ namespace ShoppingListWebApi.Controllers
                 user = await _userEndpoint.Register(meResponse.email, string.Empty, LoginType.Facebook);
                 var (accessToken, refreshToken) = await GenerateToken2(user.UserId, deviceId);
 
-                AddRefreshToken(refreshToken);
+                AddRefreshTokenCookie(refreshToken);
                 string id = Guid.NewGuid().ToString();
                 _memoryCache.Set(id,accessToken,TimeSpan.FromSeconds(60) );
                 return Redirect($"{returnUrl}/#/?id={id}");
@@ -178,7 +178,7 @@ namespace ShoppingListWebApi.Controllers
                 {
                     var (accessToken, refreshToken) = await GenerateToken2(user.UserId, deviceId); //TODO
 
-                    AddRefreshToken(refreshToken);
+                    AddRefreshTokenCookie(refreshToken);
                     string id = Guid.NewGuid().ToString();
                     _memoryCache.Set(id, accessToken, TimeSpan.FromSeconds(60));
                     return Redirect($"{returnUrl}/#/?id={id}&sss=(rrr)");
@@ -199,7 +199,7 @@ namespace ShoppingListWebApi.Controllers
 
             return NotFound(new ProblemDetails { Title = "Token not found." } );
         }
-        private void AddRefreshToken(string refreshToken)
+        private void AddRefreshTokenCookie(string refreshToken)
         {
             HttpContext.Response.Cookies.Append("refreshToken", refreshToken, new CookieOptions
             {
@@ -229,7 +229,7 @@ namespace ShoppingListWebApi.Controllers
 
             var (accessToken, refreshToken) = await GenerateToken2(user.UserId, login.DeviceId);
 
-            AddRefreshToken(refreshToken);
+            AddRefreshTokenCookie(refreshToken);
 
             return new UserNameAndTokensResponse
             {
@@ -256,7 +256,7 @@ namespace ShoppingListWebApi.Controllers
                 }
                 var (accessToken, refreshToken) = await GenerateToken2(user.UserId, request.DeviceId);
 
-                AddRefreshToken(refreshToken);
+                AddRefreshTokenCookie(refreshToken);
 
                 return Ok(new UserNameAndTokensResponse
                 {
@@ -331,14 +331,7 @@ namespace ShoppingListWebApi.Controllers
 
                 if (isCookie)
                 {
-                    HttpContext.Response.Cookies.Append("refreshToken", newrefreshToken, new CookieOptions
-                    {
-                        HttpOnly = true,
-                        Secure = true,
-                        SameSite = SameSiteMode.None,
-                        // Domain = "localhost",
-                        Expires = DateTimeOffset.UtcNow.AddDays(30)
-                    });
+                    AddRefreshTokenCookie(newrefreshToken);
                 }
                 return new UserNameAndTokensResponse
                 {
