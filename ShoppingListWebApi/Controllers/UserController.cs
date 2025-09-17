@@ -214,14 +214,8 @@ namespace ShoppingListWebApi.Controllers
 
             var (accessToken, refreshToken) = await GenerateToken2(user.UserId, login.DeviceId);
 
-            HttpContext.Response.Cookies.Append("refreshToken", refreshToken, new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.None,
-                // Domain = "localhost",
-                Expires = DateTimeOffset.UtcNow.AddDays(30)
-            });
+            AddRefreshToken(refreshToken);
+
             return new UserNameAndTokensResponse
             {
                 UserName = login.UserName,
@@ -246,6 +240,8 @@ namespace ShoppingListWebApi.Controllers
                     return Conflict(new ProblemDetails { Title = "User already exist." });
                 }
                 var (accessToken, refreshToken) = await GenerateToken2(user.UserId, request.DeviceId);
+
+                AddRefreshToken(refreshToken);
 
                 return Ok(new UserNameAndTokensResponse
                 {
