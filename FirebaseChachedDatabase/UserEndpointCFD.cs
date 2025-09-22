@@ -334,8 +334,8 @@ namespace FirebaseChachedDatabase
 
         public async Task SetUserPermissionToListAggrAsync(int userId, int listAggregationId, int permission)
         {
-
-
+            await _userEndpointFD.SetUserPermissionToListAggrAsync(userId, listAggregationId, permission);
+            
             await _cache.UpdateAsync<List<UserListAggregator>, string>(Dictionary.UserId + userId,
                 userListAggr =>
                 {
@@ -352,11 +352,12 @@ namespace FirebaseChachedDatabase
 
                     return Task.FromResult(listUsersPermToListaggr);
                 });
-            await _userEndpointFD.SetUserPermissionToListAggrAsync(userId, listAggregationId, permission);
         }
 
         public async Task DeleteUserListAggrAscync(int userId, int listAggregationId)
         {
+            await _userEndpointFD.DeleteUserListAggrAscync(userId, listAggregationId);
+
             await _cache.UpdateAsync<List<UserListAggregator>, string>(Dictionary.UserId + userId,
                userListAggr =>
                {
@@ -374,7 +375,6 @@ namespace FirebaseChachedDatabase
 
                      return Task.FromResult(listUsersPermToListaggr);
                  });
-            await _userEndpointFD.DeleteUserListAggrAscync(userId, listAggregationId);
         }
 
 
