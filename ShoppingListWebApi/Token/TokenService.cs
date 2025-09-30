@@ -136,6 +136,7 @@ public class TokenService : ITokenService
             new Claim(JwtRegisteredClaimNames.Jti, jti),
             new Claim(JwtRegisteredClaimNames.Exp, new DateTimeOffset(DateTime.Now.AddSeconds(5)).ToUnixTimeSeconds().ToString()),
             new Claim(ClaimTypes.Version, version==null ? 1.ToString():version.ToString()),
+            //..user.Roles.Select(a=> new Claim(ClaimTypes.Role, a))
             };
 
         //var roles = await GetUserRoles(userId);
