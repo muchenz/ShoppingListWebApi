@@ -17,9 +17,9 @@ internal class PermissionEndpoint : IPermissionEndpoint
 
     private readonly ShopingListDBContext _context;
     private readonly IMapper _mapper;
-    private readonly IUserEndpoint _userEndpoint;
+    private readonly UserEndpoint _userEndpoint;
 
-    public PermissionEndpoint(ShopingListDBContext context, IMapper mapper, IUserEndpoint userEndpoint)
+    public PermissionEndpoint(ShopingListDBContext context, IMapper mapper, UserEndpoint userEndpoint)
     {
         _context = context;
         _mapper = mapper;

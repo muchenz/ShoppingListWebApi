@@ -11,6 +11,7 @@ namespace EFDataBase
         public static void AddEFDatabase(this IServiceCollection services)
 {
             services.AddTransient<IUserEndpoint, UserEndpoint>();
+            services.AddTransient<UserEndpoint>();
             services.AddTransient<IListAggregatorEndpoint, ListAggregatorEndpoint>();
             services.AddTransient<IListItemEndpoint, ListItemEndpoint>();
             services.AddTransient<IInvitationEndpoint, InvitationEndpoint>();
