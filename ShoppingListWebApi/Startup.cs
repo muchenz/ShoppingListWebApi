@@ -91,15 +91,15 @@ public class Startup
                options.UseSqlite(Configuration.GetConnectionString("ShopingListDB3")));
         //options.UseSqlite("data source=C:\\Users\\muchenz\\source\\repos\\ShoppingListWebApi\\ShippingListDB_SQLite\\ShippingListDB_SQLite.db"));
 
-       // services.AddEFDatabase();
+        // services.AddEFDatabase();
 
         //---------------------------------------------
-        services.AddFirebasedDatabase(Configuration);
+        //services.AddFirebasedDatabase(Configuration);
 
         //------------------------------------------------
-        //services.AddFirebaseCaschedDatabas();
-        //services.AddSingleton<CacheConveinient>();
-        //services.AddSingleton<IMiniDistributedCache, FirabaseCache>();
+        services.AddFirebaseCaschedDatabas(Configuration);
+        services.AddSingleton<CacheConveinient>();
+        services.AddSingleton<IMiniDistributedCache, FirabaseCache>();
         //-----------------------------------------------
 
         services.AddScoped<ITokenService, TokenService>();

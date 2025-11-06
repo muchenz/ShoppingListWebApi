@@ -25,7 +25,7 @@ namespace Shared.DataEndpoints.Abstaractions
 
         Task<User> GetTreeAsync(string userName);
         Task<User> GetUserByNameAsync(string userName);
-
+        //-----------------------------
         Task<bool> IsUserHasListAggregatorAsync(int userId, int listAggregatorId);
         Task<bool> IsUserIsAdminOfListAggregatorAsync(int userId, int listAggregatorId);
         Task AddUserListAggregationAsync(int userId, int listAggregationId, int permission);
@@ -37,6 +37,8 @@ namespace Shared.DataEndpoints.Abstaractions
         Task<List<UserListAggregator>> TryGetTwoAdministratorsOfListAggregationsAsync(int listAggregationId); 
         Task<int> GetLastAdminIdAsync(int listAggregationId);
         Task SetUserPermissionToListAggrAsync(int userId, int listAggregationId, int permission);
+        //-----------------------------
+
         Task DeleteUserListAggrAscync(int userId, int listAggregationId);
 
         Task<List<ListAggregationWithUsersPermission>> GetListAggrWithUsersPermAsync(string userName);

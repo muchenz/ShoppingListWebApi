@@ -3,9 +3,10 @@ using EFDataBase;
 using FirebaseDatabase;
 using Google.Cloud.Firestore;
 using Microsoft.Extensions.Caching.Distributed;
-
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Shared.DataEndpoints.Abstaractions;
+using ShoppingListWebApi.Data;
 using System;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -223,13 +224,27 @@ namespace FirebaseChachedDatabase
 
     public static class AddFirebaseCaschedDatabasExtensions
     {
-        public static void AddFirebaseCaschedDatabas(this IServiceCollection services)
+        public static void AddFirebaseCaschedDatabas(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddTransient<UserEndpointFD, UserEndpointFD>();
             services.AddTransient<ListAggregatorEndpointFD, ListAggregatorEndpointFD>();
             services.AddTransient<ListItemEndpointFD, ListItemEndpointFD>();
             services.AddTransient<InvitationEndpointFD, InvitationEndpointFD>();
             services.AddTransient<ListEndpointFD, ListEndpointFD>();
+
+            services.AddTransient<ToDeleteEndpoint>();
+            services.AddSingleton<DeleteChannel>();
+
+            services.Configure<FirebaseFDOptions>(configuration.GetSection(FirebaseFDOptions.SectionName));
+
+
+            var firebaseOptions = configuration.GetSection(FirebaseFDOptions.SectionName).Get<FirebaseFDOptions>();
+
+            if (firebaseOptions.UseBatchProcessing)
+            {
+                services.AddHostedService<ToDeleteService>();
+            }
+            //-----------------------
 
 
             services.AddTransient<IUserEndpoint, UserEndpointCFD>();
