@@ -107,4 +107,45 @@ internal class PermissionEndpoint : IPermissionEndpoint
 
         return InvitationResult.Ok();
     }
+
+    public async Task<Result> DeleteUserPermission(int listAggregationId
+       , UserPermissionToListAggregation item, int senderId)
+    {
+
+        //if (await _userEndpoint.IsUserIsAdminOfListAggregatorAsync(senderId, listAggregationId) is not true)
+        //{
+        //    return Problem(title: "User has no permission.", statusCode: 403);
+        //}
+
+        var user = await _userEndpoint.GetUserByNameAsync(item.User.EmailAddress);
+
+        if (user == null)
+            return InvitationResult.Failure(Error.NotFound("User not exist."));
+
+
+        var admins = await _userEndpoint.TryGetTwoAdministratorsOfListAggregationsAsync(listAggregationId);
+
+        if (admins.Count == 1 && user.UserId == admins.First().UserId)
+            return InvitationResult.Failure(Error.Conflict("Only one Admin left - not delete."));
+
+
+
+        bool isUserHasListAggregator = await _userEndpoint.IsUserHasListAggregatorAsync(user.UserId, listAggregationId);
+
+
+        if (!isUserHasListAggregator)
+            return InvitationResult.Failure(Error.NotFound("User permission not found."));
+
+        try
+        {
+            await _userEndpoint.DeleteUserListAggrAscync(user.UserId, listAggregationId);
+
+        }
+        catch (DbUpdateException ex)
+        {
+            return InvitationResult.Failure(Error.Unexpected("Failed to Delete permission. Refresh data and try again."));
+        }
+
+        return InvitationResult.Ok();
+    }
 }
