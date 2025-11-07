@@ -288,6 +288,9 @@ namespace FirebaseChachedDatabase
 
         public async Task AddUserListAggregationAsync(int userId, int listAggregationId, int permission)
         {
+
+            await _userEndpointFD.AddUserListAggregationAsync(userId, listAggregationId, permission);
+
             await _cache.UpdateAsync<List<UserListAggregator>, string>(Dictionary.UserId + userId,
                   userListAggr =>
                   {
@@ -300,8 +303,6 @@ namespace FirebaseChachedDatabase
                       });
                       return Task.FromResult(userListAggr);
                   });
-
-            await _userEndpointFD.AddUserListAggregationAsync(userId, listAggregationId, permission);
         }
 
         public Task<bool> IsUserInvitatedToListAggregationAsync(int userId, int listAggregationId)
@@ -411,6 +412,8 @@ namespace FirebaseChachedDatabase
 
         public async Task<List<UserListAggregator>> GetUserListAggrByUserId(int userId)
         {
+
+
 
             var cashed = await _cache.GetAsync<List<UserListAggregator>>(Dictionary.UserId + userId);
 
