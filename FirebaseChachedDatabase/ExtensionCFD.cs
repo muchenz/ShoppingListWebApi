@@ -253,7 +253,7 @@ namespace FirebaseChachedDatabase
             services.AddTransient<IListItemEndpoint, ListItemEndpointCFD>();
             services.AddTransient<IInvitationEndpoint, InvitationEndpointCFD>();
             services.AddTransient<IListEndpoint, ListEndpointCFD>();
-            services.AddTransient<IPermissionEndpoint, PermissionEndpointCFT>();
+            services.AddTransient<IPermissionEndpoint, PermissionEndpointCFD>();
 
             services.AddTransient<ITokenEndpoint, UserEndpointCFD>();
 
