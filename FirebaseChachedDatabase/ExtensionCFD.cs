@@ -231,6 +231,7 @@ namespace FirebaseChachedDatabase
             services.AddTransient<ListItemEndpointFD, ListItemEndpointFD>();
             services.AddTransient<InvitationEndpointFD, InvitationEndpointFD>();
             services.AddTransient<ListEndpointFD, ListEndpointFD>();
+            services.AddTransient<PermissionEndpointFD>();
 
             services.AddTransient<ToDeleteEndpoint>();
             services.AddSingleton<DeleteChannel>();
@@ -252,9 +253,11 @@ namespace FirebaseChachedDatabase
             services.AddTransient<IListItemEndpoint, ListItemEndpointCFD>();
             services.AddTransient<IInvitationEndpoint, InvitationEndpointCFD>();
             services.AddTransient<IListEndpoint, ListEndpointCFD>();
+            services.AddTransient<IPermissionEndpoint, PermissionEndpointCFT>();
 
             services.AddTransient<ITokenEndpoint, UserEndpointCFD>();
 
+            //services.AddMemoryCache();
         }
 
     }
