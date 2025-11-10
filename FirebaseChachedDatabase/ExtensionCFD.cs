@@ -257,7 +257,7 @@ namespace FirebaseChachedDatabase
 
             services.AddTransient<ITokenEndpoint, UserEndpointCFD>();
 
-            //services.AddMemoryCache();
+            services.AddMemoryCache();
         }
 
     }
