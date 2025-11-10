@@ -6,6 +6,7 @@ using Google.Type;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Caching.Memory;
 using Shared.DataEndpoints.Abstaractions;
 using Shared.DataEndpoints.Models;
 using System;
@@ -24,6 +25,7 @@ namespace FirebaseChachedDatabase
         private readonly IMapper _mapper;
         private readonly CacheConveinient _cache;
         private readonly UserEndpointFD _userEndpointFD;
+        private readonly IMemoryCache _memoryCache;
         FirestoreDb Db;
 
         CollectionReference _listAggrCol;
@@ -36,12 +38,13 @@ namespace FirebaseChachedDatabase
         CollectionReference _refreshToken;
 
 
-        public UserEndpointCFD(IMapper mapper, CacheConveinient cache, UserEndpointFD userEndpointFD)
+        public UserEndpointCFD(IMapper mapper, CacheConveinient cache, UserEndpointFD userEndpointFD, IMemoryCache  memoryCache)
         {
             Db = FirestoreDb.Create("testnosqldb1");
             _mapper = mapper;
             _cache = cache;
             _userEndpointFD = userEndpointFD;
+            _memoryCache = memoryCache;
             _listAggrCol = Db.Collection("listAggregator");
             _listCol = Db.Collection("list");
             _listItemCol = Db.Collection("listItem");
