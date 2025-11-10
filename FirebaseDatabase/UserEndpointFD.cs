@@ -338,12 +338,9 @@ namespace FirebaseDatabase
             }
 
 
-            var listListAggregatortDTO = new List<ListAggregator>();
-
-
-
             if (!listUserListAggregator.Any()) return userDTO;
 
+            var listListAggregatortDTO = new List<ListAggregator>();
 
 
             var docListAggerSnapshotsList = await RestrictQuerryListTo10Async(
