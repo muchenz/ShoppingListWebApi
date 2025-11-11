@@ -76,7 +76,7 @@ namespace ShoppingListWebApi.Controllers
         //[Authorize(Roles ="Admin")]
         public async Task<ActionResult<User>> GetUser(int id)
         {
-            var user = await _userEndpoint.FindUserByIdAsync(id);
+            var user = await _userEndpoint.GetUserByIdAsync(id);
 
             if (user == null)
             {
