@@ -2,6 +2,7 @@
 using FirebaseDatabase;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Caching.Memory;
 using Shared.DataEndpoints.Abstaractions;
 using Shared.DataEndpoints.Models;
 using System;
@@ -15,11 +16,14 @@ namespace FirebaseChachedDatabase
     {
         private readonly ListItemEndpointFD _listItemEndpointFD;
         private readonly CacheConveinient _cache;
+        private readonly IMemoryCache _memoryCache;
 
-        public ListItemEndpointCFD(IMapper mapper, ListItemEndpointFD listItemEndpointFD, CacheConveinient cache)
+        public ListItemEndpointCFD(IMapper mapper, ListItemEndpointFD listItemEndpointFD, CacheConveinient cache,
+            IMemoryCache memoryCache)
         {
             _listItemEndpointFD = listItemEndpointFD;
             _cache = cache;
+            _memoryCache = memoryCache;
         }
 
         public async Task<ListItem> AddListItemAsync(int parentId, ListItem listItem, int listAggregationId)
@@ -98,7 +102,7 @@ namespace FirebaseChachedDatabase
                             item.GetType().GetProperty(propertyName).SetValue(item, value);
 
                             await _cache.SetAsync(listAggregationId, res);
-
+                            _memoryCache.Set(listAggregationId, res);
                         }
 
                     }
@@ -127,6 +131,7 @@ namespace FirebaseChachedDatabase
                         fromdelete.ListItems.Remove(todelete);
 
                         await _cache.SetAsync(listAggregationId, res);
+                        _memoryCache.Set(listAggregationId, res);
 
                     }
                 }
@@ -146,6 +151,7 @@ namespace FirebaseChachedDatabase
                         list.ListItems.Add(listItem);
 
                         await _cache.SetAsync(listAggregationId, res);
+                        _memoryCache.Set(listAggregationId, res);
 
                     }
                 }
