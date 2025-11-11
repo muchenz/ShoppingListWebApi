@@ -21,7 +21,7 @@ namespace Shared.DataEndpoints.Abstaractions
     }
     public interface IUserEndpoint
     {
-        public Task<User> FindUserByIdAsync(int id);
+        public Task<User> GetUserByIdAsync(int id);
 
         Task<User> GetTreeAsync(string userName);
         Task<User> GetUserByNameAsync(string userName);
