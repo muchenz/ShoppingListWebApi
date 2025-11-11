@@ -2,6 +2,7 @@
 using FirebaseDatabase;
 using Google.Cloud.Firestore;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Caching.Memory;
 using Shared.DataEndpoints.Abstaractions;
 using Shared.DataEndpoints.Models;
 using System.Collections.Generic;
@@ -16,12 +17,14 @@ namespace FirebaseChachedDatabase
     {
         private readonly ListAggregatorEndpointFD _listAggregatorEndpoint;
         private readonly CacheConveinient _cache;
+        private readonly IMemoryCache _memoryCache;
 
         public ListAggregatorEndpointCFD(IMapper mapper, ListAggregatorEndpointFD listAggregatorEndpoint
-            , CacheConveinient cache)
+            , CacheConveinient cache, IMemoryCache memoryCache)
         {
             _listAggregatorEndpoint = listAggregatorEndpoint;
             _cache = cache;
+            _memoryCache = memoryCache;
         }
 
         public async Task<ListAggregator> AddListAggregatorAsync(ListAggregator listAggregator, int parentId)
@@ -42,7 +45,7 @@ namespace FirebaseChachedDatabase
             }
 
             await _cache.SetAsync(addedListAggr.ListAggregatorId, addedListAggr);
-
+            _memoryCache.Set(addedListAggr.ListAggregatorId, addedListAggr);
             return addedListAggr;
 
 
@@ -67,6 +70,7 @@ namespace FirebaseChachedDatabase
             var deleted = await _listAggregatorEndpoint.DeleteListAggrAsync(listAggregationId);
 
             await _cache.RemoveAnyKeyAsync(listAggregationId);
+            _memoryCache.Remove(listAggregationId);
 
 
             foreach (var item in listUseListAggr)
@@ -92,7 +96,7 @@ namespace FirebaseChachedDatabase
         public async Task<ListAggregator> EditListAggregatorAsync(ListAggregator listAggregator)
         {
             await _cache.RemoveAnyKeyAsync(listAggregator.ListAggregatorId);
-
+            _memoryCache.Remove(listAggregator.ListAggregatorId);
             return await _listAggregatorEndpoint.EditListAggregatorAsync(listAggregator);
         }
     }
