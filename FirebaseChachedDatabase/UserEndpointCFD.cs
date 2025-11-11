@@ -59,37 +59,9 @@ namespace FirebaseChachedDatabase
 
         async Task<(User, List<UserListAggregatorFD>)> GetUserAggrListAsync(string userName)
         {
-            var aa = new ListAggregatorFD() { };
+            var userDTO = await GetUserByNameAsync(userName);
 
-
-            var querrySnapshot = await _usersCol.WhereEqualTo("EmailAddress", userName).GetSnapshotAsync();
-
-            var documentSnapshot = querrySnapshot.FirstOrDefault();
-            var userFD = documentSnapshot.ConvertTo<UserFD>();
-            userFD.Id = documentSnapshot.Id;
-
-            //--------
-            var userDTO = new User
-            {
-                EmailAddress = userName,
-                LoginType = userFD.LoginType,
-                Roles = userFD.Roles
-                                    ,
-                UserId = int.Parse(userFD.Id)
-            };
-
-            //querrySnapshot = await _userListAggrCol.WhereEqualTo("UserId", userFD.UserId).GetSnapshotAsync();
-
-
-            //var listUserListAggregatorFD = new List<UserListAggregatorFD>();
-
-            //foreach (var item in querrySnapshot)
-            //{
-            //    var temp = item.ConvertTo<UserListAggregatorFD>();
-            //    listUserListAggregator.Add(temp);
-            //}
-
-            var listUserListAggregator = await GetUserListAggrByUserId(userFD.UserId);
+            var listUserListAggregator = await GetUserListAggrByUserId(userDTO.UserId);
 
             var listUserListAggregatorFD = _mapper.Map<List<UserListAggregatorFD>>(listUserListAggregator);
 
@@ -224,6 +196,7 @@ namespace FirebaseChachedDatabase
             return documentSnapshotsList;
         }
 
+       
         public async Task<User> GetTreeAsync(string userName)
         {
 
@@ -233,11 +206,10 @@ namespace FirebaseChachedDatabase
 
             var listToRemove = new List<UserListAggregatorFD>();
 
-
             foreach (var item in userAggrList)
             {
-
-                var cashed = await _cache.GetAsync<ListAggregator>(item.ListAggregatorId);
+                var cashed = await _memoryCache.GetOrCreateAsync(item.ListAggregatorId,
+                    async _ =>  await _cache.GetAsync<ListAggregator>(item.ListAggregatorId));
 
                 if (cashed != null)
                 {
@@ -265,14 +237,15 @@ namespace FirebaseChachedDatabase
             return user;
         }
 
-        public Task<User> FindUserByIdAsync(int id)
+        public Task<User> GetUserByIdAsync(int id)
         {
-            return _userEndpointFD.FindUserByIdAsync(id);
+            return _memoryCache.GetOrCreateAsync($"userid:{id}", async _=> await _userEndpointFD.GetUserByIdAsync(id));
         }
 
         public Task<User> GetUserByNameAsync(string userName)
         {
-            return _userEndpointFD.GetUserByNameAsync(userName);
+            return _memoryCache.GetOrCreateAsync($"username:{userName}", 
+                async _ => await _userEndpointFD.GetUserByNameAsync(userName));
         }
 
         public async Task<bool> IsUserIsListAggregatorAsync(int userId, int listAggregatorId)
@@ -458,29 +431,35 @@ namespace FirebaseChachedDatabase
             return _userEndpointFD.GetUserIdsFromListAggrIdAsync(listAggregationId);
         }
 
-        public async Task<User> GetUserById(int userId)
-        {
-            var querrySnapshot = await _usersCol.WhereEqualTo(nameof(UserFD.UserId), userId).GetSnapshotAsync();
-
-            var documentSnapshot = querrySnapshot.FirstOrDefault();
-            var userFD = documentSnapshot.ConvertTo<UserFD>();
-            userFD.Id = documentSnapshot.Id;
-
-            return _mapper.Map<User>(userFD);
-        }
+       
 
         async Task<List<ListAggregationWithUsersPermission>> GetListAggrWithUsersPerm_EmptyAsync(string userName)
         {
             var userTree = await GetTreeAsync(userName);
 
 
+            //return userTree.ListAggregators.Where(a => a.PermissionLevel == 1).Select(a =>
+            //{
+            //    a.Lists = null;
+            //    return new ListAggregationWithUsersPermission
+            //    {
+            //        ListAggregator = a
+
+            //    };
+            //}).ToList();
+
+            //because MemoryCache has same reference (!!!) to objects so "a.Lists = null;" infer cache!!!
             return userTree.ListAggregators.Where(a => a.PermissionLevel == 1).Select(a =>
             {
-                a.Lists = null;
                 return new ListAggregationWithUsersPermission
                 {
-                    ListAggregator = a
+                    ListAggregator = new ListAggregator
+                    {
+                        ListAggregatorId = a.ListAggregatorId,
+                        ListAggregatorName = a.ListAggregatorName,
+                        PermissionLevel = a.PermissionLevel
 
+                    }
                 };
             }).ToList();
 
@@ -489,7 +468,7 @@ namespace FirebaseChachedDatabase
         }
         public async Task<List<ListAggregationWithUsersPermission>> GetListAggrWithUsersPerm_EmptyAsync(int userId)
         {
-            var user = await GetUserById(userId);
+            var user = await GetUserByIdAsync(userId);
 
             return await GetListAggrWithUsersPerm_EmptyAsync(user.EmailAddress);
         }
