@@ -108,7 +108,7 @@ namespace FirebaseDatabase
             await querrySnapshot.FirstOrDefault().Reference.DeleteAsync();
         }
 
-        public async Task<User> FindUserByIdAsync(int id)
+        public async Task<User> GetUserByIdAsync(int id)
         {
 
             var refDoc = await _usersCol.Document(id.ToString()).GetSnapshotAsync();
@@ -307,26 +307,9 @@ namespace FirebaseDatabase
             CollectionReference usersColection = Db.Collection("users");
 
 
-            var aa = new ListAggregatorFD() { };
+            var userDTO = await GetUserByNameAsync(userName);
 
-
-            var querrySnapshot = await usersColection.WhereEqualTo("EmailAddress", userName).GetSnapshotAsync();
-
-            var documentSnapshot = querrySnapshot.FirstOrDefault();
-            var userFD = documentSnapshot.ConvertTo<UserFD>();
-            userFD.Id = documentSnapshot.Id;
-
-            //--------
-            var userDTO = new User
-            {
-                EmailAddress = userName,
-                LoginType = userFD.LoginType,
-                Roles = userFD.Roles
-                                    ,
-                UserId = int.Parse(userFD.Id)
-            };
-
-            querrySnapshot = await userListAggregatorColection.WhereEqualTo("UserId", userFD.UserId).GetSnapshotAsync();
+            var querrySnapshot = await userListAggregatorColection.WhereEqualTo("UserId", userDTO.UserId).GetSnapshotAsync();
 
 
             var listUserListAggregator = new List<UserListAggregatorFD>();
@@ -486,12 +469,12 @@ namespace FirebaseDatabase
 
         public async Task<List<string>> GetUserRolesByUserIdAsync(int userId)
         {
-            return (await FindUserByIdAsync(userId))?.Roles.ToList();
+            return (await GetUserByIdAsync(userId))?.Roles.ToList();
         }
 
         public Task<User> GetUserWithRolesAsync(int userId)
         {
-            return FindUserByIdAsync(userId);
+            return GetUserByIdAsync(userId);
         }
 
        
