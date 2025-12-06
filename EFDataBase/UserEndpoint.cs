@@ -26,7 +26,7 @@ namespace EFDataBase
 
 
 
-        public async Task<User> FindUserByIdAsync(int id)
+        public async Task<User> GetUserByIdAsync(int id)
         {
             var user = await _context.Users.FindAsync(id);
 
