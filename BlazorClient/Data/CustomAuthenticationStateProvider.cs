@@ -55,10 +55,11 @@ namespace BlazorClient.Data
             else
             {
                 _tokenClientService.LogInstance("CustomAuthenticationStateProvider");
-                while (_tokenClientService.IsTokenRefresing) 
-                {
-                    await Task.Delay(100);
-                }
+                //while (_tokenClientService.IsTokenRefresing) 
+                //{
+                //    await Task.Delay(100);
+                //}
+                await Task.Run( ()=> _tokenClientService.IsTokenRefresingEvent.Wait());
                 try
                 {
                     var accessToken = await _localStorageService.GetItemAsync<string>("accessToken");

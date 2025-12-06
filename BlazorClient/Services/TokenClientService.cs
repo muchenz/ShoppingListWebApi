@@ -83,7 +83,10 @@ public class TokenClientService
     }
 
     SemaphoreSlim semSlim = new SemaphoreSlim(1);
+
+    // shoud be volatile
     public bool IsTokenRefresing { get; set; } = false;
+    public ManualResetEventSlim IsTokenRefresingEvent = new ManualResetEventSlim(true);
     public async Task CheckAndSetNewTokens()
     {
         if (!IsTokenExpired())
@@ -96,7 +99,8 @@ public class TokenClientService
             if (IsTokenExpired())
             {
                 //_stateService.StateInfo.IsTokenRefresing = true;
-                IsTokenRefresing = true;
+                //IsTokenRefresing = true;
+                IsTokenRefresingEvent.Reset();
                 if (await RefreshTokensAsync() == false)
                 {
                     throw new UnauthorizedAccessException("Could not refresh token");
@@ -107,7 +111,8 @@ public class TokenClientService
         {
             LogInstance("CheckAndSetNewTokens");
             //_stateService.StateInfo.IsTokenRefresing = false;
-            IsTokenRefresing = false;
+            //IsTokenRefresing = false;
+            IsTokenRefresingEvent.Set();
             semSlim.Release();
 
         }
