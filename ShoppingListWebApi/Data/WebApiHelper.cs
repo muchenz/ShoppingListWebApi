@@ -26,7 +26,7 @@ namespace ShoppingListWebApi.Data
             var querry = new QueryBuilder();
             querry.Add("client_id", appId);
             querry.Add("client_secret", apiPrivateKey);
-            //querry.Add("redirect_uri", "https://localhost:5001/api/User");
+            //querry.Add("redirect_uri", "https://localhost:8001/api/User");
            // querry.Add("redirect_uri", "https://webapi.mcfly.ga/api/User");
             querry.Add("redirect_uri", myDomain);
             querry.Add("code", code);
@@ -40,7 +40,7 @@ namespace ShoppingListWebApi.Data
 
 
             //return RedirectPermanent("https://graph.facebook.com/oauth/access_token?client_id=259675572518658&client_secret=da7b7d35c4755ff27bb2051d803d7eef"
-            //    + $"&redirect_uri=https://localhost:5001/api/User&code={code}");
+            //    + $"&redirect_uri=https://localhost:8001/api/User&code={code}");
 
             using var clientHttp = new HttpClient();
             clientHttp.BaseAddress = new Uri("https://graph.facebook.com");
