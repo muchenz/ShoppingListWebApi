@@ -15,6 +15,7 @@ namespace FirebaseDatabase
     internal class ListAggregatorEndpointFD : IListAggregatorEndpoint
     {
         private readonly IMapper _mapper;
+        private readonly DeleteChannel _deleteChannel;
         private readonly FirebaseFDOptions _firebaseFDOptions;
         FirestoreDb Db;
 
@@ -35,6 +36,7 @@ namespace FirebaseDatabase
 
             Db = FirestoreDb.Create("testnosqldb1");
             _mapper = mapper;
+            _deleteChannel = deleteChannel;
             _firebaseFDOptions = optionsFire.Value;
             _listAggrCol = Db.Collection("listAggregator");
             _listCol = Db.Collection("list");
@@ -124,7 +126,10 @@ namespace FirebaseDatabase
                     amount++;
                 });
 
-                await _deleteChannel.Writer.WriteAsync(new DeleteEvent());
+                if (_firebaseFDOptions.UseChannel) 
+                {
+                    await _deleteChannel.Writer.WriteAsync(new DeleteEvent());
+                }
 
                 return amount;
             }

@@ -176,9 +176,12 @@ namespace FirebaseDatabase
                     transation.Set(todeleteRef, toDedelete);
                     amount++;
                 });
-
-                await _deleteChannel.Writer.WriteAsync(new DeleteEvent());
                 
+                if (_firebaseFDOptions.UseChannel)
+                {
+                    await _deleteChannel.Writer.WriteAsync(new DeleteEvent());
+                }
+
                 return amount;
             }
             catch (Exception ex)
