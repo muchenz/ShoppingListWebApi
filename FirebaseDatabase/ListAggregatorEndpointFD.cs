@@ -29,7 +29,8 @@ namespace FirebaseDatabase
 
         private object listItemId;
 
-        public ListAggregatorEndpointFD(IMapper mapper, IOptions<FirebaseFDOptions> optionsFire)
+        public ListAggregatorEndpointFD(IMapper mapper, IOptions<FirebaseFDOptions> optionsFire, 
+            DeleteChannel deleteChannel)
         {
 
             Db = FirestoreDb.Create("testnosqldb1");
@@ -122,6 +123,8 @@ namespace FirebaseDatabase
                     transation.Set(todeleteRef, toDedelete);
                     amount++;
                 });
+
+                await _deleteChannel.Writer.WriteAsync(new DeleteEvent());
 
                 return amount;
             }
