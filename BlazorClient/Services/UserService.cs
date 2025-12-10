@@ -1,6 +1,7 @@
 ﻿using BlazorClient.Models;
 using BlazorClient.Models.Requests;
 using BlazorClient.Models.Response;
+using BlazorClient.Pages.LoginPages;
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -148,10 +149,17 @@ namespace BlazorClient.Services
             }
             catch (JSException ex)
             {
-                return MessageAndStatusAndData<UserNameAndTokensResponse>.Fail("Invalid username or password.");
+                var splitError = ex.Message.Split("\n");
+                var first = splitError[0].Trim();
+                
+                return first switch
+                {
+                    "Failed to fetch" => MessageAndStatusAndData<UserNameAndTokensResponse>.Fail("Connection problem."),
+                    "Login failed" => MessageAndStatusAndData<UserNameAndTokensResponse>.Fail("Invalid username or password."),
+                    _ => MessageAndStatusAndData<UserNameAndTokensResponse>.Fail("Other connection problem.")
+
+                };
             }
-
-
             return MessageAndStatusAndData<UserNameAndTokensResponse>.Ok(response);
 
         }
