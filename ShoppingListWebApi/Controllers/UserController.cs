@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Azure.Core;
 using EFDataBase;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -140,6 +141,17 @@ namespace ShoppingListWebApi.Controllers
 
         }
 
+        Dictionary<string,string> MakeStateDictionary(string state)
+        {
+            Dictionary<string, string> stateDic = new();
+            foreach (var item in state.Split(","))
+            {
+                var key = item.Split("=")[0].Trim();
+                var value = item.Split("=")[1].Trim();
+                stateDic[key] = value;
+            }
+            return stateDic;
+        }
 
         [HttpGet]
         public async Task<IActionResult> FacebookCode(string code, string state)
@@ -147,8 +159,12 @@ namespace ShoppingListWebApi.Controllers
             MeResponse meResponse = null;
 
             string referer = Request.Headers["Referer"].ToString();
-            var returnUrl = state.Split(",").Last().Split("=").Last();
-            var deviceId = state.Split(",")[^2].Split("=").Last();
+            Dictionary<string, string> stateDic = MakeStateDictionary(state);
+
+
+            stateDic.TryGetValue("returnUrl", out var returnUrl);
+            stateDic.TryGetValue("di", out var deviceId);
+
             string myDomain = Request.GetDisplayUrl().Split('?')[0];
 
             if (!string.IsNullOrEmpty(code))
@@ -166,8 +182,22 @@ namespace ShoppingListWebApi.Controllers
 
                 AddRefreshTokenCookie(refreshToken);
                 string id = Guid.NewGuid().ToString();
-                _memoryCache.Set(id,accessToken,TimeSpan.FromSeconds(60) );
-                return Redirect($"{returnUrl}/#/?id={id}");
+                _memoryCache.Set(id, (accessToken: accessToken, refreshToken: refreshToken, useName:user.EmailAddress), TimeSpan.FromSeconds(60) );
+
+                // -------- for MAUI login by browser
+                string html = $@"
+                                <html>
+                                <body>
+                                <script>
+                                window.location.href = '{returnUrl}?id={id}';
+                                </script>
+                                <p>Jeśli nie nastąpi automatyczne przekierowanie, kliknij <a href='{returnUrl}?id={id}'>tutaj</a>.</p>
+                                </body>
+                                </html>";
+                return Content(html, "text/html");
+
+
+                //return Redirect($"{returnUrl}/#/?id={id}");
 
             }
             else
@@ -180,8 +210,23 @@ namespace ShoppingListWebApi.Controllers
 
                     AddRefreshTokenCookie(refreshToken);
                     string id = Guid.NewGuid().ToString();
-                    _memoryCache.Set(id, accessToken, TimeSpan.FromSeconds(60));
-                    return Redirect($"{returnUrl}/#/?id={id}&sss=(rrr)");
+                    _memoryCache.Set(id, (accessToken:accessToken, refreshToken:refreshToken, useName: user.EmailAddress), TimeSpan.FromSeconds(60));
+
+
+                    // -------- for MAUI login by browser
+                    string html = $@"
+                                    <html>
+                                    <body>
+                                    <script>
+                                    window.location.href = '{returnUrl}?id={id}';
+                                    </script>
+                                    <p>Jeśli nie nastąpi automatyczne przekierowanie, kliknij <a href='{returnUrl}?id={id}'>tutaj</a>.</p>
+                                    </body>
+                                    </html>";
+                    return Content(html, "text/html");
+
+
+                    //return Redirect($"{returnUrl}/#/?id={id}&sss=(rrr)");
                 }
 
             }
@@ -192,12 +237,27 @@ namespace ShoppingListWebApi.Controllers
         [HttpGet("GetAccessToken")]
         public async Task<ActionResult<GetAccessTokenResponse>> GetAccessToken(string id)
         {
-            if(_memoryCache.TryGetValue(id, out string accessToken))
+            if(_memoryCache.TryGetValue(id, out var tokens ))
             {
+                var (accessToken, _, _) = ((string , string, string))tokens;
+
                 return  await Task.FromResult(new GetAccessTokenResponse { AccessToken = accessToken });
             }
 
             return NotFound(new ProblemDetails { Title = "Token not found." } );
+        }
+
+        [HttpGet("GetTokensFromId")]
+        public async Task<ActionResult<UserNameAndTokensResponse>> GetTokens(string id)
+        {
+            if (_memoryCache.TryGetValue(id, out var tokens))
+            {
+                var (accessToken, refreshToken,userName) = ((string, string, string))tokens;
+
+                return await Task.FromResult(new UserNameAndTokensResponse { Token = accessToken, RefreshToken=refreshToken, UserName= userName });
+            }
+
+            return NotFound(new ProblemDetails { Title = "Token not found." });
         }
         private void AddRefreshTokenCookie(string refreshToken)
         {
