@@ -15,15 +15,15 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
-      "applicationUrl": "https://localhost:8003;https://192.168.0.222:8003"
+      "applicationUrl": "https://localhost:5003;https://192.168.0.222:5003"
     },
     "WSL": {
       "commandName": "WSL2",
       "launchBrowser": true,
-      "launchUrl": "https://localhost:8003/weatherforecast",
+      "launchUrl": "https://localhost:5003/weatherforecast",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "ASPNETCORE_URLS": "https://localhost:8003;https://192.168.0.222:8003"
+        "ASPNETCORE_URLS": "https://localhost:5003;https://192.168.0.222:5003"
       },
       "distributionName": ""
     },
@@ -32,7 +32,7 @@
       "launchBrowser": true,
       "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}/weatherforecast",
       "environmentVariables": {
-        "ASPNETCORE_URLS": "https://+:8003;"
+        "ASPNETCORE_URLS": "https://+:5003;"
       },
       "publishAllPorts": true,
       "useSSL": true

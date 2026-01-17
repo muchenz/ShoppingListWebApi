@@ -35,7 +35,7 @@ namespace BlazorClient.Data_COPY
 
         public static async Task SignalRInitAsync(IConfiguration configuration)
         {
-            //_hubConnection = new HubConnectionBuilder().WithUrl("https://94.251.148.187:8013/chatHub", (opts) =>
+            //_hubConnection = new HubConnectionBuilder().WithUrl("https://94.251.148.187:5013/chatHub", (opts) =>
             //{
             //_hubConnection = new HubConnectionBuilder().WithUrl("https://192.168.8.222:91/chatHub", (opts) =>
             //{
