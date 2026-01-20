@@ -4,6 +4,7 @@
 @inherits LayoutComponentBase
 @inject IConfiguration configuration
 @inject NavigationManager NavigationManager
+@inject StateService stateService
 @inject Blazored.LocalStorage.ILocalStorageService localStorageService
 
 @inject IJSRuntime JSRuntime
@@ -80,7 +81,7 @@
     </div>
     </BlazorClient.Pages.SignalR>
 @code{
-   
+
     protected override void OnInitialized()
     {
         NavigationManager.LocationChanged += HandleLocationChange;
@@ -110,7 +111,7 @@
         }
     }
 
-   
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -120,6 +121,7 @@
         {
             await localStorageService.SetItemAsync("gid", Guid.NewGuid().ToString());
         }
+        stateService.StateInfo.Gid = await localStorageService.GetItemAsStringAsync("gid");
 
         var wasRefresh = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "blazor_refresh");
         if (wasRefresh == "true")

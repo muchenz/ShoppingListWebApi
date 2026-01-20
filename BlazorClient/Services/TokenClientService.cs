@@ -62,7 +62,7 @@ public class TokenClientService
         var httpClient = _httpClientFactory.CreateClient("api");
         //var httpClient = _httpClient;
 
-        var deviceid  = await _localStorage.GetItemAsync<string>("gid");
+        var deviceid  = _stateService.StateInfo.Gid;
         UserNameAndTokensResponse tokensResponse = null;
         try
         {

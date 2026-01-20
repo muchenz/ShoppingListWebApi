@@ -19,6 +19,7 @@ namespace BlazorClient.Services
         public string ClientSignalRID { get; set; }
         public string UserName { get; set; }
         public bool IsTokenRefresing { get; set; }
+        public string Gid { get; set; }
 
     }
 

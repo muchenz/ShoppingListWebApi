@@ -38,7 +38,7 @@ namespace BlazorClient.Services
         string token;
         private async Task SetRequestBearerAuthorizationHeader(HttpRequestMessage httpRequestMessage)
         {
-            var gid = await _localStorage.GetItemAsync<string>("gid");
+            var gid = _userInfoService.StateInfo.Gid;
 
             token = await _localStorage.GetItemAsync<string>("accessToken");
             //token += "a";
