@@ -127,6 +127,12 @@ public class LockManager : IDisposable
             _lockManager = lockManager;
         }
 
+        public LockBuilder AddLock(string lockName)
+        {
+            _keys.Add(lockName);
+            return this;
+        }
+
         public LockBuilder AddLockListAggr(int listAggrId)
         {
             _keys.Add($"listaggr:{listAggrId}");
