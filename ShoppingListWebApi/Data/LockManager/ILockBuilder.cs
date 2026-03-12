@@ -4,8 +4,8 @@ using System.Threading.Tasks;
 namespace ShoppingListWebApi.Data.LockManager;
 public interface ILockBuilder
 {
-    LockManagerPriorityQueue.LockBuilder AddLock(string lockName);
-    LockManagerPriorityQueue.LockBuilder AddLockListAggr(int listAggrId);
-    LockManagerPriorityQueue.LockBuilder AddLockUser(int userId);
+    ILockBuilder AddLock(string lockName);
+    ILockBuilder AddLockListAggr(int listAggrId);
+    ILockBuilder AddLockUser(int userId);
     Task<IAsyncDisposable> LockAsync();
 }

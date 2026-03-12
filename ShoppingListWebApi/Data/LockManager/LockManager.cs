@@ -16,41 +16,41 @@ namespace ShoppingListWebApi.Data.LockManager;
 //    private static readonly Lazy<LockManager> _instance = new(() => new LockManager());
 //    public static LockManager Instance => _instance.Value;
 //}
-//public class LockManagerFactory
-//{
-//    public enum LockManagerType
-//    {
-//        Standard,
-//        PriorityQueue,
-//        LinkedList
-//    }
+public class LockManagerFactory
+{
+    public enum LockManagerType
+    {
+        Standard,
+        PriorityQueue,
+        LinkedList
+    }
 
-//    public static ILockManager Create(LockManagerType managerType = LockManagerType.Standard,
-//        TimeSpan lockTTL = default, 
-//        TimeSpan cleanupInterval = default)
-//    {
+    public static ILockManager Create(LockManagerType managerType = LockManagerType.Standard,
+        TimeSpan lockTTL = default,
+        TimeSpan cleanupInterval = default)
+    {
 
-//        return managerType switch
-//        {
-//            LockManagerType.Standard => new LockManager(lockTTL, cleanupInterval),
-//            LockManagerType.PriorityQueue => new LockManagerPriorityQueue(),
-//            LockManagerType.LinkedList => new LockManagerLinkedList(),
-//            _ => throw new ArgumentException("Invalid lock manager type", nameof(managerType)),
-//        };
-
-
-//    }
-
-//    public static T Create<T>(
-//       TimeSpan lockTTL = default,
-//       TimeSpan cleanupInterval = default)
-//       where T : LockManager
-//    {
-//        return (T)Activator.CreateInstance(typeof(T), lockTTL, cleanupInterval)!;
-//    }
+        return managerType switch
+        {
+            LockManagerType.Standard => new LockManager(lockTTL, cleanupInterval),
+            LockManagerType.PriorityQueue => new LockManagerPriorityQueue(),
+            LockManagerType.LinkedList => new LockManagerLinkedList(),
+            _ => throw new ArgumentException("Invalid lock manager type", nameof(managerType)),
+        };
 
 
-//}
+    }
+
+    public static T Create<T>(
+       TimeSpan lockTTL = default,
+       TimeSpan cleanupInterval = default)
+       where T : LockManager
+    {
+        return (T)Activator.CreateInstance(typeof(T), lockTTL, cleanupInterval)!;
+    }
+
+
+}
 
 public class LockManager : IDisposable, ILockManager
 {
@@ -122,7 +122,7 @@ public class LockManager : IDisposable, ILockManager
         }
     }
 
-    public LockBuilder GetBuilder()
+    public ILockBuilder GetBuilder()
     {
         return new LockBuilder(this);
     }
@@ -168,7 +168,7 @@ public class LockManager : IDisposable, ILockManager
 
 
 
-    public class LockBuilder
+    public class LockBuilder:ILockBuilder
     {
         private readonly LockManager _lockManager;
         private readonly List<string> _keys = new();
@@ -178,25 +178,25 @@ public class LockManager : IDisposable, ILockManager
             _lockManager = lockManager;
         }
 
-        public LockBuilder AddLock(string lockName)
+        public ILockBuilder AddLock(string lockName)
         {
             _keys.Add(lockName);
             return this;
         }
 
-        public LockBuilder AddLockListAggr(int listAggrId)
+        public ILockBuilder AddLockListAggr(int listAggrId)
         {
             _keys.Add($"listaggr:{listAggrId}");
             return this;
         }
 
-        public LockBuilder AddLockUser(int userId)
+        public ILockBuilder AddLockUser(int userId)
         {
             _keys.Add($"user:{userId}");
             return this;
         }
 
-        public async Task<IDisposable> LockAsync()
+        public async Task<IAsyncDisposable> LockAsync()
         {
 
             var keys = _keys.OrderBy(k => k).ToList();
@@ -229,7 +229,7 @@ public class LockManager : IDisposable, ILockManager
     }
 
 
-    private class Releaser : IDisposable
+    private class Releaser : IAsyncDisposable
     {
         private readonly LockManager _lockManager;
         private readonly List<LockInfo> _lockInfos;
@@ -242,11 +242,11 @@ public class LockManager : IDisposable, ILockManager
         }
 
 
-        public void Dispose()
+        public async ValueTask DisposeAsync()
         {
             if (_disposed) return;
 
-            _lockManager._stateLock.Wait();
+            await _lockManager._stateLock.WaitAsync();
             try
             {
                 foreach (var info in _lockInfos)
@@ -264,9 +264,10 @@ public class LockManager : IDisposable, ILockManager
 
             }
         }
+
     }
 }
-public class LockManagerPriorityQueue
+public class LockManagerPriorityQueue:ILockManager
 {
 
     private class LockInfo
@@ -338,7 +339,7 @@ public class LockManagerPriorityQueue
         }
     }
 
-    public LockBuilder GetBuilder()
+    public ILockBuilder GetBuilder()
     {
         return new LockBuilder(this);
     }
@@ -353,18 +354,18 @@ public class LockManagerPriorityQueue
             _lockManager = lockManager;
         }
 
-        public LockBuilder AddLock(string lockName)
+        public ILockBuilder AddLock(string lockName)
         {
             _keys.Add(lockName);
             return this;
         }
-        public LockBuilder AddLockListAggr(int listAggrId)
+        public ILockBuilder AddLockListAggr(int listAggrId)
         {
             _keys.Add($"listaggr:{listAggrId}");
             return this;
         }
 
-        public LockBuilder AddLockUser(int userId)
+        public ILockBuilder AddLockUser(int userId)
         {
             _keys.Add($"user:{userId}");
             return this;
@@ -440,7 +441,7 @@ public class LockManagerPriorityQueue
 
 }
 
-public class LockManagerLinkedList
+public class LockManagerLinkedList:ILockManager
 {
 
     private class LockInfo
@@ -518,12 +519,12 @@ public class LockManagerLinkedList
         }
     }
 
-    public LockBuilder GetBuilder()
+    public ILockBuilder GetBuilder()
     {
         return new LockBuilder(this);
     }
 
-    public class LockBuilder
+    public class LockBuilder:ILockBuilder
     {
         private readonly LockManagerLinkedList _lockManager;
         private readonly List<string> _keys = new();
@@ -532,18 +533,18 @@ public class LockManagerLinkedList
         {
             _lockManager = lockManager;
         }
-        public LockBuilder AddLock(string lockName)
+        public ILockBuilder AddLock(string lockName)
         {
             _keys.Add(lockName);
             return this;
         }
-        public LockBuilder AddLockListAggr(int listAggrId)
+        public ILockBuilder AddLockListAggr(int listAggrId)
         {
             _keys.Add($"listaggr:{listAggrId}");
             return this;
         }
 
-        public LockBuilder AddLockUser(int userId)
+        public ILockBuilder AddLockUser(int userId)
         {
             _keys.Add($"user:{userId}");
             return this;
