@@ -7,9 +7,52 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ShoppingListWebApi.Data;
+namespace ShoppingListWebApi.Data.LockManager;
 
-public class LockManager : IDisposable
+
+
+//public class LockManagerFactory
+//{
+//    private static readonly Lazy<LockManager> _instance = new(() => new LockManager());
+//    public static LockManager Instance => _instance.Value;
+//}
+//public class LockManagerFactory
+//{
+//    public enum LockManagerType
+//    {
+//        Standard,
+//        PriorityQueue,
+//        LinkedList
+//    }
+
+//    public static ILockManager Create(LockManagerType managerType = LockManagerType.Standard,
+//        TimeSpan lockTTL = default, 
+//        TimeSpan cleanupInterval = default)
+//    {
+
+//        return managerType switch
+//        {
+//            LockManagerType.Standard => new LockManager(lockTTL, cleanupInterval),
+//            LockManagerType.PriorityQueue => new LockManagerPriorityQueue(),
+//            LockManagerType.LinkedList => new LockManagerLinkedList(),
+//            _ => throw new ArgumentException("Invalid lock manager type", nameof(managerType)),
+//        };
+
+
+//    }
+
+//    public static T Create<T>(
+//       TimeSpan lockTTL = default,
+//       TimeSpan cleanupInterval = default)
+//       where T : LockManager
+//    {
+//        return (T)Activator.CreateInstance(typeof(T), lockTTL, cleanupInterval)!;
+//    }
+
+
+//}
+
+public class LockManager : IDisposable, ILockManager
 {
 
     private class LockInfo
@@ -21,12 +64,20 @@ public class LockManager : IDisposable
 
     private readonly ConcurrentDictionary<string, LockInfo> _locksDic = new();
     private readonly Timer _cleanupTimer;
-    private readonly TimeSpan _lockTTL = TimeSpan.FromMinutes(1);
-    private readonly TimeSpan _cleanupInterval = TimeSpan.FromMinutes(5);
+    private readonly TimeSpan _lockTTL;
+    private readonly TimeSpan _cleanupInterval;
 
-    public LockManager()
+    internal LockManager()
     {
         _cleanupInterval = TimeSpan.FromMinutes(5);
+        _lockTTL = TimeSpan.FromMinutes(1);
+
+        _cleanupTimer = new Timer(async _ => await Cleanup(), null, _cleanupInterval, _cleanupInterval);
+    }
+    internal LockManager(TimeSpan lockTTL = default, TimeSpan cleanupInterval = default)
+    {
+        _lockTTL = lockTTL <= TimeSpan.Zero ? TimeSpan.FromMinutes(1) : lockTTL;
+        _cleanupInterval = cleanupInterval <= TimeSpan.Zero ? TimeSpan.FromMinutes(5) : cleanupInterval;
 
         _cleanupTimer = new Timer(async _ => await Cleanup(), null, _cleanupInterval, _cleanupInterval);
     }
@@ -230,18 +281,26 @@ public class LockManagerPriorityQueue
     private readonly ConcurrentDictionary<string, LockInfo> _locksDic = new();
     private readonly PriorityQueue<string, long> _expiryQueue = new();
     private readonly Timer _cleanupTimer;
-    private readonly TimeSpan _lockTTL = TimeSpan.FromMinutes(1);
-    private readonly TimeSpan _cleanupInterval = TimeSpan.FromMinutes(5);
+    private readonly TimeSpan _lockTTL;
+    private readonly TimeSpan _cleanupInterval;
     private readonly SemaphoreSlim _queueLock = new SemaphoreSlim(1, 1);
     public LockManagerPriorityQueue()
     {
         _cleanupInterval = TimeSpan.FromMinutes(5);
+        _lockTTL= TimeSpan.FromMinutes(1);
 
         _cleanupTimer = new Timer(async _ => await Cleanup(), null, _cleanupInterval, _cleanupInterval);
     }
 
     private readonly SemaphoreSlim _cleanupLock = new SemaphoreSlim(1, 1);
 
+    internal LockManagerPriorityQueue(TimeSpan lockTTL = default, TimeSpan cleanupInterval = default)
+    {
+        _lockTTL = lockTTL <= TimeSpan.Zero ? TimeSpan.FromMinutes(1) : lockTTL;
+        _cleanupInterval = cleanupInterval <= TimeSpan.Zero ? TimeSpan.FromMinutes(5) : cleanupInterval;
+
+        _cleanupTimer = new Timer(async _ => await Cleanup(), null, _cleanupInterval, _cleanupInterval);
+    }
     private async Task Cleanup()
     {
         if (!_cleanupLock.Wait(0))
@@ -390,12 +449,21 @@ public class LockManagerLinkedList
     private readonly ConcurrentDictionary<string, LinkedListNode<LockInfo>> _nodeDic = new();
     private readonly LinkedList<LockInfo> _lockList = new();
     private readonly Timer _cleanupTimer;
-    private readonly TimeSpan _lockTTL = TimeSpan.FromMinutes(1);
-    private readonly TimeSpan _cleanupInterval = TimeSpan.FromMinutes(5);
+    private readonly TimeSpan _lockTTL;
+    private readonly TimeSpan _cleanupInterval;
     private readonly SemaphoreSlim _stateLock = new SemaphoreSlim(1, 1);
     public LockManagerLinkedList()
     {
         _cleanupInterval = TimeSpan.FromMinutes(5);
+        _lockTTL = TimeSpan.FromMinutes(1);
+
+    _cleanupTimer = new Timer(async _ => await Cleanup(), null, _cleanupInterval, _cleanupInterval);
+    }
+
+    internal LockManagerLinkedList(TimeSpan lockTTL = default, TimeSpan cleanupInterval = default)
+    {
+        _lockTTL = lockTTL <= TimeSpan.Zero ? TimeSpan.FromMinutes(1) : lockTTL;
+        _cleanupInterval = cleanupInterval <= TimeSpan.Zero ? TimeSpan.FromMinutes(5) : cleanupInterval;
 
         _cleanupTimer = new Timer(async _ => await Cleanup(), null, _cleanupInterval, _cleanupInterval);
     }

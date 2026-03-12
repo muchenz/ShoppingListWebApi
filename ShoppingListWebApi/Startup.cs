@@ -24,6 +24,7 @@ using ServiceMediatR.ListCommandAndQueries;
 using Shared;
 using ShoppingListWebApi.Auth.Api;
 using ShoppingListWebApi.Data;
+using ShoppingListWebApi.Data.LockManager;
 using ShoppingListWebApi.Handlers;
 using ShoppingListWebApi.Hub;
 using ShoppingListWebApi.Hub.Auth;
