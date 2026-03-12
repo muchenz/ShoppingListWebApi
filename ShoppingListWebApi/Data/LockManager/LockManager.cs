@@ -33,8 +33,8 @@ public class LockManagerFactory
         return managerType switch
         {
             LockManagerType.Standard => new LockManager(lockTTL, cleanupInterval),
-            LockManagerType.PriorityQueue => new LockManagerPriorityQueue(),
-            LockManagerType.LinkedList => new LockManagerLinkedList(),
+            LockManagerType.PriorityQueue => new LockManagerPriorityQueue(lockTTL, cleanupInterval),
+            LockManagerType.LinkedList => new LockManagerLinkedList(lockTTL, cleanupInterval),
             _ => throw new ArgumentException("Invalid lock manager type", nameof(managerType)),
         };
 
@@ -44,7 +44,7 @@ public class LockManagerFactory
     public static T Create<T>(
        TimeSpan lockTTL = default,
        TimeSpan cleanupInterval = default)
-       where T : LockManager
+       where T : ILockManager
     {
         return (T)Activator.CreateInstance(typeof(T), lockTTL, cleanupInterval)!;
     }
