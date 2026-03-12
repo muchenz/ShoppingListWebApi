@@ -287,7 +287,7 @@ public class LockManagerPriorityQueue
     public LockManagerPriorityQueue()
     {
         _cleanupInterval = TimeSpan.FromMinutes(5);
-        _lockTTL= TimeSpan.FromMinutes(1);
+        _lockTTL = TimeSpan.FromMinutes(1);
 
         _cleanupTimer = new Timer(async _ => await Cleanup(), null, _cleanupInterval, _cleanupInterval);
     }
@@ -343,7 +343,7 @@ public class LockManagerPriorityQueue
         return new LockBuilder(this);
     }
 
-    public class LockBuilder
+    public class LockBuilder : ILockBuilder
     {
         private readonly LockManagerPriorityQueue _lockManager;
         private readonly List<string> _keys = new();
@@ -353,6 +353,11 @@ public class LockManagerPriorityQueue
             _lockManager = lockManager;
         }
 
+        public LockBuilder AddLock(string lockName)
+        {
+            _keys.Add(lockName);
+            return this;
+        }
         public LockBuilder AddLockListAggr(int listAggrId)
         {
             _keys.Add($"listaggr:{listAggrId}");
@@ -457,7 +462,7 @@ public class LockManagerLinkedList
         _cleanupInterval = TimeSpan.FromMinutes(5);
         _lockTTL = TimeSpan.FromMinutes(1);
 
-    _cleanupTimer = new Timer(async _ => await Cleanup(), null, _cleanupInterval, _cleanupInterval);
+        _cleanupTimer = new Timer(async _ => await Cleanup(), null, _cleanupInterval, _cleanupInterval);
     }
 
     internal LockManagerLinkedList(TimeSpan lockTTL = default, TimeSpan cleanupInterval = default)
@@ -527,7 +532,11 @@ public class LockManagerLinkedList
         {
             _lockManager = lockManager;
         }
-
+        public LockBuilder AddLock(string lockName)
+        {
+            _keys.Add(lockName);
+            return this;
+        }
         public LockBuilder AddLockListAggr(int listAggrId)
         {
             _keys.Add($"listaggr:{listAggrId}");
