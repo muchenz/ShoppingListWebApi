@@ -2,5 +2,5 @@
 
 public interface ILockManager
 {
-    LockManager.LockBuilder GetBuilder();
+    ILockBuilder GetBuilder();
 }
